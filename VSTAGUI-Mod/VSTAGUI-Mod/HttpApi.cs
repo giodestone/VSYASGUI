@@ -7,6 +7,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Vintagestory.API.Server;
 using VSYASGUI_CommonLib;
+using VSYASGUI_CommonLib.ResponseObjects;
+using VSYASGUI_Mod;
 
 namespace VSYASGUI
 {
@@ -15,11 +17,13 @@ namespace VSYASGUI
         ICoreServerAPI _Api = null;
         HttpListener _HttpListener = null;
         Config _Config = null;
+        LogCache _LogCache = null;
 
-        public HttpApi(Config config, ICoreServerAPI api)
+        public HttpApi(ICoreServerAPI api, Config config, LogCache logCache)
         {
             _Config = config;
             _Api = api;
+            _LogCache = logCache;
         }
 
         /// <summary>
@@ -73,6 +77,14 @@ namespace VSYASGUI
 
             switch (context.Request.Url.AbsolutePath.TrimEnd('/'))
             {
+                case "/players-online":
+                    context.Response.StatusCode = 200;
+                    var players = _Api.Server.Players.Where(p => p.ConnectionState != EnumClientState.Offline).Select(p => PlayerDetails.FromServerPlayer(p)).ToList();
+                    WriteJsonToResponse(context, players); 
+                    break;
+                case "/console":
+                    SendConsole(context);
+                    break;
                 default:
                     context.Response.StatusCode = 418;
                     WriteJsonToResponse(context, ResponseFactory.MakeErrorBadRequest());
@@ -81,11 +93,20 @@ namespace VSYASGUI
         }
 
         /// <summary>
+        /// Send console details.
+        /// </summary>
+        private void SendConsole(HttpListenerContext context)
+        {
+            context.Response.StatusCode = 200;
+            WriteJsonToResponse(context, _LogCache.GetLog());
+        }
+
+        /// <summary>
         /// Returns true if the recieved API key in the header matches <see cref="Config.ApiKey"/>.
         /// </summary>
         private bool IsApiKeyMatching(HttpListenerContext context)
         {
-            var recievedKey = context.Request.Headers[CommonVariables.Request_Header_Api_Key_Name];
+            var recievedKey = context.Request.Headers[CommonVariables.RequestHeaderApiKeyName];
 
             if (recievedKey == null)
                 return false;

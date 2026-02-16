@@ -64,7 +64,8 @@
 
 <ItemGroup>
   <ProjectReference Include="..\..\VSYASGUI-CommonLib\VSYASGUI-CommonLib.csproj">
-    <Private>False</Private>
+    <Private></Private>
+    <CopyLocalSatelliteAssemblies></CopyLocalSatelliteAssemblies>
   </ProjectReference>
 </ItemGroup>
 

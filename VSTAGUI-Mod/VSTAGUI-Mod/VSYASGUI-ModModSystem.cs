@@ -4,6 +4,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Server;
 using VSYASGUI;
+using VSYASGUI_Mod;
 
 namespace VSTAGUI_Mod
 {
@@ -38,7 +39,9 @@ namespace VSTAGUI_Mod
                 return;
             }
 
-            _HttpApi = new HttpApi(_Config, api);
+            LogCache logCache = new(api, _Config);
+
+            _HttpApi = new HttpApi(api, _Config, logCache);
 
             try
             {
@@ -50,6 +53,8 @@ namespace VSTAGUI_Mod
                 api.Logger.LogException(EnumLogType.Error, e);
                 return;
             }
+
+            api.Logger.Log(EnumLogType.Notification, $"VSAYSGUI HTTP API now active at endpoint {_Config.BindURL}   Api key: {_Config.ApiKey}");
         }
 
         public override void StartClientSide(ICoreClientAPI api)
