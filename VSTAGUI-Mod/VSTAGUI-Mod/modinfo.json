@@ -1,0 +1,14 @@
+{
+    "$schema": "https://moddbcdn.vintagestory.at/schema/modinfo.latest.json",
+    "type": "Code",
+    "modid": "vsyasgui-mod",
+    "name": "Vintage Story Yet Another GUI Mod",
+    "authors": [
+        "giodestone"
+    ],
+    "description": "Provides a HTTP RESTful API to allow remote management of server.",
+    "version": "1.0.0",
+    "dependencies": {
+        "game": "1.21.0"
+    }
+}

@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="docs.md" />
+  </Folder>
+  <Project Path="VSTAGUI-Mod/VSTAGUI-Mod/VSYASGUI-Mod.csproj" Id="03a5741e-6316-4325-8a59-7be41f912510" />
+  <Project Path="VSTAGUI-Mod/ZZCakeBuild/CakeBuild.csproj" Id="7006a37f-e166-4eae-adcd-c19636852cb5" />
+  <Project Path="VSYASGUI-CommonLib/VSYASGUI-CommonLib.csproj" Id="f680fc6c-b3f9-4d10-903b-14950acf0ef5" />
+</Solution>
