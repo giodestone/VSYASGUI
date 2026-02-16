@@ -22,9 +22,9 @@
             <Label Content="VS YAS GUI" FontWeight="Bold"/>
             <Label Content="Vintage Story Yet Another Simple Graphical User Interface"/>
             <Separator Margin="0,0,0,20" Visibility="Hidden"/>
+            <Label Content="Enter connection details:"/>
             <Grid Margin="0,0,0,10">
                 <Grid.RowDefinitions>
-                    <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
@@ -34,7 +34,15 @@
                 </Grid.ColumnDefinitions>
                 
                 <Label Grid.Column="0" Content="Server API Key"></Label>
-                <ComboBox x:Name="APIKeyComboBox" Grid.Column="1" IsEditable="True" Margin="0,0,0,5"/>
+                <ComboBox x:Name="APIKeyComboBox" Grid.Column="1" IsEditable="True" Margin="0,0,0,5">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Grid.Column="0" Text="{Binding}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
 
                 <Label Grid.Column="0" Grid.Row="1" Content="Server HTTP Endpoint Address"></Label>
                 <ComboBox x:Name="EndpointComboBox" Grid.Column="1" Grid.Row="1" IsEditable="True" Margin="0,0,0,5"/>

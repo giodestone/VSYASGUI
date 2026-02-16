@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace VSYASGUI_WFP_App
+namespace VSYASGUI_WFP_App.MVVM.Models
 {
     /// <summary>
     /// User config for the app. Must be serializable into JSON.

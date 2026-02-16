@@ -23,6 +23,8 @@ namespace VSYASGUI_WFP_App.Pages
         public ConnectPage()
         {
             InitializeComponent();
+
+            APIKeyComboBox.ItemsSource = new List<string>() { "test", "lol", "hello" };
         }
 
         private void OnConnectButton_Click(object sender, RoutedEventArgs e)
