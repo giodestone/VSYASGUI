@@ -20,5 +20,15 @@ namespace VSYASGUI_WFP_App
         {
             InitializeComponent();
         }
+
+        protected override void OnInitialized(EventArgs e)
+        {
+            base.OnInitialized(e);
+
+            if (Config.LoadOrCreate() == false)
+            {
+                MessageBox.Show($"Unable to load or create the configuration file. \n\nNo user settings will be remembered such as the API keys. \n\nTry removing the config file at ({Config.GetPathToConfig()}), checking if your disk is full, that you have write permissions, or has been broken.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
     }
 }
