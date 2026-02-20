@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace VSYASGUI_WFP_App.MVVM.ViewModels.Base
 {
-    internal abstract class Presenter : INotifyPropertyChanged
+    public abstract class Presenter : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 

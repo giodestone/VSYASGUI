@@ -13,15 +13,20 @@ namespace VSYASGUI_WFP_App.MVVM.Models
     /// <summary>
     /// User config for the app. Must be serializable into JSON.
     /// </summary>
-    internal class Config
+    public class Config
     {
         public static Config Instance { get; protected set; }
 
         public const string FileName = "settings.json";
 
-        public string[] ApiKeys { get; set; }
+        public List<string> ApiKeys { get; set; } = ["changeme", "test2"];
 
-        public string[] EndpointAddresses { get; set; }
+        public List<string> EndpointAddresses { get; set; } = ["http://127.0.0.1:8181/", "test2"];
+
+        /// <summary>
+        /// Text for an error box that says it has failed to load or create the config file.
+        /// </summary>
+        public string FailedToCreateOrLoadConfigText => $"Unable to load or create the configuration file. \n\nNo user settings will be saved. \n\nTry:\n * Removing the config file at {Config.GetPathToConfig()}\n* Checking if your disk is full.\n* That you have write permissions.";
 
         /// <summary>
         /// Tries to write the config file to disk in the same directory as the executable.
@@ -51,8 +56,11 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// Load the config from a file, or create a new one if non functional.<br/>
         /// 
         /// If there is a load error, returns false.
+        /// <br/>
+        /// <br/>
+        /// See also: <seealso cref="FailedToCreateOrLoadConfigText"/>
         /// </summary>
-        public static bool LoadOrCreate()
+        public static bool TryLoadOrCreate()
         {
             var pathToConfig = GetPathToConfig();
             if (pathToConfig == string.Empty)
@@ -107,6 +115,29 @@ namespace VSYASGUI_WFP_App.MVVM.Models
             }
 
             return pathToConfig;
+        }
+
+        /// <summary>
+        /// Try to remove the existing config file.
+        /// </summary>
+        /// <remarks>
+        /// Will not re-create instance, or recreate the file. You must use <see cref="TryLoadOrCreate"/>.
+        /// </remarks>
+        /// <returns>True if deletion was successful. False if it was not.</returns>
+        public bool TryDeleteConfig()
+        {
+            try
+            {
+                File.Delete(GetPathToConfig());
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR: Failed to delete config file.");
+                Console.WriteLine(e.Message);
+                return false;
+            }
         }
     }
 }

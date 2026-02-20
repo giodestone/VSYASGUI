@@ -4,9 +4,14 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VSYASGUI_WFP_App"
+        xmlns:controls="clr-namespace:VSYASGUI_WFP_App.UserControls"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Frame Source="/Pages/ConnectPage.xaml" NavigationUIVisibility="Hidden"/>
-    </Grid>
+    <DockPanel>
+        <controls:MenuBar DockPanel.Dock="Top"/>
+        <Grid>
+            <Frame Source="/MVVM/Views/ConnectPage.xaml" NavigationUIVisibility="Hidden"/>
+        </Grid>
+    </DockPanel>
+
 </Window>

@@ -4,10 +4,17 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:VSYASGUI_WFP_App.Pages"
-      mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="ConnectPage">
-    
+      Title="Connect Page"
+      
+      mc:Ignorable="d" 
+      xmlns:viewModels="clr-namespace:VSYASGUI_WFP_App.MVVM.ViewModels"
+      x:ClassModifier="internal"
+      d:DataContext="{d:DesignInstance viewModels:ConfigPresenter}">
+
+    <Page.DataContext>
+        <viewModels:ConfigPresenter/>
+    </Page.DataContext>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="25"/>
@@ -34,21 +41,28 @@
                 </Grid.ColumnDefinitions>
                 
                 <Label Grid.Column="0" Content="Server API Key"></Label>
-                <ComboBox x:Name="APIKeyComboBox" Grid.Column="1" IsEditable="True" Margin="0,0,0,5">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Grid.Column="0" Text="{Binding}"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
+                <ComboBox x:Name="APIKeyComboBox" Grid.Column="1" Margin="0,0,0,5" 
+                          IsEditable="True" 
+                          IsReadOnly="False" 
+                          IsTextSearchEnabled="True"
+                          SelectedIndex="0"
+                          ItemsSource="{Binding ApiKeyHistory}" 
+                          Text="{Binding CurrentlySelectedApiKey, UpdateSourceTrigger=LostFocus}" >
                 </ComboBox>
 
                 <Label Grid.Column="0" Grid.Row="1" Content="Server HTTP Endpoint Address"></Label>
-                <ComboBox x:Name="EndpointComboBox" Grid.Column="1" Grid.Row="1" IsEditable="True" Margin="0,0,0,5"/>
+                <ComboBox x:Name="EndpointComboBox" Grid.Column="1" Grid.Row="1" Margin="0,0,0,5"
+                          IsEditable="True" 
+                          IsReadOnly="False" 
+                          IsTextSearchEnabled="True"
+                          SelectedIndex="0"
+                          ItemsSource="{Binding EndpointHistory}" 
+                          Text="{Binding CurrentlySelectedEndpoint, UpdateSourceTrigger=LostFocus}" >
+ 
+                </ComboBox>
             </Grid>
             
-        <Button x:Name="ConnectButton" Content="Connect" Width="200" Click="OnConnectButton_Click"/>
+        <Button x:Name="ConnectButton" Content="Connect" Width="200" Command="{Binding ConnectCommand}"/>
         
         </StackPanel>
 

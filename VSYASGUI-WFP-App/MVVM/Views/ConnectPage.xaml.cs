@@ -18,18 +18,11 @@ namespace VSYASGUI_WFP_App.Pages
     /// <summary>
     /// Interaction logic for ConnectPage.xaml
     /// </summary>
-    public partial class ConnectPage : Page
+    internal sealed partial class ConnectPage : Page
     {
         public ConnectPage()
         {
             InitializeComponent();
-
-            APIKeyComboBox.ItemsSource = new List<string>() { "test", "lol", "hello" };
-        }
-
-        private void OnConnectButton_Click(object sender, RoutedEventArgs e)
-        {
-
         }
     }
 }

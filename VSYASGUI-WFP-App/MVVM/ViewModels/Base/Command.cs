@@ -7,7 +7,7 @@ using System.Windows.Input;
 
 namespace VSYASGUI_WFP_App.MVVM.ViewModels.Base
 {
-    internal sealed class Command : ICommand
+    public sealed class Command : ICommand
     {
         private readonly Action<object> _action;
 
