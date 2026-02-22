@@ -15,12 +15,30 @@ namespace VSYASGUI_WFP_App.MVVM.Models
     /// </summary>
     public class Config
     {
+        /// <summary>
+        /// Active instance of the config.
+        /// </summary>
         public static Config Instance { get; protected set; }
 
         public const string FileName = "settings.json";
 
-        public List<string> ApiKeys { get; set; } = ["changeme", "test2"];
+        /// <summary>
+        /// API key which the user has selected.
+        /// </summary>
+        public string CurrentApiKey { get; set; } = "";
+        /// <summary>
+        /// History of API keys.
+        /// </summary>
+        public List<string> ApiKeyHistory { get; set; } = ["changeme", "test2"];
 
+        /// <summary>
+        /// Endpoint which the user has selected.
+        /// </summary>
+        public string CurrentEndpoint { get; set; } = ""; // e.g. http://127.0.0.1:8181/
+
+        /// <summary>
+        /// History of endpoint addresses.
+        /// </summary>
         public List<string> EndpointAddresses { get; set; } = ["http://127.0.0.1:8181/", "test2"];
 
         /// <summary>

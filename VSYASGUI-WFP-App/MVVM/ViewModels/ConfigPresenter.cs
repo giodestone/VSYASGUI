@@ -22,7 +22,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             set 
             {
                 Update(ref _CurrentlySelectedApiKey, value);
-                _CurrentlySelectedApiKey = value;
+                Config.Instance.CurrentApiKey = value;
             }
         }
 
@@ -32,7 +32,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             set
             {
                 Update(ref _CurrentlySelectedEndpoint, value);
-                _CurrentlySelectedEndpoint = value;
+                Config.Instance.CurrentEndpoint = value;
             }
         }
 
@@ -40,41 +40,41 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         {
             InitObservableCollections();
 
-            if (Config.Instance.ApiKeys.Count > 0)
-                _CurrentlySelectedApiKey = Config.Instance.ApiKeys[0];
+            if (Config.Instance.ApiKeyHistory.Count > 0)
+                Config.Instance.CurrentApiKey = Config.Instance.ApiKeyHistory[0];
 
             if (Config.Instance.EndpointAddresses.Count > 0)
-                _CurrentlySelectedEndpoint = Config.Instance.EndpointAddresses[0];
+                Config.Instance.CurrentEndpoint = Config.Instance.EndpointAddresses[0];
         }
 
         private void InitObservableCollections()
         {
-            _ApiKeyHistory = new ObservableCollection<string>(Config.Instance.ApiKeys);
+            _ApiKeyHistory = new ObservableCollection<string>(Config.Instance.ApiKeyHistory);
             _EndpointHistory = new ObservableCollection<string>(Config.Instance.EndpointAddresses);
         }
 
-        public ICommand ConnectCommand
+        /// <summary>
+        /// Adds the currently selected ApiKey/Endpoint to their respective collections, if not already present. Basically provides a history of entries.
+        /// </summary>
+        public ICommand AddCurrentlySelectedToCollection
         {
             get
             {
                 return new Command(_ =>
                 {
-                    if (!Config.Instance.ApiKeys.Contains(_CurrentlySelectedApiKey) && !string.IsNullOrEmpty(_CurrentlySelectedApiKey))
+                    if (!Config.Instance.ApiKeyHistory.Contains(Config.Instance.CurrentApiKey) && !string.IsNullOrEmpty(Config.Instance.CurrentApiKey))
                     {
-                        Config.Instance.ApiKeys.Insert(0, _CurrentlySelectedApiKey);
-                        ApiKeyHistory.Insert(0, _CurrentlySelectedApiKey);
+                        Config.Instance.ApiKeyHistory.Insert(0, Config.Instance.CurrentApiKey);
+                        ApiKeyHistory.Insert(0, Config.Instance.CurrentApiKey);
                     }
 
-                    if (!Config.Instance.EndpointAddresses.Contains(_CurrentlySelectedEndpoint) && !string.IsNullOrEmpty(_CurrentlySelectedEndpoint))
+                    if (!Config.Instance.EndpointAddresses.Contains(Config.Instance.CurrentEndpoint) && !string.IsNullOrEmpty(Config.Instance.CurrentEndpoint))
                     {
-                        Config.Instance.EndpointAddresses.Insert(0, _CurrentlySelectedEndpoint);
-                        EndpointHistory.Insert(0, _CurrentlySelectedEndpoint);
+                        Config.Instance.EndpointAddresses.Insert(0, Config.Instance.CurrentEndpoint);
+                        EndpointHistory.Insert(0, Config.Instance.CurrentEndpoint);
                     }
-
-
                 });
             }
         }
-
     }
 }

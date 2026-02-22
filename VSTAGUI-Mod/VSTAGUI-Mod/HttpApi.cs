@@ -78,12 +78,15 @@ namespace VSYASGUI
             switch (context.Request.Url.AbsolutePath.TrimEnd('/'))
             {
                 case "/players-online":
-                    context.Response.StatusCode = 200;
+                    context.Response.StatusCode = (int)HttpStatusCode.OK;
                     var players = _Api.Server.Players.Where(p => p.ConnectionState != EnumClientState.Offline).Select(p => PlayerDetails.FromServerPlayer(p)).ToList();
                     WriteJsonToResponse(context, players); 
                     break;
                 case "/console":
                     SendConsole(context);
+                    break;
+                case "/":
+                    context.Response.StatusCode = (int)HttpStatusCode.OK; 
                     break;
                 default:
                     context.Response.StatusCode = 418;

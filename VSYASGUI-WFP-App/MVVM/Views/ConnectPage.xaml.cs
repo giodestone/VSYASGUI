@@ -12,6 +12,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using VSYASGUI_WFP_App.MVVM.Models;
+using VSYASGUI_WFP_App.MVVM.Views;
 
 namespace VSYASGUI_WFP_App.Pages
 {
@@ -23,6 +25,19 @@ namespace VSYASGUI_WFP_App.Pages
         public ConnectPage()
         {
             InitializeComponent();
+        }
+
+        protected override void OnInitialized(EventArgs e)
+        {
+            base.OnInitialized(e);
+
+            Helpers.DestroyAllBackNavigation(NavigationService);
+        }
+
+        private void ConnectButton_Click(object sender, RoutedEventArgs e)
+        {
+            ConnectingPage connectingPage = new ConnectingPage();
+            this.NavigationService.Navigate(connectingPage);
         }
     }
 }

@@ -22,7 +22,7 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
-            <ColumnDefinition Width="500"/>
+            <ColumnDefinition Width="400"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="1"  Grid.Column="1">
@@ -61,8 +61,8 @@
  
                 </ComboBox>
             </Grid>
-            
-        <Button x:Name="ConnectButton" Content="Connect" Width="200" Command="{Binding ConnectCommand}"/>
+
+            <Button x:Name="ConnectButton" Content="Connect" Width="200" Command="{Binding AddCurrentlySelectedToCollection}" Click="ConnectButton_Click"/>
         
         </StackPanel>
 

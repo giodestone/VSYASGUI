@@ -1,8 +1,10 @@
-﻿namespace VSYASGUI_CommonLib
+﻿using VSYASGUI_CommonLib.RequestObjects;
+
+namespace VSYASGUI_CommonLib
 {
     public static class CommonVariables
     {
-        public const string RequestHeaderApiKeyName = "api-key";
+        public const string RequestHeaderApiKeyName = nameof(RequestBase.ApiKey);
         //public const 
     }
 }
