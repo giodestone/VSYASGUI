@@ -13,13 +13,8 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
     {
         private MainWindowViews _CurrentView = MainWindowViews.Default;
 
-        public ICommand ChangeToConnectScreenCommand => return new Rou
+        //public ICommand ChangeToConnectScreenCommand => return 
         //public ICommand ChangeToFirstViewCommand => 
-
-        public MainWindowViewModel()
-        {
-
-        }
 
         public void SwichViews(MainWindowViews newView)
         {
