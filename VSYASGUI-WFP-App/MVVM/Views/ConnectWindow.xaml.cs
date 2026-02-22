@@ -18,19 +18,18 @@ using VSYASGUI_WFP_App.MVVM.Views;
 namespace VSYASGUI_WFP_App.MVVM.Views
 {
     /// <summary>
-    /// Interaction logic for ConnectControl.xaml
+    /// Interaction logic for ConnectWindow.xaml
     /// </summary>
-    internal sealed partial class ConnectControl : UserControl
+    internal sealed partial class ConnectWindow : Window
     {
-        public ConnectControl()
+        public ConnectWindow()
         {
             InitializeComponent();
         }
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
-            //TODO FIX
-            //Application.Current.MainWindow = new ConnectingControl();
+            Application.Current.MainWindow = new ConnectingWindow();
         }
     }
 }

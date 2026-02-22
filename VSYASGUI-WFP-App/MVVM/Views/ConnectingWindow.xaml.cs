@@ -17,11 +17,11 @@ using VSYASGUI_WFP_App.MVVM.Models;
 namespace VSYASGUI_WFP_App.MVVM.Views
 {
     /// <summary>
-    /// Interaction logic for ConnectingControl.xaml
+    /// Interaction logic for ConnectingWindow.xaml
     /// </summary>
-    public partial class ConnectingControl : UserControl
+    public partial class ConnectingWindow : Window
     {
-        public ConnectingControl()
+        public ConnectingWindow()
         {
             InitializeComponent();
         }
@@ -59,23 +59,20 @@ namespace VSYASGUI_WFP_App.MVVM.Views
                     throw new NotImplementedException();
                 case Error.Connection:
                     {
-                        // TODO
-                        //ConnectionFailedControl connectionFailedWindow = new("Unable to establish connection to specified endpoint.", "Check the endpoitn address.");
-                        //Application.Current.MainWindow = connectionFailedWindow;
+                        ConnectionFailedWindow connectionFailedWindow = new("Unable to establish connection to specified endpoint.", "Check the endpoitn address.");
+                        Application.Current.MainWindow = connectionFailedWindow;
                     }
                     break;
                 case Error.Unauthorised:
                     {
-                        // TODO
-                        //ConnectionFailedControl connectionFailedWindow = new("Invalid API key.", "Check if the API key is the same one as the server you are trying to connect to.");
-                        //Application.Current.MainWindow =  connectionFailedWindow;
+                        ConnectionFailedWindow connectionFailedWindow = new("Invalid API key.", "Check if the API key is the same one as the server you are trying to connect to.");
+                        Application.Current.MainWindow =  connectionFailedWindow;
                     }
                     break;
                 default:
                     {
-                        // TODO
-                        //ConnectionFailedControl connectionFailedWindow = new("Failed to connect.", "Something went wrong when trying to communicate with the server.");
-                        //Application.Current.MainWindow =  connectionFailedWindow;
+                        ConnectionFailedWindow connectionFailedWindow = new("Failed to connect.", "Something went wrong when trying to communicate with the server.");
+                        Application.Current.MainWindow =  connectionFailedWindow;
                     }
                     break;
             }
