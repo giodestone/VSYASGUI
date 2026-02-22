@@ -15,29 +15,21 @@ using System.Windows.Shapes;
 using VSYASGUI_WFP_App.MVVM.Models;
 using VSYASGUI_WFP_App.MVVM.Views;
 
-namespace VSYASGUI_WFP_App.Pages
+namespace VSYASGUI_WFP_App.MVVM.Views
 {
     /// <summary>
-    /// Interaction logic for ConnectPage.xaml
+    /// Interaction logic for ConnectWindow.xaml
     /// </summary>
-    internal sealed partial class ConnectPage : Page
+    internal sealed partial class ConnectWindow : Window
     {
-        public ConnectPage()
+        public ConnectWindow()
         {
             InitializeComponent();
         }
 
-        protected override void OnInitialized(EventArgs e)
-        {
-            base.OnInitialized(e);
-
-            Helpers.DestroyAllBackNavigation(NavigationService);
-        }
-
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
-            ConnectingPage connectingPage = new ConnectingPage();
-            this.NavigationService.Navigate(connectingPage);
+            Application.Current.MainWindow = new ConnectingWindow();
         }
     }
 }
