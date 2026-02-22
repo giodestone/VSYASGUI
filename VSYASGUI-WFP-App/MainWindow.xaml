@@ -5,13 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VSYASGUI_WFP_App"
         xmlns:controls="clr-namespace:VSYASGUI_WFP_App.UserControls"
+        xmlns:views="clr-namespace:VSYASGUI_WFP_App.MVVM.Views"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <DockPanel>
         <controls:MenuBar DockPanel.Dock="Top"/>
-        <Grid>
-            <Frame Source="/MVVM/Views/ConnectPage.xaml" NavigationUIVisibility="Hidden"/>
-        </Grid>
+        <views:ConnectControl/>
     </DockPanel>
 
 </Window>
