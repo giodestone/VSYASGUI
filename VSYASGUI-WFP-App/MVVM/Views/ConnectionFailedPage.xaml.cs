@@ -52,5 +52,10 @@ namespace VSYASGUI_WFP_App.MVVM.Views
         {
             NavigationService.Navigate(new ConnectPage());
         }
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            Helpers.TryDestroyAllBackNavigation(NavigationService);
+        }
     }
 }

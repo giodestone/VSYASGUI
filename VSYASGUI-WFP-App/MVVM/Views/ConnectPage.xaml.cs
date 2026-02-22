@@ -27,17 +27,15 @@ namespace VSYASGUI_WFP_App.Pages
             InitializeComponent();
         }
 
-        protected override void OnInitialized(EventArgs e)
-        {
-            base.OnInitialized(e);
-
-            Helpers.DestroyAllBackNavigation(NavigationService);
-        }
-
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
             ConnectingPage connectingPage = new ConnectingPage();
             this.NavigationService.Navigate(connectingPage);
+        }
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            Helpers.TryDestroyAllBackNavigation(NavigationService);
         }
     }
 }

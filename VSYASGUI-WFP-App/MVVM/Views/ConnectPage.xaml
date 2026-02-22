@@ -10,7 +10,8 @@
       mc:Ignorable="d" 
       xmlns:viewModels="clr-namespace:VSYASGUI_WFP_App.MVVM.ViewModels"
       x:ClassModifier="internal"
-      d:DataContext="{d:DesignInstance viewModels:ConfigPresenter}">
+      d:DataContext="{d:DesignInstance viewModels:ConfigPresenter}"
+      Loaded="Page_Loaded">
 
     <Page.DataContext>
         <viewModels:ConfigPresenter/>

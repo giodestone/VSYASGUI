@@ -51,8 +51,6 @@ namespace VSYASGUI_WFP_App.MVVM.Views
         [STAThread]
         private void OnCheckConnectionComplete(Error result)
         {
-            // TODO: Remove this from the navigation history, if forward/back navigation is ever implemented.
-
             switch (result)
             {
                 case Error.Ok:
@@ -76,6 +74,11 @@ namespace VSYASGUI_WFP_App.MVVM.Views
                     }
                     break;
             }
+        }
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            Helpers.TryDestroyAllBackNavigation(NavigationService);
         }
     }
 }

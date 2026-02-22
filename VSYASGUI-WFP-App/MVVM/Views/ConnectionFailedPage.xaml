@@ -8,7 +8,8 @@
       xmlns:local="clr-namespace:VSYASGUI_WFP_App.MVVM.Views"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="ConnectionFailedPage" DataContext="{Binding Mode=OneWay, RelativeSource={RelativeSource Self}}">
+      Title="ConnectionFailedPage" DataContext="{Binding Mode=OneWay, RelativeSource={RelativeSource Self}}"
+      Loaded="Page_Loaded">
 
     <Grid>
         <Grid.RowDefinitions>
