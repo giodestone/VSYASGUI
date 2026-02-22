@@ -12,13 +12,14 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using VSYASGUI_WFP_App.Pages;
 
 namespace VSYASGUI_WFP_App.MVVM.Views
 {
     /// <summary>
-    /// Interaction logic for ConnectionFailedWindow.xaml
+    /// Interaction logic for ConnectionFailedPage.xaml
     /// </summary>
-    public partial class ConnectionFailedWindow : Window
+    public partial class ConnectionFailedPage : Page
     {
         public string FailureReason { get; private set; }
         public string ResolutionSuggestions { get; private set; }
@@ -26,7 +27,7 @@ namespace VSYASGUI_WFP_App.MVVM.Views
         /// <summary>
         /// Construct the connection failed page with default reasons.
         /// </summary>
-        public ConnectionFailedWindow()
+        public ConnectionFailedPage()
         { 
             FailureReason = "No reason given.";
             ResolutionSuggestions = "No resolution information given.";
@@ -39,7 +40,7 @@ namespace VSYASGUI_WFP_App.MVVM.Views
         /// </summary>
         /// <param name="reason">Quick and snappy reason.</param>
         /// <param name="resolveSuggestions">Suggestion(s) as to how the user may resolve this.</param>
-        public ConnectionFailedWindow(string reason, string resolveSuggestions)
+        public ConnectionFailedPage(string reason, string resolveSuggestions)
         { 
             FailureReason = reason;
             ResolutionSuggestions = resolveSuggestions;
@@ -49,7 +50,7 @@ namespace VSYASGUI_WFP_App.MVVM.Views
 
         private void ReturnButton_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.MainWindow = new ConnectWindow();
+            NavigationService.Navigate(new ConnectPage());
         }
     }
 }

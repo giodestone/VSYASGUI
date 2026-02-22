@@ -17,11 +17,11 @@ using VSYASGUI_WFP_App.MVVM.Models;
 namespace VSYASGUI_WFP_App.MVVM.Views
 {
     /// <summary>
-    /// Interaction logic for ConnectingWindow.xaml
+    /// Interaction logic for ConnectingPage.xaml
     /// </summary>
-    public partial class ConnectingWindow : Window
+    public partial class ConnectingPage : Page
     {
-        public ConnectingWindow()
+        public ConnectingPage()
         {
             InitializeComponent();
         }
@@ -59,20 +59,20 @@ namespace VSYASGUI_WFP_App.MVVM.Views
                     throw new NotImplementedException();
                 case Error.Connection:
                     {
-                        ConnectionFailedWindow connectionFailedWindow = new("Unable to establish connection to specified endpoint.", "Check the endpoitn address.");
-                        Application.Current.MainWindow = connectionFailedWindow;
+                        ConnectionFailedPage connectionFailedPage = new("Unable to establish connection to specified endpoint.", "Check the endpoitn address.");
+                        NavigationService.Navigate(connectionFailedPage);
                     }
                     break;
                 case Error.Unauthorised:
                     {
-                        ConnectionFailedWindow connectionFailedWindow = new("Invalid API key.", "Check if the API key is the same one as the server you are trying to connect to.");
-                        Application.Current.MainWindow =  connectionFailedWindow;
+                        ConnectionFailedPage connectionFailedPage = new("Invalid API key.", "Check if the API key is the same one as the server you are trying to connect to.");
+                        NavigationService.Navigate(connectionFailedPage);
                     }
                     break;
                 default:
                     {
-                        ConnectionFailedWindow connectionFailedWindow = new("Failed to connect.", "Something went wrong when trying to communicate with the server.");
-                        Application.Current.MainWindow =  connectionFailedWindow;
+                        ConnectionFailedPage connectionFailedPage = new("Failed to connect.", "Something went wrong when trying to communicate with the server.");
+                        NavigationService.Navigate(connectionFailedPage);
                     }
                     break;
             }
