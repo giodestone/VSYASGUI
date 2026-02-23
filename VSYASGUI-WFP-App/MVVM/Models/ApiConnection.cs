@@ -42,12 +42,19 @@ namespace VSYASGUI_WFP_App.MVVM.Models
 
 
         /// <summary>
-        /// Check the connection between the
+        /// Check the connection to the specified endpoint using the api key.
         /// </summary>
-        /// <param name="hostname"></param>
-        /// <param name="apiKey"></param>
-        /// <returns></returns>
-        public async Task<Error> CheckConnection()
+        /// <param name="cancellationToken">Token for cancellation.</param>
+        /// <returns>
+        /// <list type="bullet">
+        /// <item><see cref="Error.Ok"/> if connection is okay. </item>
+        /// <item><see cref="Error.Cancelled"/> if cancelled. </item>
+        /// <item><see cref="Error.Connection"/> if unable to connect, or initialise request. </item> 
+        /// <item><see cref="Error.Unauthorised"/> if 401 is returned. </item>
+        /// <item><see cref="Error.General"/> if a different failure occurred (probably due to an OS error). </item>
+        /// </list>
+        /// </returns>
+        public async Task<Error> CheckConnection(CancellationToken cancellationToken)
         {
             ConnectionRequest connectionRequest = new() { ApiKey  = _ApiKey };
 
@@ -55,13 +62,17 @@ namespace VSYASGUI_WFP_App.MVVM.Models
 
             try
             {
-                response = await _Client.PostAsync(_EndpointUri, SerialiseObject(connectionRequest));
+                response = await _Client.PostAsync(_EndpointUri, SerialiseObject(connectionRequest), cancellationToken);
             }
             catch (HttpRequestException httpRequestException)
             {
                 if (httpRequestException.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                     return Error.Unauthorised;
                 return Error.General;
+            }
+            catch (TaskCanceledException cancelledException)
+            {
+                return Error.Cancelled;
             }
             catch (Exception e)
             {

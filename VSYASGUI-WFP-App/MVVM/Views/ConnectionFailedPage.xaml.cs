@@ -21,17 +21,17 @@ namespace VSYASGUI_WFP_App.MVVM.Views
     /// </summary>
     public partial class ConnectionFailedPage : Page
     {
-        public string FailureReason { get; private set; }
-        public string ResolutionSuggestions { get; private set; }
+        private const string ReasonDefaultText = "No reason given.";
+        private const string ResolutionDefaultText = "No resolution information given.";
+
+        public string FailureReason { get; private set; } = ReasonDefaultText;
+        public string ResolutionSuggestions { get; private set; } = ResolutionDefaultText;
 
         /// <summary>
         /// Construct the connection failed page with default reasons.
         /// </summary>
         public ConnectionFailedPage()
         { 
-            FailureReason = "No reason given.";
-            ResolutionSuggestions = "No resolution information given.";
-
             InitializeComponent();
         }
 
@@ -42,8 +42,10 @@ namespace VSYASGUI_WFP_App.MVVM.Views
         /// <param name="resolveSuggestions">Suggestion(s) as to how the user may resolve this.</param>
         public ConnectionFailedPage(string reason, string resolveSuggestions)
         { 
-            FailureReason = reason;
-            ResolutionSuggestions = resolveSuggestions;
+            if (!string.IsNullOrEmpty(reason))
+                FailureReason = reason;
+            if (!string.IsNullOrEmpty(resolveSuggestions))
+                ResolutionSuggestions = resolveSuggestions;
 
             InitializeComponent();
         }

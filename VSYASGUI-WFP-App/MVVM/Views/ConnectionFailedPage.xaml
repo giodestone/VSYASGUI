@@ -25,10 +25,9 @@
                 <Image Source="{svgc:SvgImage Source=/Assets/Icons/LoadingIcon.svg, AppName=VSYASGUI-WFP-App}" Width="24" Height="24"/>
                 <Label Content="Unable to connect" FontWeight="Bold"/>
                 <Separator/>
-                <Label x:Name="FailureReasonLabel" Content="{Binding FailureReason}"/>
-                <Label x:Name="ResolutionSuggestionsLabel" Content="{Binding ResolutionSuggestions}"/>
-                <Separator Visibility="Hidden"/>
-                <Button Content="Return to Connection Screen" HorizontalAlignment="Center" Width="160" Click="ReturnButton_Click"/>
+                <TextBlock x:Name="FailureReasonLabel" Text="{Binding FailureReason}" TextWrapping="Wrap"/>
+                <TextBlock Margin="0 6 0 0" x:Name="ResolutionSuggestionsLabel" Text="{Binding ResolutionSuggestions}" TextWrapping="Wrap"/>
+                <Button Margin="0 6 0 0"  Content="Return to Connection Screen" HorizontalAlignment="Center" Width="160" Click="ReturnButton_Click"/>
             </StackPanel>
         </Border>
     </Grid>

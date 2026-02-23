@@ -78,15 +78,13 @@ namespace VSYASGUI
             switch (context.Request.Url.AbsolutePath.TrimEnd('/'))
             {
                 case "/players-online":
-                    context.Response.StatusCode = (int)HttpStatusCode.OK;
-                    var players = _Api.Server.Players.Where(p => p.ConnectionState != EnumClientState.Offline).Select(p => PlayerDetails.FromServerPlayer(p)).ToList();
-                    WriteJsonToResponse(context, players); 
+                    SendPlayersOnlineResponse(context);
                     break;
                 case "/console":
-                    SendConsole(context);
+                    SendConsoleResponse(context);
                     break;
                 case "/":
-                    context.Response.StatusCode = (int)HttpStatusCode.OK; 
+                    SendConnectionCheckResponse(context);
                     break;
                 default:
                     context.Response.StatusCode = 418;
@@ -95,13 +93,25 @@ namespace VSYASGUI
             }
         }
 
+        private void SendPlayersOnlineResponse(HttpListenerContext context)
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.OK;
+            var players = _Api.Server.Players.Where(p => p.ConnectionState != EnumClientState.Offline).Select(p => PlayerDetails.FromServerPlayer(p)).ToList();
+            WriteJsonToResponse(context, players);
+        }
+
+        private static void SendConnectionCheckResponse(HttpListenerContext context)
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.OK;
+        }
+
         /// <summary>
         /// Send console details.
         /// </summary>
-        private void SendConsole(HttpListenerContext context)
+        private void SendConsoleResponse(HttpListenerContext context)
         {
             context.Response.StatusCode = 200;
-            WriteJsonToResponse(context, _LogCache.GetLog());
+            WriteJsonToResponse(context, ResponseFactory.MakeConsoleEntriesResponse(_LogCache.GetLog()));
         }
 
         /// <summary>

@@ -18,5 +18,10 @@ namespace VSYASGUI_CommonLib
         {
             return new ErrorResponse() { error = "bad-request" };
         }
+
+        public static ConsoleEntriesResponse MakeConsoleEntriesResponse(string[] lines)
+        {
+            return new ConsoleEntriesResponse() { NewLines = lines.ToArray() };
+        }
     }
 }

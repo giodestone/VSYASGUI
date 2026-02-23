@@ -14,7 +14,9 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         Ok = 0,
         General,
         Connection,
-        Unauthorised
+        Unauthorised,
+        Cancelled,
+
 
     }
 }

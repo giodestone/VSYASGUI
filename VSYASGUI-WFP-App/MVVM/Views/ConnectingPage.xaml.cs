@@ -13,14 +13,18 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using VSYASGUI_WFP_App.MVVM.Models;
+using VSYASGUI_WFP_App.MVVM.ViewModels;
+using VSYASGUI_WFP_App.Pages;
 
 namespace VSYASGUI_WFP_App.MVVM.Views
 {
     /// <summary>
     /// Interaction logic for ConnectingPage.xaml
     /// </summary>
-    public partial class ConnectingPage : Page
+    internal partial class ConnectingPage : Page
     {
+        ConnectionPresenter? _ConnectionPresenter;
+
         public ConnectingPage()
         {
             InitializeComponent();
@@ -29,8 +33,6 @@ namespace VSYASGUI_WFP_App.MVVM.Views
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
-
-            CheckConnection();
         }
 
         /// <summary>
@@ -38,18 +40,22 @@ namespace VSYASGUI_WFP_App.MVVM.Views
         /// </summary>
         private void CheckConnection()
         {
-            ApiConnection.SetupConnection(Config.Instance.CurrentEndpoint, Config.Instance.CurrentApiKey);
+            _ConnectionPresenter?.TryBeginConnectionCheck();
 
-            // Fixes issue with the code in OnCheckConnectionComplete below being ran on the wrong thread.
-            ApiConnection.Instance.CheckConnection().ContinueWith(
-                task => Application.Current.Dispatcher.BeginInvoke(OnCheckConnectionComplete, task.Result));
+
+
+            //ApiConnection.SetupConnection(Config.Instance.CurrentEndpoint, Config.Instance.CurrentApiKey);
+
+            //// Fixes issue with the code in OnCheckConnectionComplete below being ran on the wrong thread.
+            //var t = ApiConnection.Instance.CheckConnection().ContinueWith(
+            //    task => Application.Current.Dispatcher.BeginInvoke(OnCheckConnectionComplete, task.Result
+            
         }
 
         /// <summary>
         /// Moves onto the next screen for when the <see cref="ApiConnection.CheckConnection"/> operation completes.
         /// </summary>
-        [STAThread]
-        private void OnCheckConnectionComplete(Error result)
+        private void OnCheckConnectionComplete(object? sender, Error result)
         {
             switch (result)
             {
@@ -57,7 +63,7 @@ namespace VSYASGUI_WFP_App.MVVM.Views
                     throw new NotImplementedException();
                 case Error.Connection:
                     {
-                        ConnectionFailedPage connectionFailedPage = new("Unable to establish connection to specified endpoint.", "Check the endpoitn address.");
+                        ConnectionFailedPage connectionFailedPage = new("Unable to establish connection to specified endpoint.", "Check the endpoint address.");
                         NavigationService.Navigate(connectionFailedPage);
                     }
                     break;
@@ -65,6 +71,12 @@ namespace VSYASGUI_WFP_App.MVVM.Views
                     {
                         ConnectionFailedPage connectionFailedPage = new("Invalid API key.", "Check if the API key is the same one as the server you are trying to connect to.");
                         NavigationService.Navigate(connectionFailedPage);
+                    }
+                    break;
+                case Error.Cancelled:
+                    {
+                        ConnectionFailedPage connectPage = new("User cancelled connection attempt.", string.Empty);
+                        NavigationService.Navigate(connectPage);
                     }
                     break;
                 default:
@@ -79,6 +91,17 @@ namespace VSYASGUI_WFP_App.MVVM.Views
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             Helpers.TryDestroyAllBackNavigation(NavigationService);
+
+            ConnectionPresenter connectionPresenter = DataContext as ConnectionPresenter;
+            if (connectionPresenter == null)
+            {
+                Console.WriteLine("ERROR: Data context is of an invalid (unexpected) type.");
+                return;
+            }
+             _ConnectionPresenter = connectionPresenter;
+            _ConnectionPresenter.ConnectionCheckComplete += OnCheckConnectionComplete;
+
+            CheckConnection();
         }
     }
 }
