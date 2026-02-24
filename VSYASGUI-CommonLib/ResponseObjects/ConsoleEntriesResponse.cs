@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace VSYASGUI_CommonLib.ResponseObjects
 {
     public class ConsoleEntriesResponse : ResponseBase
     {
-        public string[] NewLines;
+        public List<string>? NewLines;
 
+        [JsonIgnore]
         public override bool ExpectsResponse => true;
     }
 }

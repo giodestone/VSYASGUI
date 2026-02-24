@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using VSYASGUI_CommonLib.RequestObjects;
 using VSYASGUI_CommonLib.ResponseObjects;
 using VSYASGUI_WFP_App.MVVM.Models;
 using VSYASGUI_WFP_App.MVVM.ViewModels.Base;
@@ -39,7 +40,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         public ConnectionPresenter()
         {
             if (ApiConnection.Instance == null)
-                ApiConnection.SetupConnection(Config.Instance.CurrentEndpoint, Config.Instance.CurrentApiKey);
+                ApiConnection.SetupConnection(Config.Instance.GetUrlForApi, Config.Instance.CurrentApiKey);
         }
 
         private bool IsConnectionTaskRunning(Task task)
@@ -60,7 +61,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             _ConnectionCheckCancellationTokenSource = new CancellationTokenSource();
             try
             {
-                _CurrentConnectionCheckTask = ApiConnection.Instance.RequestApiInfo<NoResponse>(_ConnectionCheckCancellationTokenSource.Token);
+                _CurrentConnectionCheckTask = ApiConnection.Instance.RequestApiInfo<NoResponse>(new ConnectionRequest(), _ConnectionCheckCancellationTokenSource.Token);
                 _CurrentConnectionCheckTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnConnectionCheckComplete, task.Result));
             }
             catch (Exception e)
@@ -108,7 +109,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
             try
             {
-                _ConsoleEntryRequestTask = ApiConnection.Instance.RequestApiInfo<ConsoleEntriesResponse>(new CancellationToken());
+                _ConsoleEntryRequestTask = ApiConnection.Instance.RequestApiInfo<ConsoleEntriesResponse>(new ConsoleRequest(), new CancellationToken());
                 _ConsoleEntryRequestTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnRequestConsoleUpdateSucceeded, task.Result));
             }
             catch (Exception e)

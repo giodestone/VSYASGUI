@@ -29,11 +29,11 @@ namespace VSYASGUI_Mod
         /// <summary>
         /// Get the full log. Expensive operation as it gets ALL cached lines.
         /// </summary>
-        public string[] GetLog()
+        public List<string> GetLog()
         {
             List<string> totalString = new List<string>(_Cache.Count);
             _Cache.Foreach(entry => totalString.Add(entry));
-            return totalString.ToArray();
+            return totalString;
         }
 
         /// <summary>

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VSYASGUI_CommonLib.ResponseObjects;
+﻿using VSYASGUI_CommonLib.ResponseObjects;
 
 namespace VSYASGUI_CommonLib
 {
@@ -19,9 +14,9 @@ namespace VSYASGUI_CommonLib
             return new ErrorResponse() { error = "bad-request" };
         }
 
-        public static ConsoleEntriesResponse MakeConsoleEntriesResponse(string[] lines)
+        public static ConsoleEntriesResponse MakeConsoleEntriesResponse(List<string> lines)
         {
-            return new ConsoleEntriesResponse() { NewLines = lines.ToArray() };
+            return new ConsoleEntriesResponse() { NewLines = lines };
         }
     }
 }

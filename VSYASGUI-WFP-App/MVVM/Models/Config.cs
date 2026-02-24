@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -49,7 +50,14 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// <summary>
         /// Text for an error box that says it has failed to load or create the config file.
         /// </summary>
+        [JsonIgnore]
         public string FailedToCreateOrLoadConfigText => $"Unable to load or create the configuration file. \n\nNo user settings will be saved. \n\nTry:\n * Removing the config file at {Config.GetPathToConfig()}\n* Checking if your disk is full.\n* That you have write permissions.";
+
+        /// <summary>
+        /// Get a URL ready to have the API URI added.
+        /// </summary>
+        [JsonIgnore]
+        public string GetUrlForApi { get => CurrentEndpoint.TrimEnd('/'); }
 
         /// <summary>
         /// Tries to write the config file to disk in the same directory as the executable.

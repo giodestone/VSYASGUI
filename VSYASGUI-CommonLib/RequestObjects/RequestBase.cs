@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace VSYASGUI_CommonLib.RequestObjects
 {
@@ -13,11 +8,12 @@ namespace VSYASGUI_CommonLib.RequestObjects
     public abstract class RequestBase
     {
         /// <summary>
-        /// Where the request should go.
+        /// Where the request should go. Must include a leading /
         /// </summary>
         [JsonIgnore]
-        protected abstract string Address { get; }
+        public abstract string Address { get; }
 
+        [JsonIgnore]
         public string ApiKey = string.Empty;
     }
 }

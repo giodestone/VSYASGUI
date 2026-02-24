@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
-using System.Text;
+﻿using System.Net.Http;
 using System.Text.Json;
-using System.Threading.Tasks;
+using VSYASGUI_CommonLib;
 using VSYASGUI_CommonLib.RequestObjects;
 using VSYASGUI_CommonLib.ResponseObjects;
 
@@ -20,9 +14,9 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         internal struct RequestResult
         {
             public Error Error;
-            public HttpContent? HttpContent;
+            public string HttpContent;
 
-            public RequestResult(Error error, HttpContent? httpContent)
+            public RequestResult(Error error, string httpContent)
             {
                 Error = error;
                 HttpContent = httpContent;
@@ -96,19 +90,23 @@ namespace VSYASGUI_WFP_App.MVVM.Models
 
         //}
 
-        public async Task<ApiResponse<TExpectedResponse>> RequestApiInfo<TExpectedResponse>(CancellationToken cancellationToken) where TExpectedResponse : ResponseBase
+        public async Task<ApiResponse<TExpectedResponse>> RequestApiInfo<TExpectedResponse>(RequestBase request, CancellationToken cancellationToken) where TExpectedResponse : ResponseBase, new()
         {
-            ConsoleRequest request = new ConsoleRequest() { ApiKey = Config.Instance.CurrentApiKey };
+            request.ApiKey = Config.Instance.CurrentApiKey;
             var response = await SendHttpRequest(request, cancellationToken);
+
+            if (response.Error != Error.Ok)
+                return new ApiResponse<TExpectedResponse>(response.Error, null);
 
             TExpectedResponse? serialisedObject = null;
 
-            if (response.HttpContent == null)
+            TExpectedResponse r = new(); // Sureley there is a better wayt to do this.
+            if (response.HttpContent == null && r.ExpectsResponse)
                 return new ApiResponse<TExpectedResponse>(response.Error, null);
 
             try
             {
-                serialisedObject = JsonSerializer.Deserialize<TExpectedResponse>(response.HttpContent.ReadAsStream());
+                serialisedObject = JsonSerializer.Deserialize<TExpectedResponse>(response.HttpContent, new JsonSerializerOptions() { IncludeFields = true });
             }
             catch (Exception ex)
             {
@@ -125,8 +123,11 @@ namespace VSYASGUI_WFP_App.MVVM.Models
 
             try
             {
-                // TODO: fix this to include the api key in the header.
-                response = await _Client.PostAsync(_EndpointUri, SerialiseObject(request), cancellationToken);
+                // TODO: fix this to include the api key in the header
+                HttpContent c = SerialiseObject(request);
+                c.Headers.Add(CommonVariables.RequestHeaderApiKeyName, request.ApiKey);
+                response = await _Client.PostAsync(_EndpointUri + request.Address, c, cancellationToken);
+                response.EnsureSuccessStatusCode();
             }
             catch (HttpRequestException httpRequestException)
             {
@@ -148,14 +149,16 @@ namespace VSYASGUI_WFP_App.MVVM.Models
                 return new RequestResult(Error.Connection, null);
             }
 
+            string contentString = await response.Content.ReadAsStringAsync();
+
             switch (response.StatusCode)
             {
                 case System.Net.HttpStatusCode.OK:
-                    return new RequestResult(Error.Ok, response.Content);
+                    return new RequestResult(Error.Ok, contentString);
                 case System.Net.HttpStatusCode.Unauthorized:
-                    return new RequestResult(Error.Unauthorised, response.Content);
+                    return new RequestResult(Error.Unauthorised, contentString);
                 default:
-                    return new RequestResult(Error.General, response.Content);
+                    return new RequestResult(Error.General, contentString);
             }
         }
 
@@ -168,8 +171,8 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         {
             string serialised = string.Empty;
             try
-            {
-                serialised = JsonSerializer.Serialize(obj);
+            { 
+                serialised = JsonSerializer.Serialize(obj, new JsonSerializerOptions { IncludeFields = true });
             }
             catch (Exception e)
             {

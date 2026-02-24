@@ -83,7 +83,7 @@ namespace VSYASGUI_WFP_App.UserControls
 
             foreach (var item in e.NewLines)
             {
-                ConsoleTextBox.Text += item;
+                ConsoleTextBox.Text += item + "\n";
             }
         }
     }

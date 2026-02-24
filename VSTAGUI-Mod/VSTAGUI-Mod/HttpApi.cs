@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Vintagestory.API.Server;
 using VSYASGUI_CommonLib;
 using VSYASGUI_CommonLib.ResponseObjects;
@@ -87,8 +85,8 @@ namespace VSYASGUI
                     SendConnectionCheckResponse(context);
                     break;
                 default:
-                    context.Response.StatusCode = 418;
-                    WriteJsonToResponse(context, ResponseFactory.MakeErrorBadRequest());
+                    context.Response.StatusCode = 200;
+                    WriteJsonToResponse(context, null);
                     break;
             }
         }
@@ -137,7 +135,8 @@ namespace VSYASGUI
         {
             try
             {
-                string serialisedObj = JsonSerializer.Serialize(objToJsonise);
+                JsonSerializerOptions options = new JsonSerializerOptions() { IncludeFields = true };
+                string serialisedObj = JsonSerializer.Serialize(objToJsonise, options);
                 byte[] byteSerialisedObj = Encoding.UTF8.GetBytes(serialisedObj);
                 context.Response.ContentType = "application/json";
                 context.Response.OutputStream.Write(byteSerialisedObj, 0, byteSerialisedObj.Length);

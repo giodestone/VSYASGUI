@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Vintagestory.API.Server;
 
@@ -17,7 +17,6 @@ namespace VSYASGUI
         public const string ConfigFileName = "VSYASGUI-config.json";
         public string BindURL { get; set; } = "http://127.0.0.1:8181/";
         public string ApiKey { get; set; } = "changeme";
-
         public int MaxConsoleEntriesCache { get; set; } = 10000;
 
         /// <summary>
