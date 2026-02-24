@@ -16,6 +16,7 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         Connection,
         Unauthorised,
         Cancelled,
+        Deserialisation
 
 
     }

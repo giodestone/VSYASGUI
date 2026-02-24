@@ -9,5 +9,7 @@ namespace VSYASGUI_CommonLib.ResponseObjects
     public class ConsoleEntriesResponse : ResponseBase
     {
         public string[] NewLines;
+
+        public override bool ExpectsResponse => true;
     }
 }

@@ -60,7 +60,11 @@ namespace VSYASGUI_WFP_App.MVVM.Views
             switch (result)
             {
                 case Error.Ok:
-                    throw new NotImplementedException();
+                    {
+                        ServerPage serverPage = new();
+                        NavigationService.Navigate(serverPage);
+                    }
+                    break;
                 case Error.Connection:
                     {
                         ConnectionFailedPage connectionFailedPage = new("Unable to establish connection to specified endpoint.", "Check the endpoint address.");

@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using VSYASGUI_CommonLib.RequestObjects;
+using VSYASGUI_CommonLib.ResponseObjects;
 
 namespace VSYASGUI_WFP_App.MVVM.Models
 {
@@ -15,6 +17,18 @@ namespace VSYASGUI_WFP_App.MVVM.Models
     /// </summary>
     internal class ApiConnection
     {
+        internal struct RequestResult
+        {
+            public Error Error;
+            public HttpContent? HttpContent;
+
+            public RequestResult(Error error, HttpContent? httpContent)
+            {
+                Error = error;
+                HttpContent = httpContent;
+            }
+        }
+
         public static ApiConnection? Instance { get; protected set; }
         
         HttpClient _Client;
@@ -41,57 +55,107 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         }
 
 
-        /// <summary>
-        /// Check the connection to the specified endpoint using the api key.
-        /// </summary>
-        /// <param name="cancellationToken">Token for cancellation.</param>
-        /// <returns>
-        /// <list type="bullet">
-        /// <item><see cref="Error.Ok"/> if connection is okay. </item>
-        /// <item><see cref="Error.Cancelled"/> if cancelled. </item>
-        /// <item><see cref="Error.Connection"/> if unable to connect, or initialise request. </item> 
-        /// <item><see cref="Error.Unauthorised"/> if 401 is returned. </item>
-        /// <item><see cref="Error.General"/> if a different failure occurred (probably due to an OS error). </item>
-        /// </list>
-        /// </returns>
-        public async Task<Error> CheckConnection(CancellationToken cancellationToken)
-        {
-            ConnectionRequest connectionRequest = new() { ApiKey  = _ApiKey };
+        ///// <summary>
+        ///// Check the connection to the specified endpoint using the api key.
+        ///// </summary>
+        ///// <param name="cancellationToken">Token for cancellation.</param>
+        ///// <returns>
+        ///// <list type="bullet">
+        ///// <item><see cref="Error.Ok"/> if status 200 is returned. </item>
+        ///// <item><see cref="Error.Cancelled"/> if cancelled. </item>
+        ///// <item><see cref="Error.Connection"/> if unable to connect, or initialise request. </item> 
+        ///// <item><see cref="Error.Unauthorised"/> if 401 is returned. </item>
+        ///// <item><see cref="Error.General"/> if a different failure occurred (probably due to an OS error). </item>
+        ///// </list>
+        ///// </returns>
+        //public async Task<Error> CheckConnection(CancellationToken cancellationToken)
+        //{
+        //    ConnectionRequest connectionRequest = new() { ApiKey = _ApiKey };
+        //    return await SendHttpRequest(connectionRequest, cancellationToken);
+        //}
 
+        
+
+        //public async Task<ApiResponse<ConsoleEntriesResponse>> GetConsoleValues(CancellationToken cancellationToken)
+        //{
+        //    ConsoleRequest request = new ConsoleRequest() { ApiKey = Config.Instance.CurrentApiKey };
+        //    var response = await SendHttpRequest(request, cancellationToken);
+
+        //    ConsoleEntriesResponse? serialisedObject = null;
+
+        //    try
+        //    {
+        //        serialisedObject = JsonSerializer.Deserialize<ConsoleEntriesResponse>(response.HttpContent.ReadAsStream());
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return new ApiResponse<ConsoleEntriesResponse>(Error.Deserialisation, null);
+        //    }
+
+        //    return new ApiResponse<ConsoleEntriesResponse>(Error.Ok, serialisedObject);
+
+        //}
+
+        public async Task<ApiResponse<TExpectedResponse>> RequestApiInfo<TExpectedResponse>(CancellationToken cancellationToken) where TExpectedResponse : ResponseBase
+        {
+            ConsoleRequest request = new ConsoleRequest() { ApiKey = Config.Instance.CurrentApiKey };
+            var response = await SendHttpRequest(request, cancellationToken);
+
+            TExpectedResponse? serialisedObject = null;
+
+            if (response.HttpContent == null)
+                return new ApiResponse<TExpectedResponse>(response.Error, null);
+
+            try
+            {
+                serialisedObject = JsonSerializer.Deserialize<TExpectedResponse>(response.HttpContent.ReadAsStream());
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<TExpectedResponse>(Error.Deserialisation, null);
+            }
+
+            return new ApiResponse<TExpectedResponse>(Error.Ok, serialisedObject);
+
+        }
+
+        private async Task<RequestResult> SendHttpRequest(RequestBase request, CancellationToken cancellationToken)
+        {
             HttpResponseMessage? response = null;
 
             try
             {
-                response = await _Client.PostAsync(_EndpointUri, SerialiseObject(connectionRequest), cancellationToken);
+                // TODO: fix this to include the api key in the header.
+                response = await _Client.PostAsync(_EndpointUri, SerialiseObject(request), cancellationToken);
             }
             catch (HttpRequestException httpRequestException)
             {
                 if (httpRequestException.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                    return Error.Unauthorised;
-                return Error.General;
+                    return new RequestResult(Error.Unauthorised, null);
+                return new RequestResult(Error.General, null);
             }
             catch (TaskCanceledException cancelledException)
             {
-                return Error.Cancelled;
+                return new RequestResult(Error.Cancelled, null);
             }
             catch (Exception e)
             {
-                return Error.General;
+                return new RequestResult(Error.General, null);
             }
 
             if (response == null)
-            { 
-                return Error.Connection;
+            {
+                return new RequestResult(Error.Connection, null);
             }
 
             switch (response.StatusCode)
             {
                 case System.Net.HttpStatusCode.OK:
-                    return Error.Ok;
+                    return new RequestResult(Error.Ok, response.Content);
                 case System.Net.HttpStatusCode.Unauthorized:
-                    return Error.Unauthorised;
+                    return new RequestResult(Error.Unauthorised, response.Content);
                 default:
-                    return Error.General;
+                    return new RequestResult(Error.General, response.Content);
             }
         }
 

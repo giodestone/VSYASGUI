@@ -12,17 +12,23 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using VSYASGUI_WFP_App.MVVM.Models;
 
 namespace VSYASGUI_WFP_App.MVVM.Views
 {
     /// <summary>
     /// Interaction logic for OverviewPage.xaml
     /// </summary>
-    internal partial class OverviewPage : Page
+    internal partial class ServerPage : Page
     {
-        public OverviewPage()
+        public ServerPage()
         {
             InitializeComponent();
+        }
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

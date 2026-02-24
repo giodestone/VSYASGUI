@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using VSYASGUI_CommonLib.ResponseObjects;
 using VSYASGUI_WFP_App.MVVM.Models;
 using VSYASGUI_WFP_App.MVVM.ViewModels.Base;
 
@@ -16,7 +17,11 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         public event EventHandler<Error> ConnectionCheckComplete;
         
         private CancellationTokenSource _ConnectionCheckCancellationTokenSource;
-        private Task<Error> _CurrentConnectionCheckTask;
+        private Task<ApiResponse<NoResponse>> _CurrentConnectionCheckTask;
+
+        public event EventHandler<ConsoleEntriesResponse> ConsoleReadSuccessful;
+
+        private Task<ApiResponse<ConsoleEntriesResponse>> _ConsoleEntryRequestTask;
 
         /// <summary>
         /// Command form of <see cref="TryBeginConnectionCheck"/>.
@@ -37,27 +42,31 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
                 ApiConnection.SetupConnection(Config.Instance.CurrentEndpoint, Config.Instance.CurrentApiKey);
         }
 
+        private bool IsConnectionTaskRunning(Task task)
+        { 
+            return ApiConnection.Instance != null && (task != null && !task.IsCompleted); 
+        }
+
         /// <summary>
         /// Try to check if it is possible to connect with the server.
         /// </summary>
         /// <returns><c>true</c> if check was begun, <c>false</c> if the check is already running, or in rare cases cannot start.</returns>
         public bool TryBeginConnectionCheck()
         {
-            if ((_CurrentConnectionCheckTask != null && !_CurrentConnectionCheckTask.IsCompleted) 
-                || ApiConnection.Instance == null)
+            if (IsConnectionTaskRunning(_CurrentConnectionCheckTask))
                 return false;
 
             ConnectionCheckBegun?.Invoke(this, EventArgs.Empty);
             _ConnectionCheckCancellationTokenSource = new CancellationTokenSource();
             try
             {
-                _CurrentConnectionCheckTask = ApiConnection.Instance.CheckConnection(_ConnectionCheckCancellationTokenSource.Token);
+                _CurrentConnectionCheckTask = ApiConnection.Instance.RequestApiInfo<NoResponse>(_ConnectionCheckCancellationTokenSource.Token);
                 _CurrentConnectionCheckTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnConnectionCheckComplete, task.Result));
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
                 Console.WriteLine("ERROR: Unable to invoke connection check due to an exception.");
-                Console.WriteLine(ex.Message);
+                Console.WriteLine(e.Message);
                 return false;
             }
 
@@ -87,9 +96,35 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// Must be called by the main thread, e.g. using <c>Application.Current.Dispatcher.BeginInvoke(OnConnectionCheckComplete>)</c>.
         /// </remarks>
         /// <param name="taskResult">Result of the task.</param>
-        private void OnConnectionCheckComplete(Error taskResult)
+        private void OnConnectionCheckComplete(ApiResponse<NoResponse> taskResult)
         {
-            ConnectionCheckComplete.Invoke(this, taskResult);
+            ConnectionCheckComplete.Invoke(this, taskResult.ErrorResult);
+        }
+
+        public bool TryRequestConsoleUpdate()
+        {
+            if (IsConnectionTaskRunning(_ConsoleEntryRequestTask))
+                return false;
+
+            try
+            {
+                _ConsoleEntryRequestTask = ApiConnection.Instance.RequestApiInfo<ConsoleEntriesResponse>(new CancellationToken());
+                _ConsoleEntryRequestTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnRequestConsoleUpdateSucceeded, task.Result));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR: Unable to invoke connection check due to an exception.");
+                Console.WriteLine(e.Message);
+                return false;
+            }
+
+            return true;
+        }
+
+        private void OnRequestConsoleUpdateSucceeded(ApiResponse<ConsoleEntriesResponse> response)
+        {
+            if (response.ErrorResult == Error.Ok && response.Response != null)
+                ConsoleReadSuccessful?.Invoke(this, response.Response);
         }
     }
 }

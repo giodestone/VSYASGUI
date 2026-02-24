@@ -54,6 +54,8 @@ namespace VSYASGUI_CommonLib.ResponseObjects
         /// </summary>
         public EnumClientState ConnectionState { get; init; }
 
+        public override bool ExpectsResponse => true;
+
         public static PlayerDetails FromServerPlayer(IServerPlayer player)
         {
             return new PlayerDetails()

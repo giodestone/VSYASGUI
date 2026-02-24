@@ -42,6 +42,11 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         public List<string> EndpointAddresses { get; set; } = ["http://127.0.0.1:8181/", "test2"];
 
         /// <summary>
+        /// Minimum interval for how often the server will be polled for realtime resources.
+        /// </summary>
+        public int ServerPollIntervalMilliseconds { get; set; } = 1000;
+
+        /// <summary>
         /// Text for an error box that says it has failed to load or create the config file.
         /// </summary>
         public string FailedToCreateOrLoadConfigText => $"Unable to load or create the configuration file. \n\nNo user settings will be saved. \n\nTry:\n * Removing the config file at {Config.GetPathToConfig()}\n* Checking if your disk is full.\n* That you have write permissions.";

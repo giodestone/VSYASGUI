@@ -7,12 +7,10 @@ using System.Threading.Tasks;
 namespace VSYASGUI_CommonLib.ResponseObjects
 {
     /// <summary>
-    /// Signifies an error response.
+    /// For type system. Signifies that no response body is expected.
     /// </summary>
-    public sealed class ErrorResponse : ResponseBase
+    public class NoResponse : ResponseBase
     {
-        public override bool ExpectsResponse => true;
-        public string error { get; set; } = "undefined";
-
+        public override bool ExpectsResponse => false;
     }
 }
