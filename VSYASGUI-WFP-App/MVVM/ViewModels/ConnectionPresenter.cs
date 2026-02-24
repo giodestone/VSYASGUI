@@ -102,14 +102,14 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             ConnectionCheckComplete.Invoke(this, taskResult.ErrorResult);
         }
 
-        public bool TryRequestConsoleUpdate()
+        public bool TryRequestConsoleUpdate(long lineFrom)
         {
             if (IsConnectionTaskRunning(_ConsoleEntryRequestTask))
                 return false;
 
             try
             {
-                _ConsoleEntryRequestTask = ApiConnection.Instance.RequestApiInfo<ConsoleEntriesResponse>(new ConsoleRequest(), new CancellationToken());
+                _ConsoleEntryRequestTask = ApiConnection.Instance.RequestApiInfo<ConsoleEntriesResponse>(new ConsoleRequest() { LineFrom = lineFrom }, new CancellationToken());
                 _ConsoleEntryRequestTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnRequestConsoleUpdateSucceeded, task.Result));
             }
             catch (Exception e)

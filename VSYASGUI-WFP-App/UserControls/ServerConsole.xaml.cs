@@ -26,6 +26,7 @@ namespace VSYASGUI_WFP_App.UserControls
     {
         ConnectionPresenter _ConnectionPresenter;
         Task _PollServerTask;
+        long _LatestLine = 0;
 
         public ServerConsole()
         {
@@ -37,7 +38,7 @@ namespace VSYASGUI_WFP_App.UserControls
             if (_ConnectionPresenter == null)
                 return;
 
-            _ConnectionPresenter.TryRequestConsoleUpdate();
+            _ConnectionPresenter.TryRequestConsoleUpdate(_LatestLine);
         }
 
         /// <summary>
@@ -75,16 +76,21 @@ namespace VSYASGUI_WFP_App.UserControls
         }
 
         private void OnConsoleReadSuccessful(object? sender, ConsoleEntriesResponse e)
-        {
-            ConsoleTextBox.Text = string.Empty;
-            
+        {             
+            // Something went wrong with the response.
             if (e.NewLines == null)
+                return;
+
+            // sent wrong line
+            if (e.LineFrom != _LatestLine)
                 return;
 
             foreach (var item in e.NewLines)
             {
                 ConsoleTextBox.Text += item + "\n";
             }
+
+            _LatestLine = e.LineTo;
         }
     }
 }

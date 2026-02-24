@@ -4,9 +4,15 @@ namespace VSYASGUI_CommonLib.ResponseObjects
 {
     public class ConsoleEntriesResponse : ResponseBase
     {
-        public List<string>? NewLines;
-
         [JsonIgnore]
         public override bool ExpectsResponse => true;
+
+        public List<string>? NewLines { get; set; }
+
+        public long LineFrom { get; set; }
+
+        public long LineTo { get; set; } = 0;
+
+
     }
 }

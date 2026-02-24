@@ -14,9 +14,9 @@ namespace VSYASGUI_CommonLib
             return new ErrorResponse() { error = "bad-request" };
         }
 
-        public static ConsoleEntriesResponse MakeConsoleEntriesResponse(List<string> lines)
+        public static ConsoleEntriesResponse MakeConsoleEntriesResponse(List<string> lines, long lineFrom, long lineTo)
         {
-            return new ConsoleEntriesResponse() { NewLines = lines };
+            return new ConsoleEntriesResponse() { NewLines = lines, LineFrom = lineFrom, LineTo = lineTo };
         }
     }
 }

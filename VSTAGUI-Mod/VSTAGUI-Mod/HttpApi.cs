@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.Json;
 using Vintagestory.API.Server;
 using VSYASGUI_CommonLib;
+using VSYASGUI_CommonLib.RequestObjects;
 using VSYASGUI_CommonLib.ResponseObjects;
 using VSYASGUI_Mod;
 
@@ -49,7 +51,7 @@ namespace VSYASGUI
         {
             var context = _HttpListener.EndGetContext(ar);
             _HttpListener.BeginGetContext(OnHttp, this);
-            HandleRequest(context);
+            HandleRequest(ar, context);
 
             //if (_HttpListener == null || !_HttpListener.IsListening)
             //    return;
@@ -57,7 +59,7 @@ namespace VSYASGUI
 
         }
 
-        private void HandleRequest(HttpListenerContext context)
+        private void HandleRequest(IAsyncResult ar, HttpListenerContext context)
         {
             if (!IsApiKeyMatching(context))
             {
@@ -79,7 +81,7 @@ namespace VSYASGUI
                     SendPlayersOnlineResponse(context);
                     break;
                 case "/console":
-                    SendConsoleResponse(context);
+                    SendConsoleResponse(ar, context);
                     break;
                 case "/":
                     SendConnectionCheckResponse(context);
@@ -106,10 +108,42 @@ namespace VSYASGUI
         /// <summary>
         /// Send console details.
         /// </summary>
-        private void SendConsoleResponse(HttpListenerContext context)
+        private async void SendConsoleResponse(IAsyncResult ar, HttpListenerContext context)
         {
+            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+
+            string strmContents = string.Empty;
+
+            try
+            {
+                byte[] bytes = new byte[2048];
+                int strRead = await context.Request.InputStream.ReadAsync(bytes, 0, 2048);
+
+                // Convert byte array to a text string.
+                strmContents = context.Request.ContentEncoding.GetString(bytes, 0, strRead);
+            }
+            catch
+            {
+                return;
+            }
+
+            ConsoleRequest request = null;
+
+            try
+            {
+                request = JsonSerializer.Deserialize<ConsoleRequest>(strmContents, new JsonSerializerOptions() { IncludeFields = true });
+            }
+            catch
+            {
+                return;
+            }
+
+            if (request == null)
+                return;
+
             context.Response.StatusCode = 200;
-            WriteJsonToResponse(context, ResponseFactory.MakeConsoleEntriesResponse(_LogCache.GetLog()));
+            _LogCache.GetLog(request.LineFrom, out var logLines, out var lineFrom, out var lineTo);
+            WriteJsonToResponse(context, ResponseFactory.MakeConsoleEntriesResponse(logLines, lineFrom, lineTo));
         }
 
         /// <summary>
