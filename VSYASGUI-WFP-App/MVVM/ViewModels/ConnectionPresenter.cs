@@ -54,11 +54,8 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         public string SendCommandContents
         {
             get => _SendCommandContents;
-            set
-            {
-                _SendCommandContents = value;
-                Update(ref _SendCommandContents, value);
-            }
+            set => Update(ref _SendCommandContents, value, "SendCommandContents");
+            
         }
 
         /// <summary>

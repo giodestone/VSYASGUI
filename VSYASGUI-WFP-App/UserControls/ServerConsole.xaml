@@ -18,7 +18,7 @@
                     <ColumnDefinition/>
                     <ColumnDefinition Width="100"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Grid.Row="1" Grid.Column="0" x:Name="CommandTextBox" Text="{Binding SendCommandContents}"/>
+                <TextBox Grid.Row="1" Grid.Column="0" x:Name="CommandTextBox" Text="{Binding Path=SendCommandContents}"/>
                 <Button Grid.Row="1" Grid.Column="1" x:Name="SendCommandButton" Content="Send Command" Margin="4 0 0 0" Command="{Binding TrySendCommandToServerCommand}" />
             </Grid>
 
