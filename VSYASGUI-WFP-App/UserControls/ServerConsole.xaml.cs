@@ -72,7 +72,14 @@ namespace VSYASGUI_WFP_App.UserControls
 
             _PollServerTask = PollServer(this, OnPollServerInterval);
             _ConnectionPresenter.ConsoleReadSuccessful += OnConsoleReadSuccessful;
+            _ConnectionPresenter.ServerInstanceGuidChanged += OnServerGuidChanged;
             
+        }
+
+        private void OnServerGuidChanged(object? sender, EventArgs e)
+        {
+            _LatestLine = 0;
+            ConsoleTextBox.Clear();
         }
 
         private void OnConsoleReadSuccessful(object? sender, ConsoleEntriesResponse e)

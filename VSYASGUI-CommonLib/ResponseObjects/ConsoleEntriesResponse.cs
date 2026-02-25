@@ -2,7 +2,7 @@
 
 namespace VSYASGUI_CommonLib.ResponseObjects
 {
-    public class ConsoleEntriesResponse : ResponseBase
+    public class ConsoleEntriesResponse : InstanceAwareResponseBase
     {
         [JsonIgnore]
         public override bool ExpectsResponse => true;
@@ -11,8 +11,6 @@ namespace VSYASGUI_CommonLib.ResponseObjects
 
         public long LineFrom { get; set; }
 
-        public long LineTo { get; set; } = 0;
-
-
+        public long LineTo { get; set; }
     }
 }

@@ -18,12 +18,14 @@ namespace VSYASGUI
         HttpListener _HttpListener = null;
         Config _Config = null;
         LogCache _LogCache = null;
+        Guid _InstanceGuid;
 
-        public HttpApi(ICoreServerAPI api, Config config, LogCache logCache)
+        public HttpApi(ICoreServerAPI api, Config config, LogCache logCache, Guid instanceGuid)
         {
             _Config = config;
             _Api = api;
             _LogCache = logCache;
+            _InstanceGuid = instanceGuid;
         }
 
         /// <summary>
@@ -88,7 +90,7 @@ namespace VSYASGUI
                     break;
                 default:
                     context.Response.StatusCode = 200;
-                    WriteJsonToResponse(context, null);
+                    WriteJsonToResponse(context, ResponseFactory.MakeConnectionCheckResponse(_InstanceGuid));
                     break;
             }
         }
@@ -143,7 +145,7 @@ namespace VSYASGUI
 
             context.Response.StatusCode = 200;
             _LogCache.GetLog(request.LineFrom, out var logLines, out var lineFrom, out var lineTo);
-            WriteJsonToResponse(context, ResponseFactory.MakeConsoleEntriesResponse(logLines, lineFrom, lineTo));
+            WriteJsonToResponse(context, ResponseFactory.MakeConsoleEntriesResponse(logLines, lineFrom, lineTo, _InstanceGuid));
         }
 
         /// <summary>

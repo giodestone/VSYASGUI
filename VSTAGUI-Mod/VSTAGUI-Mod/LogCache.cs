@@ -36,13 +36,12 @@ namespace VSYASGUI_Mod
             if (fromLine >= _LastLine)
             {
                 lines = new List<string>(0);
-                fromLine = _LastLine;
+                firstLineNumber = _LastLine;
                 lastLineNumber = _LastLine;
+                return;
             }
 
             List<string> filteredLines = new List<string>((int)(_LastLine - fromLine));
-
-            // TODO: FIX THIS. IF ENTRIES GET PURGED THERE IS A MAJOR BUG. THERE NEEDS TO BE COMPENSATION FOR THE BEGINNING OF THE SEQUENCE.
 
             for (int i = 0; i < _Cache.Count; i++)
             {
@@ -50,7 +49,6 @@ namespace VSYASGUI_Mod
                     filteredLines.Add(_Cache.ElementAt(i));
             }
 
-            _Cache.Foreach(entry => filteredLines.Add(entry));
             lines = filteredLines;
             firstLineNumber = fromLine;
             lastLineNumber = _LastLine;

@@ -61,7 +61,7 @@ namespace VSYASGUI_WFP_App.MVVM.Views
             {
                 case Error.Ok:
                     {
-                        ServerPage serverPage = new();
+                        ServerPage serverPage = new() { DataContext = _ConnectionPresenter };
                         NavigationService.Navigate(serverPage);
                     }
                     break;

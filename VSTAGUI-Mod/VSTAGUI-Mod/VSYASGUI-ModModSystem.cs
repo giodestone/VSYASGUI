@@ -13,6 +13,7 @@ namespace VSTAGUI_Mod
         ICoreServerAPI _Api;
         HttpApi _HttpApi;
         Config _Config;
+        Guid _InstanceGuid;
 
         // Called on server and client
         // Useful for registering block/entity classes on both sides
@@ -25,6 +26,8 @@ namespace VSTAGUI_Mod
         public override void StartServerSide(ICoreServerAPI api)
         {
             Mod.Logger.Notification("Hello from template mod server side: " + Lang.Get("vstagui-mod:hello"));
+
+            _InstanceGuid = Guid.NewGuid();
 
             _Api = api;
 
@@ -41,7 +44,7 @@ namespace VSTAGUI_Mod
 
             LogCache logCache = new(api, _Config);
 
-            _HttpApi = new HttpApi(api, _Config, logCache);
+            _HttpApi = new HttpApi(api, _Config, logCache, _InstanceGuid);
 
             try
             {

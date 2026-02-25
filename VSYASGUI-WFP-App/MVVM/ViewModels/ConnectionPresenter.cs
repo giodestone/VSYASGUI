@@ -18,11 +18,14 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         public event EventHandler<Error> ConnectionCheckComplete;
         
         private CancellationTokenSource _ConnectionCheckCancellationTokenSource;
-        private Task<ApiResponse<NoResponse>> _CurrentConnectionCheckTask;
+        private Task<ApiResponse<ConnectionCheckResponse>> _CurrentConnectionCheckTask;
 
         public event EventHandler<ConsoleEntriesResponse> ConsoleReadSuccessful;
 
         private Task<ApiResponse<ConsoleEntriesResponse>> _ConsoleEntryRequestTask;
+
+        public event EventHandler ServerInstanceGuidChanged;
+        private Guid _LatestServerGuid = Guid.Empty;
 
         /// <summary>
         /// Command form of <see cref="TryBeginConnectionCheck"/>.
@@ -61,7 +64,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             _ConnectionCheckCancellationTokenSource = new CancellationTokenSource();
             try
             {
-                _CurrentConnectionCheckTask = ApiConnection.Instance.RequestApiInfo<NoResponse>(new ConnectionRequest(), _ConnectionCheckCancellationTokenSource.Token);
+                _CurrentConnectionCheckTask = ApiConnection.Instance.RequestApiInfo<ConnectionCheckResponse>(new ConnectionRequest(), _ConnectionCheckCancellationTokenSource.Token);
                 _CurrentConnectionCheckTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnConnectionCheckComplete, task.Result));
             }
             catch (Exception e)
@@ -97,9 +100,29 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// Must be called by the main thread, e.g. using <c>Application.Current.Dispatcher.BeginInvoke(OnConnectionCheckComplete>)</c>.
         /// </remarks>
         /// <param name="taskResult">Result of the task.</param>
-        private void OnConnectionCheckComplete(ApiResponse<NoResponse> taskResult)
+        private void OnConnectionCheckComplete(ApiResponse<ConnectionCheckResponse> taskResult)
         {
+            CheckInstanceAwareResponseForChange(taskResult);
+
             ConnectionCheckComplete.Invoke(this, taskResult.ErrorResult);
+        }
+
+        /// <summary>
+        /// Checks whether a <see cref="InstanceAwareResponseBase"/> has an instance changed, and notifies the subscribers of <see cref="ServerInstanceGuidChanged"/>.
+        /// </summary>
+        /// <param name="taskResult">Api response to check.</param>
+        private void CheckInstanceAwareResponseForChange<T>(ApiResponse<T> taskResult) where T: InstanceAwareResponseBase
+        {
+            if (taskResult.ErrorResult == Error.Ok && taskResult.Response != null)
+            {
+                if (_LatestServerGuid == Guid.Empty)
+                    _LatestServerGuid = taskResult.Response.ServerGuid;
+                else if (taskResult.Response.ServerGuid != _LatestServerGuid)
+                {
+                    ServerInstanceGuidChanged?.Invoke(this, EventArgs.Empty); // FIXME: I am not happy with where this goes as it may make more sense to have this as a part of ApiConnection? But at the same time, I think it is a reasonable assumption that one endpoint address to be pointing to an equivalent instance, but not neccessairly the same process. Basically when the process changes (e.g. crash) I think some components need to know, but not the whole server. 
+                    _LatestServerGuid = taskResult.Response.ServerGuid;
+                }
+            }
         }
 
         public bool TryRequestConsoleUpdate(long lineFrom)
@@ -124,6 +147,8 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
         private void OnRequestConsoleUpdateSucceeded(ApiResponse<ConsoleEntriesResponse> response)
         {
+            CheckInstanceAwareResponseForChange(response);
+
             if (response.ErrorResult == Error.Ok && response.Response != null)
                 ConsoleReadSuccessful?.Invoke(this, response.Response);
         }
