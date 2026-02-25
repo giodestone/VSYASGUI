@@ -9,6 +9,12 @@
              Loaded="UserControl_Loaded">
     <Grid>
         <DockPanel>
+            <DockPanel DockPanel.Dock="Top">
+                <Label Content="Server Console"/>
+                <Label HorizontalAlignment="Right">
+                    <!--<CheckBox DockPanel.Dock="Right" IsChecked="{Binding AutomaticallyScrollToBottom, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:ServerConsole}}}">Automatically Scroll to Bottom</CheckBox>-->
+                </Label>
+            </DockPanel>
             <!--<Label DockPanel.Dock="Top" Content="Server Console"/>-->
             <Grid DockPanel.Dock="Bottom" Margin="0 6 0 0">
                 <Grid.RowDefinitions>

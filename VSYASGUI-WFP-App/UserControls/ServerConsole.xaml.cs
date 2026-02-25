@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,11 +23,25 @@ namespace VSYASGUI_WFP_App.UserControls
     /// <summary>
     /// Interaction logic for ServerConsole.xaml
     /// </summary>
-    public partial class ServerConsole : UserControl
+    public partial class ServerConsole : UserControl, INotifyPropertyChanged
     {
         ConnectionPresenter _ConnectionPresenter;
         Task _PollServerTask;
         long _LatestLine = 0;
+
+        private bool _AutomaticallyScrollToBottom = true;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public bool AutomaticallyScrollToBottom
+        {
+            get => _AutomaticallyScrollToBottom;
+            set
+            {
+                _AutomaticallyScrollToBottom = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AutomaticallyScrollToBottom)));
+            }
+        }
 
         public ServerConsole()
         {
@@ -101,6 +116,12 @@ namespace VSYASGUI_WFP_App.UserControls
             foreach (var item in e.NewLines)
             {
                 ConsoleTextBox.Text += item + "\n";
+            }
+
+            if (AutomaticallyScrollToBottom)
+            {
+                ConsoleTextBox.UpdateLayout();
+                ConsoleTextBox.ScrollToEnd();
             }
 
             _LatestLine = e.LineTo;

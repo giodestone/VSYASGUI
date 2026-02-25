@@ -19,7 +19,14 @@
         <TabControl>
             <TabItem Header="Overview">
                 <Grid Background="#FFE5E5E5">
-                    <UserControls:ServerConsole HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Height="402" Width="578"
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3*"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <UserControls:ServerConsole Grid.Row="0" Grid.Column="0" Margin="0,0,0,1"
                                                 DataContext="{Binding Mode=OneWay}"/>
                 </Grid>
             </TabItem>
