@@ -4,6 +4,8 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Vintagestory.API.Server;
 using VSYASGUI_CommonLib;
 using VSYASGUI_CommonLib.RequestObjects;
@@ -19,6 +21,9 @@ namespace VSYASGUI
         Config _Config = null;
         LogCache _LogCache = null;
         Guid _InstanceGuid;
+        
+        Task _AcceptLoop;
+        CancellationTokenSource _AcceptLoopCancellationTokenSource;
 
         public HttpApi(ICoreServerAPI api, Config config, LogCache logCache, Guid instanceGuid)
         {
@@ -40,7 +45,8 @@ namespace VSYASGUI
                 _HttpListener.Prefixes.Add(_Config.BindURL);
                 _HttpListener.Start();
 
-                _HttpListener.BeginGetContext(OnHttp, this);
+                _AcceptLoopCancellationTokenSource = new CancellationTokenSource();
+                _AcceptLoop = AcceptLoop(_AcceptLoopCancellationTokenSource.Token);
                 _Api.Logger.Notification($"VSYASGUI-Mod: API now ready at {_Config.BindURL}");
             }
             catch
@@ -49,19 +55,43 @@ namespace VSYASGUI
             }
         }
 
-        private void OnHttp(IAsyncResult ar)
+        /// <summary>
+        /// Main loop for any requests coming in. Launches a new instance of <see cref="HandleRequest(CancellationToken, HttpListenerContext)"/> for any recieved request that can be correctly interpreted.
+        /// </summary>
+        /// <returns>Task which does not have to be run synchronously.</returns>
+        private async Task AcceptLoop(CancellationToken cancellationToken)
         {
-            var context = _HttpListener.EndGetContext(ar);
-            _HttpListener.BeginGetContext(OnHttp, this);
-            HandleRequest(ar, context);
+            if (_HttpListener == null)
+                return;
 
-            //if (_HttpListener == null || !_HttpListener.IsListening)
-            //    return;
+            while (_HttpListener.IsListening || !cancellationToken.IsCancellationRequested)
+            {
+                HttpListenerContext httpListenerContext;
+                try
+                {
+                    httpListenerContext = await _HttpListener.GetContextAsync().ConfigureAwait(false);
+                }
+                catch (HttpListenerException)
+                {
+                    break; // listener stopped
+                }
+                catch (ObjectDisposedException)
+                {
+                    break; // disposed during shutdown
+                }
 
+                //Task.Run(_ => HandleRequest(cancellationToken, httpListenerContext), httpListenerContext);
 
+                _ = HandleRequest(cancellationToken, httpListenerContext);
+            }
         }
 
-        private void HandleRequest(IAsyncResult ar, HttpListenerContext context)
+        /// <summary>
+        /// Handles a request.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        private async Task HandleRequest(CancellationToken cancellationToken, HttpListenerContext context)
         {
             if (!IsApiKeyMatching(context))
             {
@@ -80,13 +110,16 @@ namespace VSYASGUI
             switch (context.Request.Url.AbsolutePath.TrimEnd('/'))
             {
                 case "/players-online":
-                    SendPlayersOnlineResponse(context);
+                    await SendPlayersOnlineResponse(context);
                     break;
                 case "/console":
-                    SendConsoleResponse(ar, context);
+                    await SendConsoleResponse(context);
+                    break;
+                case "/command":
+                    await SendCommandResponse(context);
                     break;
                 case "/":
-                    SendConnectionCheckResponse(context);
+                    await SendConnectionCheckResponse(context);
                     break;
                 default:
                     context.Response.StatusCode = 200;
@@ -95,14 +128,64 @@ namespace VSYASGUI
             }
         }
 
-        private void SendPlayersOnlineResponse(HttpListenerContext context)
+        private async Task SendCommandResponse(HttpListenerContext context)
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+
+            string requestBody = await ReadRequestContents(context);
+            CommandRequest? request = DeserialiseIntoRequestObject<CommandRequest>(requestBody);
+
+            if (request == null)
+                return;
+
+            await RunOnApiThread(() => { _Api.InjectConsole(request.Command); });         
+
+            context.Response.StatusCode = (int)HttpStatusCode.OK;
+        }
+
+        /// <summary>
+        /// Run an action on the main API thread for when the return value does not matter.<br/>
+        /// Wrapper for <see cref="RunOnApiThread{T}(Func{T})"/>.
+        /// </summary>
+        /// <param name="action">The action to run.</param>
+        private Task RunOnApiThread(Action action)
+        {
+            return RunOnApiThread<bool>(() => { action(); return true; });
+        }
+
+        /// <summary>
+        /// Function to run on the main thread from another thread (e.g. async), as the Vintage Story API is not threadsafe.
+        /// </summary>
+        /// <typeparam name="T">Return value type of the function to run.</typeparam>
+        /// <param name="functionToRun">The function to run on the main thread.</param>
+        private Task<T> RunOnApiThread<T>(Func<T> functionToRun)
+        {
+            TaskCompletionSource<T> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            _Api.Event.EnqueueMainThreadTask(() =>
+            {
+                try
+                {
+                    taskCompletionSource.TrySetResult(functionToRun());
+                }
+                catch (Exception e)
+                {
+                    taskCompletionSource.SetException(e);
+                }
+            },
+            "VSYASGUI-Mod");
+
+            return taskCompletionSource.Task;
+        }
+
+        private async Task SendPlayersOnlineResponse(HttpListenerContext context)
         {
             context.Response.StatusCode = (int)HttpStatusCode.OK;
             var players = _Api.Server.Players.Where(p => p.ConnectionState != EnumClientState.Offline).Select(p => PlayerDetails.FromServerPlayer(p)).ToList();
             WriteJsonToResponse(context, players);
         }
 
-        private static void SendConnectionCheckResponse(HttpListenerContext context)
+        private async Task SendConnectionCheckResponse(HttpListenerContext context)
         {
             context.Response.StatusCode = (int)HttpStatusCode.OK;
         }
@@ -110,42 +193,75 @@ namespace VSYASGUI
         /// <summary>
         /// Send console details.
         /// </summary>
-        private async void SendConsoleResponse(IAsyncResult ar, HttpListenerContext context)
+        private async Task SendConsoleResponse(HttpListenerContext context)
         {
             context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
 
-            string strmContents = string.Empty;
+            string strmContents = await ReadRequestContents(context);
 
+            ConsoleRequest? request = DeserialiseIntoRequestObject<ConsoleRequest>(strmContents);
+
+            if (request == null)
+                return;
+
+            context.Response.StatusCode = 200;
+
+            List<string> logLines = null;
+            long lineFrom = -1;
+            long lineTo = -1;
+
+            await RunOnApiThread(() => _LogCache.GetLog(request.LineFrom, out logLines, out lineFrom, out lineTo));
+            
+            WriteJsonToResponse(context, ResponseFactory.MakeConsoleEntriesResponse(logLines, lineFrom, lineTo, _InstanceGuid));
+        }
+        
+        /// <summary>
+        /// Deserialise the given string into a response object.
+        /// </summary>
+        /// <remarks>
+        /// The expected size of the obect is rather small. If parsing in large objects, consider using <see cref="JsonSerializer.DeserializeAsync{TValue}(System.IO.Stream, JsonSerializerOptions?, System.Threading.CancellationToken)"/>.
+        /// <br/>
+        /// Consider <typeparamref name="T"/> carefully: it is possible for a base class to incorrectly be considered.
+        /// </remarks>
+        /// <typeparam name="T">Type of request.</typeparam>
+        /// <param name="json">Processed string into json.</param>
+        /// <returns>The object if successful</returns>
+        private T DeserialiseIntoRequestObject<T>(string json) where T : RequestBase
+        {
+            T? request = null;
             try
             {
-                byte[] bytes = new byte[2048];
-                int strRead = await context.Request.InputStream.ReadAsync(bytes, 0, 2048);
+                request = JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions() { IncludeFields = true });
+            }
+            catch
+            {
+                return null;
+            }
+
+            return request;
+        }
+
+        /// <summary>
+        /// Read the contents of the request as provided by the <paramref name="context"/>.
+        /// </summary>
+        /// <returns>Request contents. <see cref="string.Empty"/> if error occurs when reading (or the request contents are empty).</returns>
+        private async Task<string> ReadRequestContents(HttpListenerContext context)
+        {
+            string strmContents = string.Empty;
+            try
+            {
+                byte[] bytes = new byte[CommonVariables.MaxRequestSize];
+                int strRead = await context.Request.InputStream.ReadAsync(bytes, 0, CommonVariables.MaxRequestSize);
 
                 // Convert byte array to a text string.
                 strmContents = context.Request.ContentEncoding.GetString(bytes, 0, strRead);
             }
             catch
             {
-                return;
+                return strmContents;
             }
 
-            ConsoleRequest request = null;
-
-            try
-            {
-                request = JsonSerializer.Deserialize<ConsoleRequest>(strmContents, new JsonSerializerOptions() { IncludeFields = true });
-            }
-            catch
-            {
-                return;
-            }
-
-            if (request == null)
-                return;
-
-            context.Response.StatusCode = 200;
-            _LogCache.GetLog(request.LineFrom, out var logLines, out var lineFrom, out var lineTo);
-            WriteJsonToResponse(context, ResponseFactory.MakeConsoleEntriesResponse(logLines, lineFrom, lineTo, _InstanceGuid));
+            return strmContents;
         }
 
         /// <summary>
@@ -179,7 +295,7 @@ namespace VSYASGUI
                 context.Response.Close();
                 return true;
             }
-            catch (Exception e) 
+            catch (Exception e)
             {
                 _Api.Logger.Error($"VSYASGUI-Mod: Failed to write response to stream.");
                 _Api.Logger.LogException(Vintagestory.API.Common.EnumLogType.Error, e);

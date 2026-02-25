@@ -73,7 +73,13 @@ namespace VSYASGUI_WFP_App.UserControls
             _PollServerTask = PollServer(this, OnPollServerInterval);
             _ConnectionPresenter.ConsoleReadSuccessful += OnConsoleReadSuccessful;
             _ConnectionPresenter.ServerInstanceGuidChanged += OnServerGuidChanged;
+            _ConnectionPresenter.SendCommandComplete += OnSendCommandComplete;
             
+        }
+
+        private void OnSendCommandComplete(object? sender, ApiResponse<ConsoleCommandResponse> e)
+        {
+            SendCommandButton.IsEnabled = true;
         }
 
         private void OnServerGuidChanged(object? sender, EventArgs e)

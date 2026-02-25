@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,12 @@ using VSYASGUI;
 
 namespace VSYASGUI_Mod
 {
+    /// <summary>
+    /// Caches any new logger entries via <see cref="ILogger.EntryAdded"/> for later use.
+    /// </summary>
+    /// <remarks>
+    /// This class is threadsafe outside of initialisation.
+    /// </remarks>
     internal class LogCache
     {
         Config _Config;
@@ -33,25 +40,28 @@ namespace VSYASGUI_Mod
         /// </summary>
         public void GetLog(long fromLine, out List<string> lines, out long firstLineNumber, out long lastLineNumber)
         {
-            if (fromLine >= _LastLine)
+            lock (_Cache)
             {
-                lines = new List<string>(0);
-                firstLineNumber = _LastLine;
+                if (fromLine >= _LastLine)
+                {
+                    lines = new List<string>(0);
+                    firstLineNumber = _LastLine;
+                    lastLineNumber = _LastLine;
+                    return;
+                }
+
+                List<string> filteredLines = new List<string>((int)(_LastLine - fromLine));
+
+                for (int i = 0; i < _Cache.Count; i++)
+                {
+                    if (_FirstLine + i >= fromLine)
+                        filteredLines.Add(_Cache.ElementAt(i));
+                }
+
+                lines = filteredLines;
+                firstLineNumber = fromLine;
                 lastLineNumber = _LastLine;
-                return;
             }
-
-            List<string> filteredLines = new List<string>((int)(_LastLine - fromLine));
-
-            for (int i = 0; i < _Cache.Count; i++)
-            {
-                if (_FirstLine + i >= fromLine)
-                    filteredLines.Add(_Cache.ElementAt(i));
-            }
-
-            lines = filteredLines;
-            firstLineNumber = fromLine;
-            lastLineNumber = _LastLine;
         }
 
         /// <summary>
@@ -60,18 +70,21 @@ namespace VSYASGUI_Mod
         /// </summary>
         private void OnLoggerEntryAdded(EnumLogType logType, string message, object[] args)
         {
-            var time = DateTime.Now;
-            _Cache.Enqueue(time.ToShortDateString() + " " + time.ToShortTimeString() + " [" + logType.ToString() + "] " + string.Format(message, args));
-            _LastLine++;
-
-            if (_LastLine == uint.MaxValue)
-                _LastLine = 0;
-
-            while (_Cache.Count > _Config.MaxConsoleEntriesCache)
+            lock (_Cache)
             {
-                _FirstLine++;
-                _Cache.Dequeue();
-                // TODO: This would probably be much better as a batch operation every x seconds.
+                var time = DateTime.Now;
+                _Cache.Enqueue(time.ToShortDateString() + " " + time.ToShortTimeString() + " [" + logType.ToString() + "] " + string.Format(message, args));
+                _LastLine++;
+
+                if (_LastLine == uint.MaxValue)
+                    _LastLine = 0;
+
+                while (_Cache.Count > _Config.MaxConsoleEntriesCache)
+                {
+                    _FirstLine++;
+                    _Cache.Dequeue();
+                    // TODO: This would probably be much better as a batch operation every x seconds.
+                }
             }
         }
     }

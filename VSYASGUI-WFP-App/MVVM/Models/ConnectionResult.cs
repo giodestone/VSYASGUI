@@ -10,7 +10,8 @@
         Connection,
         Unauthorised,
         Cancelled,
-        Deserialisation
+        Deserialisation,
+        NotSent
 
 
     }

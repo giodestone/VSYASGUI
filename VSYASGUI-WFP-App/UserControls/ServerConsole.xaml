@@ -18,8 +18,8 @@
                     <ColumnDefinition/>
                     <ColumnDefinition Width="100"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Grid.Row="1" Grid.Column="0" x:Name="CommandTextBox"/>
-                <Button Grid.Row="1" Grid.Column="1" x:Name="SendCommandButton" Content="Send Command" Margin="4 0 0 0"/>
+                <TextBox Grid.Row="1" Grid.Column="0" x:Name="CommandTextBox" Text="{Binding SendCommandContents}"/>
+                <Button Grid.Row="1" Grid.Column="1" x:Name="SendCommandButton" Content="Send Command" Margin="4 0 0 0" Command="{Binding TrySendCommandToServerCommand}" />
             </Grid>
 
             <ScrollViewer>

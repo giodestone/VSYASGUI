@@ -27,6 +27,12 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         public event EventHandler ServerInstanceGuidChanged;
         private Guid _LatestServerGuid = Guid.Empty;
 
+        public event EventHandler<ApiResponse<ConsoleCommandResponse>> SendCommandComplete;
+        private Task<ApiResponse<ConsoleCommandResponse>> _SendCommandTask;
+        private CancellationTokenSource _SendCommandCancelleationToken;
+        private string _SendCommandContents = string.Empty;
+
+
         /// <summary>
         /// Command form of <see cref="TryBeginConnectionCheck"/>.
         /// </summary>
@@ -36,6 +42,24 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// Command form of <see cref="TryCancelConnectionCheck"/>.
         /// </summary>
         public ICommand TryCancelConnectionCheckCommand => new Command(_ => TryCancelConnectionCheck());
+
+        /// <summary>
+        /// Command form of <see cref="TrySendConsoleCommand(string)"/>
+        /// </summary>
+        public ICommand TrySendCommandToServerCommand => new Command(_ => TrySendConsoleCommand());
+
+        /// <summary>
+        /// The contents of the send command.
+        /// </summary>
+        public string SendCommandContents
+        {
+            get => _SendCommandContents;
+            set
+            {
+                _SendCommandContents = value;
+                Update(ref _SendCommandContents, value);
+            }
+        }
 
         /// <summary>
         /// Calls <see cref="ApiConnection.SetupConnection(string, string)"/> if <see cref="ApiConnection.Instance"/> is already null.
@@ -152,5 +176,48 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             if (response.ErrorResult == Error.Ok && response.Response != null)
                 ConsoleReadSuccessful?.Invoke(this, response.Response);
         }
+
+
+        public bool CanSendConsoleCommand
+        {
+            get
+            {
+                if (_ConsoleEntryRequestTask == null)
+                    return false;
+                if (!_ConsoleEntryRequestTask.IsCompleted)
+                    return false;
+
+                return true;
+            }
+        }
+
+        public bool TrySendConsoleCommand()
+        {
+            if (!CanSendConsoleCommand)
+                return false;
+
+            try
+            {
+                _SendCommandCancelleationToken = new CancellationTokenSource();
+                _SendCommandTask = ApiConnection.Instance.RequestApiInfo<ConsoleCommandResponse>(new CommandRequest() { Command = SendCommandContents }, _SendCommandCancelleationToken.Token);
+                _SendCommandTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnSendCommandComplete, task.Result));
+                SendCommandContents = string.Empty;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR: Unable to invoke send console command due to an exception.");
+                Console.WriteLine(e.Message);
+                OnSendCommandComplete(new ApiResponse<ConsoleCommandResponse>(Error.NotSent, null));
+                return false;
+            }
+
+            return true;
+        }
+
+        private void OnSendCommandComplete(ApiResponse<ConsoleCommandResponse> response)
+        {
+            SendCommandComplete?.Invoke(this, response);
+        }
+
     }
 }
