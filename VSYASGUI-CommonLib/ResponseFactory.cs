@@ -23,5 +23,17 @@ namespace VSYASGUI_CommonLib
         {
             return new ConnectionCheckResponse() { ServerGuid = serverInstanceGuid };
         }
+
+        public static ServerStatisticsResponse MakeServerStatisticsResponse(double cpuUsagePercentage, long memoryUsageBytes, int serverUptimeSeconds, int totalWorldPlaytime, int onlinePlayerCount)
+        {
+            return new ServerStatisticsResponse()
+            {
+                CpuUsagePercentage = cpuUsagePercentage,
+                MemoryUsageBytes = memoryUsageBytes,
+                ServerSecondsUptime = serverUptimeSeconds,
+                TotalWorldPlaytime = totalWorldPlaytime,
+                OnlinePlayerCount = onlinePlayerCount
+            };
+        }
     }
 }

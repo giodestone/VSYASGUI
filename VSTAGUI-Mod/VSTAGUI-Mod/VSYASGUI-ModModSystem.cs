@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -43,8 +44,9 @@ namespace VSTAGUI_Mod
             }
 
             LogCache logCache = new(api, _Config);
+            CpuLoadCalc cpuLoadCalc = new(Process.GetCurrentProcess(), _Config);
 
-            _HttpApi = new HttpApi(api, _Config, logCache, _InstanceGuid);
+            _HttpApi = new HttpApi(api, _Config, logCache, _InstanceGuid, cpuLoadCalc);
 
             try
             {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -21,16 +22,28 @@ namespace VSYASGUI
         Config _Config = null;
         LogCache _LogCache = null;
         Guid _InstanceGuid;
+        CpuLoadCalc _CpuLoadCalc;
         
         Task _AcceptLoop;
         CancellationTokenSource _AcceptLoopCancellationTokenSource;
 
-        public HttpApi(ICoreServerAPI api, Config config, LogCache logCache, Guid instanceGuid)
+        public HttpApi(ICoreServerAPI api, Config config, LogCache logCache, Guid instanceGuid, CpuLoadCalc cpuLoadCalc)
         {
             _Config = config;
             _Api = api;
             _LogCache = logCache;
             _InstanceGuid = instanceGuid;
+            _CpuLoadCalc = cpuLoadCalc;
+        }
+        
+        ~HttpApi()
+        {
+            try
+            {
+                _AcceptLoopCancellationTokenSource.Cancel();
+            }
+            catch
+            { }
         }
 
         /// <summary>
@@ -118,6 +131,9 @@ namespace VSYASGUI
                 case "/command":
                     await SendCommandResponse(context);
                     break;
+                case "/statistics":
+                    await SendStatisticsResponse(context);
+                    break;
                 case "/":
                     await SendConnectionCheckResponse(context);
                     break;
@@ -126,6 +142,35 @@ namespace VSYASGUI
                     WriteJsonToResponse(context, ResponseFactory.MakeConnectionCheckResponse(_InstanceGuid));
                     break;
             }
+        }
+
+        private async Task SendStatisticsResponse(HttpListenerContext context)
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+
+            double cpuUsagePercentage = -1;
+            long memUsageBytes = -1;
+            int secondsUptime = -1;
+            int totalWorldPlaytime = -1;
+            int onlinePlayers = -1;
+
+            await RunOnApiThread(() =>
+            {
+                Process currentProcess = Process.GetCurrentProcess();
+                memUsageBytes = currentProcess.WorkingSet64;
+                cpuUsagePercentage = _CpuLoadCalc.ProcessorUsagePercentage;
+
+                secondsUptime = _Api.Server.ServerUptimeSeconds;
+                totalWorldPlaytime = _Api.Server.TotalWorldPlayTime;
+                onlinePlayers = _Api.Server.Players.Count(p => p.ConnectionState == EnumClientState.Connected);
+            });
+
+            var serverStatisticsResponse = ResponseFactory.MakeServerStatisticsResponse(cpuUsagePercentage, memUsageBytes, secondsUptime, totalWorldPlaytime, onlinePlayers);
+            
+            if (!WriteJsonToResponse(context, serverStatisticsResponse))
+                return;
+
+            context.Response.StatusCode = (int)HttpStatusCode.OK;
         }
 
         private async Task SendCommandResponse(HttpListenerContext context)
@@ -154,7 +199,7 @@ namespace VSYASGUI
         }
 
         /// <summary>
-        /// Function to run on the main thread from another thread (e.g. async), as the Vintage Story API is not threadsafe.
+        /// Creates a task which will run on the main thread from another thread (e.g. async), as the Vintage Story API is not threadsafe.
         /// </summary>
         /// <typeparam name="T">Return value type of the function to run.</typeparam>
         /// <param name="functionToRun">The function to run on the main thread.</param>
