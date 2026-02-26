@@ -28,6 +28,23 @@
                     </Grid.RowDefinitions>
                     <UserControls:ServerConsole Grid.Row="0" Grid.Column="0" Margin="0,0,0,1"
                                                 DataContext="{Binding Mode=OneWay}"/>
+                    <StackPanel Grid.Row="0" Grid.Column="1">
+                        <Label>CPU Usage %</Label>
+                        <Label Content="{Binding Path=CpuUsagePercentage}"/>
+                        <Separator/>
+                        <Label>Memory Usage (MB)</Label>
+                        <Label Content="{Binding Path=MemoryUsageMb}"/>
+                        <Separator/>
+                        <Label>Server Uptime</Label>
+                        <Label Content="{Binding Path=ServerSecondsUptime}"/>
+                        <Separator/>
+                        <Label>Total World Playtime</Label>
+                        <Label Content="{Binding Path=TotalWorldPlaytime}"/>
+                        <Separator/>
+                        <Label>Online Player Count</Label>
+                        <Label Content="{Binding Path=OnlinePlayerCount}"/>
+
+                    </StackPanel>
                 </Grid>
             </TabItem>
             <TabItem Header="Console">

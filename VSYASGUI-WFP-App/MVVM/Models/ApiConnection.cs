@@ -133,6 +133,8 @@ namespace VSYASGUI_WFP_App.MVVM.Models
             {
                 if (httpRequestException.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                     return new RequestResult(Error.Unauthorised, null);
+                else if (httpRequestException.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                    return new RequestResult(Error.BadRequest, null);
                 return new RequestResult(Error.General, null);
             }
             catch (TaskCanceledException cancelledException)

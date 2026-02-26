@@ -146,7 +146,6 @@ namespace VSYASGUI
 
         private async Task SendStatisticsResponse(HttpListenerContext context)
         {
-            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
 
             double cpuUsagePercentage = -1;
             long memUsageBytes = -1;
@@ -162,13 +161,16 @@ namespace VSYASGUI
 
                 secondsUptime = _Api.Server.ServerUptimeSeconds;
                 totalWorldPlaytime = _Api.Server.TotalWorldPlayTime;
-                onlinePlayers = _Api.Server.Players.Count(p => p.ConnectionState == EnumClientState.Connected);
+                onlinePlayers = _Api.Server.Players.Count(p => p.ConnectionState == EnumClientState.Playing);
             });
 
             var serverStatisticsResponse = ResponseFactory.MakeServerStatisticsResponse(cpuUsagePercentage, memUsageBytes, secondsUptime, totalWorldPlaytime, onlinePlayers);
             
             if (!WriteJsonToResponse(context, serverStatisticsResponse))
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return;
+            }
 
             context.Response.StatusCode = (int)HttpStatusCode.OK;
         }

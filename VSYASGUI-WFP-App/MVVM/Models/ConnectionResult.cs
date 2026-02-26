@@ -11,7 +11,8 @@
         Unauthorised,
         Cancelled,
         Deserialisation,
-        NotSent
+        NotSent,
+        BadRequest
 
 
     }

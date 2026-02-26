@@ -15,15 +15,13 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 {
     internal sealed class ConnectionPresenter : Presenter
     {
+        private const string _Unavailable = "Unavailable";
+
         public event EventHandler ConnectionCheckBegun;
         public event EventHandler<Error> ConnectionCheckComplete;
         
         private CancellationTokenSource _ConnectionCheckCancellationTokenSource;
         private Task<ApiResponse<ConnectionCheckResponse>> _CurrentConnectionCheckTask;
-
-        public event EventHandler<ConsoleEntriesResponse> ConsoleReadSuccessful;
-
-        private Task<ApiResponse<ConsoleEntriesResponse>> _ConsoleEntryRequestTask;
 
         public event EventHandler ServerInstanceGuidChanged;
         private Guid _LatestServerGuid = Guid.Empty;
@@ -35,10 +33,15 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
         private Task _PollServerTask;
         private CancellationTokenSource _PollServerCancellationTokenSource;
+        
+        public event EventHandler<ConsoleEntriesResponse> ConsoleReadSuccessful;
+        private Task<ApiResponse<ConsoleEntriesResponse>> _ConsoleEntryRequestTask;
         private long _ConsoleContentsLatestLogLine = 0;
         private string _ConsoleContents = string.Empty;
 
-
+        public event EventHandler<ApiResponse<ServerStatisticsResponse>> ServerStatisticsUpdated;
+        private Task<ApiResponse<ServerStatisticsResponse>> _ServerStatisticsUpdateTask;
+        private ServerStatisticsResponse? _LatestServerStatisticsResponse = null;
 
         /// <summary>
         /// Command form of <see cref="TryBeginConnectionCheck"/>.
@@ -75,17 +78,54 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             set => UpdateFieldWithValue(ref _ConsoleContents, value, nameof(ConsoleContents));
         }
 
-        /// <summary>
-        /// Whether a console command can be sent (i.e. one is not currently being sent).
-        /// </summary>
-        public bool CanSendConsoleCommand()
+        public string CpuUsagePercentage
         {
-            if (_ConsoleEntryRequestTask == null)
-                return false;
-            if (!_ConsoleEntryRequestTask.IsCompleted)
-                return false;
+            get
+            {
+                if (_LatestServerStatisticsResponse == null)
+                    return _Unavailable;
+                return _LatestServerStatisticsResponse.CpuUsagePercentage.ToString("F1");
+            }
+        }
 
-            return true;
+        public string MemoryUsageMb
+        {
+            get
+            {
+                if (_LatestServerStatisticsResponse == null)
+                    return _Unavailable;
+                return (_LatestServerStatisticsResponse.MemoryUsageBytes / 1024 / 1024).ToString("F0");
+            }
+        }
+
+        public string ServerSecondsUptime
+        {
+            get
+            {
+                if (_LatestServerStatisticsResponse == null)
+                    return _Unavailable;
+                return TimeSpan.FromSeconds(_LatestServerStatisticsResponse.ServerSecondsUptime).ToString();
+            }
+        }
+
+        public string TotalWorldPlaytime
+        {
+            get
+            {
+                if (_LatestServerStatisticsResponse == null)
+                    return _Unavailable;
+                return TimeSpan.FromSeconds(_LatestServerStatisticsResponse.TotalWorldPlaytime).ToString();
+            }
+        }
+
+        public string OnlinePlayerCount
+        {
+            get
+            {
+                if (_LatestServerStatisticsResponse == null)
+                    return _Unavailable;
+                return _LatestServerStatisticsResponse.OnlinePlayerCount.ToString();
+            }
         }
 
         /// <summary>
@@ -144,6 +184,19 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         }
 
         /// <summary>
+        /// Whether a console command can be sent (i.e. one is not currently being sent).
+        /// </summary>
+        public bool CanSendConsoleCommand()
+        {
+            if (_ConsoleEntryRequestTask == null)
+                return false;
+            if (!_ConsoleEntryRequestTask.IsCompleted)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
         /// Try to send the command set in <see cref="SendCommandContents"/> to the server.
         /// </summary>
         /// <returns><c>true</c> if a command has been sent. <c>false</c> if not, due to the value of <see cref="CanSendConsoleCommand"/> or technical error.</returns>
@@ -171,7 +224,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         }
 
         /// <summary>
-        /// Try to get the current value of the server console.
+        /// Try to get the current value of the server console. Expects to be called from <see cref="OnPollServerInterval"/>.
         /// </summary>
         /// <returns>true if requested, false if not</returns>
         private bool TryRequestConsoleUpdate()
@@ -318,6 +371,52 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         private void OnPollServerInterval()
         {
             TryRequestConsoleUpdate();
+            TryRequestServerStatisticsUpdate();
+        }
+
+        /// <summary>
+        /// Try to request a server update from the tasks. Expects to be called from <see cref="OnPollServerInterval"/>.
+        /// </summary>
+        /// <returns>true if it was requested, false otherwise.</returns>
+        private bool TryRequestServerStatisticsUpdate()
+        {
+            if (IsTaskRunning(_ServerStatisticsUpdateTask))
+                return false;
+
+            try
+            {
+                _ServerStatisticsUpdateTask = ApiConnection.Instance.RequestApiInfo<ServerStatisticsResponse>(new ServerStatisticsRequest() { }, _PollServerCancellationTokenSource.Token);
+                _ServerStatisticsUpdateTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnServerStatisticsUpdateSucceeded, task.Result));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR: Unable to invoke server statistics update due to an exception.");
+                Console.WriteLine(e.Message);
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Callback for when a <see cref="_ServerStatisticsUpdateTask"/> completes.
+        /// </summary>
+        /// <remarks>
+        /// Must be run on the main thread.
+        /// </remarks>
+        private void OnServerStatisticsUpdateSucceeded(ApiResponse<ServerStatisticsResponse> response)
+        {
+            if (response.ErrorResult != Error.Ok)
+                return;
+
+            _LatestServerStatisticsResponse = response.Response;
+            NotifyFieldUpdated(nameof(CpuUsagePercentage));
+            NotifyFieldUpdated(nameof(MemoryUsageMb));
+            NotifyFieldUpdated(nameof(ServerSecondsUptime));
+            NotifyFieldUpdated(nameof(TotalWorldPlaytime));
+            NotifyFieldUpdated(nameof(OnlinePlayerCount));
+
+            ServerStatisticsUpdated?.Invoke(this, response);
         }
     }
 }
