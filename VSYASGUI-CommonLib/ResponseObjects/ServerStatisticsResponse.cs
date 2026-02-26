@@ -19,7 +19,7 @@ namespace VSYASGUI_CommonLib.ResponseObjects
 
         public long MemoryUsageBytes { get; set; }
 
-        public int SecondsUptime { get; set; }
+        public int ServerSecondsUptime { get; set; }
 
         public int TotalWorldPlaytime { get; set; }
 

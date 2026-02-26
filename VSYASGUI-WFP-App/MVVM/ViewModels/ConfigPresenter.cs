@@ -21,7 +21,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             get => _CurrentlySelectedApiKey; 
             set 
             {
-                Update(ref _CurrentlySelectedApiKey, value);
+                UpdateFieldWithValue(ref _CurrentlySelectedApiKey, value);
                 Config.Instance.CurrentApiKey = value;
             }
         }
@@ -31,7 +31,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             get => _CurrentlySelectedEndpoint;
             set
             {
-                Update(ref _CurrentlySelectedEndpoint, value);
+                UpdateFieldWithValue(ref _CurrentlySelectedEndpoint, value);
                 Config.Instance.CurrentEndpoint = value;
             }
         }

@@ -29,7 +29,7 @@
             </Grid>
 
             <ScrollViewer>
-                <TextBox x:Name="ConsoleTextBox" IsReadOnly="True"/>
+                <TextBox x:Name="ConsoleTextBox" IsReadOnly="True" Text="{Binding Path=ConsoleContents}"/>
             </ScrollViewer>
         </DockPanel>
 
