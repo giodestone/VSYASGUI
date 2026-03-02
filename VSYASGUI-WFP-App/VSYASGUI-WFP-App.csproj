@@ -10,11 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SharpVectors.Wpf" Version="1.8.5" />
+    <Folder Include="Assets\Icons\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Assets\Icons\" />
+    <PackageReference Include="SharpVectors" Version="1.8.5" />
   </ItemGroup>
 
   <ItemGroup>

@@ -23,13 +23,11 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
-            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="400"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Border Grid.Row="0" Grid.Column="1">
         <StackPanel >
-            <Image Source="{svgc:SvgImage Source=/Assets/Icons/LoadingIcon.svg, AppName=VSYASGUI-WFP-App}" Width="24" Height="24"/>
-            <!--<svgc:SvgViewbox Source="/Assets/Icons/LoadingIcon.svg" Width="100" Height="100"/>-->
             <Label Content="Connecting..." FontWeight="Bold"/>
             <Label Content="Connecting to server."/>
             <Separator Visibility="Hidden"/>

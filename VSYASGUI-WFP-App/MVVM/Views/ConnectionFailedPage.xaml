@@ -17,12 +17,11 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
-            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="400"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Border Grid.Row="0" Grid.Column="1">
             <StackPanel>
-                <Image Source="{svgc:SvgImage Source=/Assets/Icons/LoadingIcon.svg, AppName=VSYASGUI-WFP-App}" Width="24" Height="24"/>
                 <Label Content="Unable to connect" FontWeight="Bold"/>
                 <Separator/>
                 <TextBlock x:Name="FailureReasonLabel" Text="{Binding FailureReason}" TextWrapping="Wrap"/>
