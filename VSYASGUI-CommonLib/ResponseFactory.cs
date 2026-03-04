@@ -1,4 +1,10 @@
-﻿using VSYASGUI_CommonLib.ResponseObjects;
+﻿using System.Runtime.Intrinsics.Arm;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Unicode;
+using VSYASGUI_CommonLib.ResponseObjects;
 
 namespace VSYASGUI_CommonLib
 {
@@ -33,6 +39,31 @@ namespace VSYASGUI_CommonLib
                 ServerSecondsUptime = serverUptimeSeconds,
                 TotalWorldPlaytime = totalWorldPlaytime,
                 OnlinePlayerCount = onlinePlayerCount
+            };
+        }
+
+        public static PlayerOverviewResponse MakePlayerOverviewResponse(List<PlayerOverview>? playerOverviews)
+        {
+            // TODO: Don't like this here, would be better done elsewhere.
+
+            string playerOverviewHashString = Random.Shared.Next().ToString();
+
+            try
+            {
+                var playerOverviewsJsonBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(playerOverviews));
+                var playerOverviewHashBytes = SHA256.Create().ComputeHash(playerOverviewsJsonBytes);
+                playerOverviewHashString = Encoding.UTF8.GetString(playerOverviewHashBytes);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Failed to make hash of playerOverviews for PlayerOverviewResponse. Selecting randon hash.");
+                Console.Error.WriteLine(e.Message);
+            }
+
+            return new PlayerOverviewResponse()
+            {
+                PlayerOverviews = playerOverviews,
+                HashOfPlayerOverviews = playerOverviewHashString
             };
         }
     }

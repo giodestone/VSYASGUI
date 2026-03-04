@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Vintagestory.API.Server;
+using Vintagestory.API.Util;
 using VSYASGUI_CommonLib;
 using VSYASGUI_CommonLib.RequestObjects;
 using VSYASGUI_CommonLib.ResponseObjects;
@@ -125,6 +126,9 @@ namespace VSYASGUI
                 case "/players-online":
                     await SendPlayersOnlineResponse(context);
                     break;
+                case "/players":
+                    await SendPlayerOverviewResponse(context);
+                    break;
                 case "/console":
                     await SendConsoleResponse(context);
                     break;
@@ -142,6 +146,74 @@ namespace VSYASGUI
                     WriteJsonToResponse(context, ResponseFactory.MakeConnectionCheckResponse(_InstanceGuid));
                     break;
             }
+        }
+
+        private async Task SendPlayerOverviewResponse(HttpListenerContext context)
+        {
+            List<PlayerOverview>? playerOverviews = null;
+
+            await RunOnApiThread(() =>
+            {
+                // TODO: Improve this: make only e.g. 10 players run at a time, as otherwise this operation may take too long.
+                
+                playerOverviews = new List<PlayerOverview>(_Api.Server.Players.Length);
+                //Dictionary<string, PlayerOverview> playerUidsDicts = new(_Api.Server.Players.Length);
+                
+                //// Get historical players first.
+                //foreach (var playerData in _Api.PlayerData.PlayerDataByUid)
+                //{
+                //    string groups = string.Empty;
+                //    foreach (var playerGroup in playerData.Value.PlayerGroupMemberships)
+                //    {
+                //        groups += playerGroup.Value.GroupName + ", ";
+                //    }
+                //    groups = groups.TrimEnd(',');
+
+                //    var playerOverview = new PlayerOverview()
+                //    {
+                //        PlayerUid = playerData.Key,
+                //        Name = playerData.Value.LastKnownPlayername,
+                //        ConnectionState = "Offline - Previously Connected",
+                //        Groups = groups
+                //    };
+
+                //    playerUidsDicts.Add(playerData.Key, playerOverview);
+
+                //    playerOverviews.Add(playerOverview);
+                //}
+
+                // Cross reference the ConnectionState with players that have previously connected during this run of the server.
+                foreach (var player in _Api.Server.Players)
+                {
+                    //if (playerUidsDicts.ContainsKey(player.PlayerUID))
+                    //{
+                    //    playerUidsDicts[player.PlayerUID].ConnectionState = player.ConnectionState.ToString();
+                    //}
+
+                    string playerGroups = string.Empty;
+                    foreach (var group in player.Groups)
+                    {
+                        playerGroups += group + ", ";
+                    }
+                    playerGroups = playerGroups.TrimEnd(',');
+
+                    playerOverviews.Add(new PlayerOverview()
+                    {
+                        Name = player.PlayerName,
+                        Groups = playerGroups,
+                        ConnectionState = player.ConnectionState.ToString(),
+                        PlayerUid = player.PlayerUID
+                    });
+                }
+            });
+
+            if (!WriteJsonToResponse(context, ResponseFactory.MakePlayerOverviewResponse(playerOverviews)) )
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return;
+            }
+
+            context.Response.StatusCode = (int)HttpStatusCode.OK;
         }
 
         private async Task SendStatisticsResponse(HttpListenerContext context)

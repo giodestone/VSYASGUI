@@ -47,8 +47,19 @@
                     </StackPanel>
                 </Grid>
             </TabItem>
-            <TabItem Header="Console">
-                <Grid Background="#FFE5E5E5"/>
+            <TabItem Header="Players">
+                <Grid Background="#FFE5E5E5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <!--<DataGrid d:ItemsSource="{d:SampleData ItemCount=5}"/>-->
+                    <DataGrid ItemsSource="{Binding Path=PlayerOverviews}" IsReadOnly="True"/>
+                    <StackPanel Grid.Column="1">
+                        <Label>Player Information</Label>
+                    </StackPanel>
+
+                </Grid>
             </TabItem>
             <TabItem Header="Settings">
                 <Grid Background="#FFE5E5E5"/>

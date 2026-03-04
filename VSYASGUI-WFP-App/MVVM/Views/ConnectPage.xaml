@@ -62,7 +62,7 @@
                 </ComboBox>
             </Grid>
 
-            <Button x:Name="ConnectButton" Content="Connect" Width="200" Command="{Binding AddCurrentlySelectedToCollection}" Click="ConnectButton_Click"/>
+            <Button x:Name="ConnectButton" Content="Connect" Width="100" Command="{Binding AddCurrentlySelectedToCollection}" Click="ConnectButton_Click"/>
         
         </StackPanel>
 

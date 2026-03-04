@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using VSYASGUI_CommonLib;
 using VSYASGUI_CommonLib.RequestObjects;
 using VSYASGUI_CommonLib.ResponseObjects;
 using VSYASGUI_WFP_App.MVVM.Models;
@@ -42,6 +45,12 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         public event EventHandler<ApiResponse<ServerStatisticsResponse>> ServerStatisticsUpdated;
         private Task<ApiResponse<ServerStatisticsResponse>> _ServerStatisticsUpdateTask;
         private ServerStatisticsResponse? _LatestServerStatisticsResponse = null;
+
+        public event EventHandler<ApiResponse<PlayerOverviewResponse>> PlayerOverviewRecieved;
+        private Task<ApiResponse<PlayerOverviewResponse>> _PlayerOverviewRequestTask;
+        private CancellationTokenSource _PlayerOverviewCancellationTokenSource;
+        private string _PreviousPlayerOverviewHash = string.Empty;
+        private ObservableCollection<PlayerOverview> _PlayerOverviews = new ObservableCollection<PlayerOverview>();
 
         /// <summary>
         /// Command form of <see cref="TryBeginConnectionCheck"/>.
@@ -125,6 +134,18 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
                 if (_LatestServerStatisticsResponse == null)
                     return _Unavailable;
                 return _LatestServerStatisticsResponse.OnlinePlayerCount.ToString();
+            }
+        }
+
+        public ObservableCollection<PlayerOverview> PlayerOverviews
+        {
+            get
+            {
+                return _PlayerOverviews;
+            }
+            set
+            {
+                UpdateFieldWithValue(ref _PlayerOverviews, value, nameof(PlayerOverviews));
             }
         }
 
@@ -372,6 +393,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         {
             TryRequestConsoleUpdate();
             TryRequestServerStatisticsUpdate();
+            TryRequestPlayersUpdate();
         }
 
         /// <summary>
@@ -418,5 +440,79 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
             ServerStatisticsUpdated?.Invoke(this, response);
         }
+
+        private bool TryRequestPlayersUpdate()
+        {
+            PlayerOverviewRequest r = new();
+            return TryMakeRequest(ref _PlayerOverviewRequestTask, _PlayerOverviewCancellationTokenSource, r, OnPlayerOverviewRequestComplete);
+        }
+
+        private void OnPlayerOverviewRequestComplete(ApiResponse<PlayerOverviewResponse> response)
+        {
+            PlayerOverviewRecieved?.Invoke(this, response);
+
+            if (response.ErrorResult != Error.Ok)
+                return;
+
+            if (response.Response.PlayerOverviews == null)
+            {
+                PlayerOverviews = new ObservableCollection<PlayerOverview>();
+                Console.Error.WriteLine("Recieved a null PlayerOverview when it should not have been null! Will not update Player overview data.");
+                return;
+            }
+
+            if (response.Response.HashOfPlayerOverviews == _PreviousPlayerOverviewHash)
+                return;
+
+            _PreviousPlayerOverviewHash = response.Response.HashOfPlayerOverviews; // prevents unneccessary updates.
+            PlayerOverviews = new ObservableCollection<PlayerOverview>(response.Response.PlayerOverviews);
+
+            NotifyFieldUpdated(nameof(PlayerOverviews));
+        }
+
+        /// <summary>
+        /// Try to make a request in a wrapped way with <see cref="ApiConnection.RequestApiInfo{TExpectedResponse}(RequestBase, CancellationToken)"/>.
+        /// </summary>
+        /// <typeparam name="TResponse">Type of the expected response.</typeparam>
+        /// <param name="baseTask">Where the launched task gets stored.</param>
+        /// <param name="cancellationTokenSource">Cancellation token.</param>
+        /// <param name="request">The request to send. Will auto-populate <see cref="RequestBase.ApiKey"/> with <see cref="ApiConnection.RequestApiInfo{TExpectedResponse}(RequestBase, CancellationToken)"/>.</param>
+        /// <param name="continuationFunction">Function to call when the request completes. Invoked by the main thread's dispatcher, as defined by <see cref="Application.Current"/>.</param>
+        /// <returns><c>true</c> if the request was made, <c>false</c> if it cannot be made either due to an exception or outcome of <see cref="IsTaskRunning(Task)"/>.</returns>
+        private bool TryMakeRequest<TResponse>(ref Task<ApiResponse<TResponse>> baseTask, CancellationTokenSource cancellationTokenSource, RequestBase request, Action<ApiResponse<TResponse>> continuationFunction) where TResponse : ResponseBase, new()
+        {
+            if (IsTaskRunning(baseTask))
+                return false;
+
+            try
+            {
+                if (cancellationTokenSource == null)
+                    cancellationTokenSource = new CancellationTokenSource();
+
+                baseTask = ApiConnection.Instance.RequestApiInfo<TResponse>(request, cancellationTokenSource.Token);
+                baseTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(continuationFunction, task.Result));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR: Unable to invoke task due to an exception.");
+                Console.WriteLine(e.Message);
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+
+    internal class PlayerInfoFull
+    {
+        public string Name { get; set; }
+        public string LastKnownName { get; }
+        public string Uid { get; }
+
+        public string FirstJoinDate { get; }
+        public string LastJoinDate { get; }
+
+
     }
 }
