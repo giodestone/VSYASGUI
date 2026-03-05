@@ -18,5 +18,8 @@ namespace VSYASGUI_CommonLib
         public string ConnectionState { get; set; }
         public string PlayerUid { get; set; }
         public string Groups { get; set; }
+        public string LastKnownName { get; set; }
+        public string FirstJoinDate { get; set; }
+        public string LastJoinDate { get; set; }
     }
 }

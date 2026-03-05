@@ -185,11 +185,7 @@ namespace VSYASGUI
                 // Cross reference the ConnectionState with players that have previously connected during this run of the server.
                 foreach (var player in _Api.Server.Players)
                 {
-                    //if (playerUidsDicts.ContainsKey(player.PlayerUID))
-                    //{
-                    //    playerUidsDicts[player.PlayerUID].ConnectionState = player.ConnectionState.ToString();
-                    //}
-
+                    // Consolodate player groups into a comma seperated list.
                     string playerGroups = string.Empty;
                     foreach (var group in player.Groups)
                     {
@@ -197,12 +193,37 @@ namespace VSYASGUI
                     }
                     playerGroups = playerGroups.TrimEnd(',');
 
+
+                    // Player name can be null if offline, in which case request the stored data.
+                    string playerName = player.PlayerName;
+                    if (player.ConnectionState == EnumClientState.Offline)
+                    {
+                        if (_Api.PlayerData.PlayerDataByUid.ContainsKey(player.PlayerUID))
+                            playerName = _Api.PlayerData.PlayerDataByUid[player.PlayerUID].LastKnownPlayername;
+                    }
+
+                    // Get data from playerdata, which can be null and crash the server (bad).
+                    string lastKnownName = string.Empty;
+                    string firstJoinDate = string.Empty;
+                    string lastJoinDate = string.Empty;
+                    
+                    if (_Api.PlayerData.PlayerDataByUid.ContainsKey(player.PlayerUID))
+                    {
+                        lastKnownName = _Api.PlayerData.PlayerDataByUid[player.PlayerUID].LastKnownPlayername;
+                        firstJoinDate = _Api.PlayerData.PlayerDataByUid[player.PlayerUID].FirstJoinDate;
+                        lastJoinDate = _Api.PlayerData.PlayerDataByUid[player.PlayerUID].LastJoinDate;
+                    }
+
+
                     playerOverviews.Add(new PlayerOverview()
                     {
-                        Name = player.PlayerName,
+                        Name = playerName,
                         Groups = playerGroups,
                         ConnectionState = player.ConnectionState.ToString(),
-                        PlayerUid = player.PlayerUID
+                        PlayerUid = player.PlayerUID,
+                        LastKnownName = lastKnownName,
+                        FirstJoinDate = firstJoinDate,
+                        LastJoinDate = lastJoinDate,
                     });
                 }
             });

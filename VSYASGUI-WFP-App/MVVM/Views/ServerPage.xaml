@@ -54,10 +54,38 @@
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <!--<DataGrid d:ItemsSource="{d:SampleData ItemCount=5}"/>-->
-                    <DataGrid ItemsSource="{Binding Path=PlayerOverviews}" IsReadOnly="True"/>
-                    <StackPanel Grid.Column="1">
-                        <Label>Player Information</Label>
-                    </StackPanel>
+                    <DataGrid ItemsSource="{Binding Path=PlayerOverviews}" SelectedIndex="{Binding SelectedPlayerOverviewIndex}" IsReadOnly="True" AutoGenerateColumns="False" >
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}"/>
+                            <DataGridTextColumn Header="UID" Binding="{Binding PlayerUid}"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding ConnectionState}"/>
+                            <DataGridTextColumn Header="Groups" Binding="{Binding Groups}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <ScrollViewer Grid.Column="1">
+                        <StackPanel>
+                            <Label FontWeight="Bold">Player Details</Label>
+                            <Separator/>
+                            <Label>Name</Label>
+                            <TextBlock Text="{Binding SelectedPlayerName}" TextWrapping="Wrap" Margin="12 0 0 0"/>
+                            <Label>Last Known Name</Label>
+                            <TextBlock Text="{Binding SelectedPlayerLastKnownName}" TextWrapping="Wrap" Margin="12 0 0 0"/>
+                            <Label>Player UID</Label>
+                            <TextBlock Text="{Binding SelectedPlayerUid}" TextWrapping="Wrap" Margin="12 0 0 0"/>
+                            <Label>First Join Date</Label>
+                            <TextBlock Text="{Binding SelectedPlayerFirstJoinDate}" TextWrapping="Wrap" Margin="12 0 0 0"/>
+                            <Label>Last Join Date</Label>
+                            <TextBlock Text="{Binding SelectedPlayerLastJoinDate}" TextWrapping="Wrap" Margin="12 0 0 0"/>
+                            <Label>Groups</Label>
+                            <TextBlock Text="{Binding SelectedPlayerGroups}" TextWrapping="Wrap" Margin="12 0 0 0"/>
+                            <Separator/>
+                            <Label>Actions</Label>
+                            <Button Content="Kick" Command="{Binding TryKickCurrentlySelectedPlayerCommand}" IsEnabled="{Binding CanSendPlayerCommands}" Margin="6 0 6 6"/>
+                            <Button Content="Ban" Command="{Binding TryBanCurrentlySelectedPlayerCommand}" IsEnabled="{Binding CanSendPlayerCommands}" Margin="6 0 6 6"/>
+                            <Button Content="Unban" Command="{Binding TryUnbanCurrentlySelectedPlayerCommand}" IsEnabled="{Binding CanSendPlayerCommands}" Margin="6 0 6 6"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                    
 
                 </Grid>
             </TabItem>

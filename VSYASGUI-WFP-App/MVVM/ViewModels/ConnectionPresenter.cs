@@ -46,11 +46,12 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         private Task<ApiResponse<ServerStatisticsResponse>> _ServerStatisticsUpdateTask;
         private ServerStatisticsResponse? _LatestServerStatisticsResponse = null;
 
-        public event EventHandler<ApiResponse<PlayerOverviewResponse>> PlayerOverviewRecieved;
+        public event EventHandler<ApiResponse<PlayerOverviewResponse>> PlayerOverviewChanged;
         private Task<ApiResponse<PlayerOverviewResponse>> _PlayerOverviewRequestTask;
         private CancellationTokenSource _PlayerOverviewCancellationTokenSource;
         private string _PreviousPlayerOverviewHash = string.Empty;
         private ObservableCollection<PlayerOverview> _PlayerOverviews = new ObservableCollection<PlayerOverview>();
+        private int _SelectedPlayerOverviewIndex = -1;
 
         /// <summary>
         /// Command form of <see cref="TryBeginConnectionCheck"/>.
@@ -63,9 +64,15 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         public ICommand TryCancelConnectionCheckCommand => new Command(_ => TryCancelConnectionCheck());
 
         /// <summary>
-        /// Command form of <see cref="TrySendConsoleCommand(string)"/>
+        /// Command form of <see cref="TrySendConsoleCommand"/>
         /// </summary>
         public ICommand TrySendCommandToServerCommand => new Command(_ => TrySendConsoleCommand());
+
+        public ICommand TryKickCurrentlySelectedPlayerCommand => new Command(_ => TryKickCurrentlySelectedPlayer());
+
+        public ICommand TryBanCurrentlySelectedPlayerCommand => new Command(_ => TryBanCurrentlySelectedPlayer());
+
+        public ICommand TryUnbanCurrentlySelectedPlayerCommand => new Command(_ => TryUnbanCurrentlySelectedPlayer());
 
         /// <summary>
         /// The contents of the send command.
@@ -137,6 +144,9 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             }
         }
 
+        /// <summary>
+        /// All player overviews currently avaliable. Due to a technicality of the VS API, will only provide players that connected since last server restart.
+        /// </summary>
         public ObservableCollection<PlayerOverview> PlayerOverviews
         {
             get
@@ -146,6 +156,125 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             set
             {
                 UpdateFieldWithValue(ref _PlayerOverviews, value, nameof(PlayerOverviews));
+            }
+        }
+
+        /// <summary>
+        /// Tracks which currently selected player overview is selected.
+        /// </summary>
+        public int SelectedPlayerOverviewIndex
+        {
+            get
+            {
+                return _SelectedPlayerOverviewIndex;
+            }
+            set
+            {
+                UpdateFieldWithValue(ref _SelectedPlayerOverviewIndex, value, nameof(SelectedPlayerOverviewIndex));
+                NotifyFieldUpdated(nameof(SelectedPlayerName));
+                NotifyFieldUpdated(nameof(SelectedPlayerLastName));
+                NotifyFieldUpdated(nameof(SelectedPlayerUid));
+                NotifyFieldUpdated(nameof(SelectedPlayerFirstJoinDate));
+                NotifyFieldUpdated(nameof(SelectedPlayerLastJoinDate));
+                NotifyFieldUpdated(nameof(SelectedPlayerLastKnownName));
+                NotifyFieldUpdated(nameof(SelectedPlayerGroups));
+                NotifyFieldUpdated(nameof(CanSendPlayerActionCommands));
+            }
+        }
+
+        /// <summary>
+        /// Get the currently selected player overview, as per the <see cref="SelectedPlayerOverviewIndex"/>.
+        /// </summary>
+        private PlayerOverview? SelectedPlayerOverview
+        {
+            get
+            {
+                if (SelectedPlayerOverviewIndex < 0 || SelectedPlayerOverviewIndex >= _PlayerOverviews.Count)
+                    return null;
+
+                return PlayerOverviews[SelectedPlayerOverviewIndex];
+            }
+        }
+
+        public string SelectedPlayerName
+        {
+            get
+            {
+                if (SelectedPlayerOverview == null)
+                    return _Unavailable;
+
+                return SelectedPlayerOverview.Name;
+            }
+        }
+
+        public string SelectedPlayerLastName
+        {
+            get => _Unavailable;
+        }
+
+        public string SelectedPlayerUid
+        {
+            get
+            {
+                if (SelectedPlayerOverview == null)
+                    return _Unavailable;
+
+                return SelectedPlayerOverview.PlayerUid;
+            }
+        }
+
+        public string SelectedPlayerFirstJoinDate
+        {
+            get
+            {
+                if (SelectedPlayerOverview == null)
+                    return _Unavailable;
+
+                return SelectedPlayerOverview.FirstJoinDate;
+            }
+        }
+
+        public string SelectedPlayerLastJoinDate
+        {
+            get
+            {
+                if (SelectedPlayerOverview == null)
+                    return _Unavailable;
+
+                return SelectedPlayerOverview.LastJoinDate;
+            }
+        }
+
+        public string SelectedPlayerLastKnownName
+        {
+            get
+            {
+                if (SelectedPlayerOverview == null)
+                    return _Unavailable;
+
+                return SelectedPlayerOverview.LastKnownName;
+            }
+        }
+
+        public string SelectedPlayerGroups
+        {
+            get
+            {
+                if (SelectedPlayerOverview == null)
+                    return _Unavailable;
+
+                return SelectedPlayerOverview.Groups;
+            }
+        }
+
+        public bool CanSendPlayerActionCommands
+        {
+            get
+            {
+                if (SelectedPlayerOverview == null)
+                    return false;
+
+                return CanSendConsoleCommand();
             }
         }
 
@@ -210,7 +339,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         public bool CanSendConsoleCommand()
         {
             if (_ConsoleEntryRequestTask == null)
-                return false;
+                return true;
             if (!_ConsoleEntryRequestTask.IsCompleted)
                 return false;
 
@@ -224,7 +353,10 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         public bool TrySendConsoleCommand()
         {
             if (!CanSendConsoleCommand())
+            {
+                NotifyFieldUpdated(nameof(CanSendPlayerActionCommands));
                 return false;
+            }
 
             try
             {
@@ -238,9 +370,12 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
                 Console.WriteLine("ERROR: Unable to invoke send console command due to an exception.");
                 Console.WriteLine(e.Message);
                 OnSendCommandComplete(new ApiResponse<ConsoleCommandResponse>(Error.NotSent, null));
+
+                NotifyFieldUpdated(nameof(CanSendPlayerActionCommands));
                 return false;
             }
 
+            NotifyFieldUpdated(nameof(CanSendPlayerActionCommands));
             return true;
         }
 
@@ -360,6 +495,8 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         private void OnSendCommandComplete(ApiResponse<ConsoleCommandResponse> response)
         {
             SendCommandComplete?.Invoke(this, response);
+
+            NotifyFieldUpdated(nameof(CanSendPlayerActionCommands));
         }
 
 
@@ -449,8 +586,6 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
         private void OnPlayerOverviewRequestComplete(ApiResponse<PlayerOverviewResponse> response)
         {
-            PlayerOverviewRecieved?.Invoke(this, response);
-
             if (response.ErrorResult != Error.Ok)
                 return;
 
@@ -500,6 +635,51 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             }
 
             return true;
+        }
+
+        private bool TryKickCurrentlySelectedPlayer()
+        {
+            if (!CanSendPlayerActionCommands)
+                return false;
+
+            string previousConsoleContents = _SendCommandContents;
+            _SendCommandContents = $"/kick {SelectedPlayerOverview.Name}";
+            
+            bool returnVal = TrySendConsoleCommand();
+
+            _SendCommandContents = previousConsoleContents;
+
+            return returnVal;
+        }
+
+        private bool TryBanCurrentlySelectedPlayer()
+        {
+            if (!CanSendPlayerActionCommands)
+                return false;
+
+            string previousConsoleContents = _SendCommandContents;
+            _SendCommandContents = $"/ban {SelectedPlayerOverview.Name} 100 year No reason specified.";
+
+            bool returnVal = TrySendConsoleCommand();
+
+            _SendCommandContents = previousConsoleContents;
+
+            return returnVal;
+        }
+
+        private bool TryUnbanCurrentlySelectedPlayer()
+        {
+            if (!CanSendPlayerActionCommands)
+                return false;
+
+            string previousConsoleContents = _SendCommandContents;
+            _SendCommandContents = $"/unban {SelectedPlayerOverview.Name}";
+
+            bool returnVal = TrySendConsoleCommand();
+
+            _SendCommandContents = previousConsoleContents;
+
+            return returnVal;
         }
     }
 
