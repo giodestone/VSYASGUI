@@ -19,6 +19,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
     internal sealed class ConnectionPresenter : Presenter
     {
         private const string _Unavailable = "Unavailable";
+        private const string _NoGroups = "No group membership";
 
         public event EventHandler ConnectionCheckBegun;
         public event EventHandler<Error> ConnectionCheckComplete;
@@ -68,10 +69,19 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// </summary>
         public ICommand TrySendCommandToServerCommand => new Command(_ => TrySendConsoleCommand());
 
+        /// <summary>
+        /// Command form of <see cref="TryKickCurrentlySelectedPlayer"/>.
+        /// </summary>
         public ICommand TryKickCurrentlySelectedPlayerCommand => new Command(_ => TryKickCurrentlySelectedPlayer());
 
+        /// <summary>
+        /// Command form of <see cref="TryBanCurrentlySelectedPlayer"/>.
+        /// </summary>
         public ICommand TryBanCurrentlySelectedPlayerCommand => new Command(_ => TryBanCurrentlySelectedPlayer());
 
+        /// <summary>
+        /// Command form of <see cref="TryUnbanCurrentlySelectedPlayer"/>.
+        /// </summary>
         public ICommand TryUnbanCurrentlySelectedPlayerCommand => new Command(_ => TryUnbanCurrentlySelectedPlayer());
 
         /// <summary>
@@ -94,6 +104,9 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             set => UpdateFieldWithValue(ref _ConsoleContents, value, nameof(ConsoleContents));
         }
 
+        /// <summary>
+        /// Alias for <see cref="_LatestServerStatisticsResponse"/>'s <see cref="ServerStatisticsResponse.CpuUsagePercentage"/> (with formatting). Returns <see cref="_Unavailable"/> if no update has been recieved.
+        /// </summary>
         public string CpuUsagePercentage
         {
             get
@@ -104,6 +117,9 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             }
         }
 
+        /// <summary>
+        /// Wrapper for <see cref="_LatestServerStatisticsResponse"/>'s <see cref="ServerStatisticsResponse.MemoryUsageBytes"/> (with conversion). Returns <see cref="_Unavailable"/> if no update has been recieved.
+        /// </summary>
         public string MemoryUsageMb
         {
             get
@@ -114,7 +130,10 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             }
         }
 
-        public string ServerSecondsUptime
+        /// <summary>
+        /// Alias for <see cref="_LatestServerStatisticsResponse"/>'s <see cref="ServerStatisticsResponse.ServerSecondsUptime"/> (with conversion to human time). Returns <see cref="_Unavailable"/> if no update has been recieved.
+        /// </summary>
+        public string ServerUptime
         {
             get
             {
@@ -124,6 +143,11 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             }
         }
 
+        /// <summary>
+        ///         /// <summary>
+        /// Alias for <see cref="_LatestServerStatisticsResponse"/>'s <see cref="ServerStatisticsResponse.TotalWorldPlaytime"/> (with conversion to human time). Returns <see cref="_Unavailable"/> if no update has been recieved.
+        /// </summary>
+        /// </summary>
         public string TotalWorldPlaytime
         {
             get
@@ -134,6 +158,9 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             }
         }
 
+        /// <summary>
+        /// Alias for <see cref="_LatestServerStatisticsResponse"/>'s <see cref="ServerStatisticsResponse.OnlinePlayerCount"/>. Returns <see cref="_Unavailable"/> if no update has been recieved.
+        /// </summary>
         public string OnlinePlayerCount
         {
             get
@@ -172,7 +199,6 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             {
                 UpdateFieldWithValue(ref _SelectedPlayerOverviewIndex, value, nameof(SelectedPlayerOverviewIndex));
                 NotifyFieldUpdated(nameof(SelectedPlayerName));
-                NotifyFieldUpdated(nameof(SelectedPlayerLastName));
                 NotifyFieldUpdated(nameof(SelectedPlayerUid));
                 NotifyFieldUpdated(nameof(SelectedPlayerFirstJoinDate));
                 NotifyFieldUpdated(nameof(SelectedPlayerLastJoinDate));
@@ -196,66 +222,79 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             }
         }
 
+        /// <summary>
+        /// Alias for <see cref="_SelectedPlayerOverviewIndex"/>'s <see cref="PlayerOverview.Name"/>. Returns <see cref="_Unavailable"/> if nothing is selected or string is empty/null.
+        /// </summary>
         public string SelectedPlayerName
         {
             get
             {
-                if (SelectedPlayerOverview == null)
+                if (SelectedPlayerOverview == null || string.IsNullOrEmpty(SelectedPlayerOverview.Name))
                     return _Unavailable;
 
                 return SelectedPlayerOverview.Name;
             }
         }
 
-        public string SelectedPlayerLastName
-        {
-            get => _Unavailable;
-        }
-
+        /// <summary>
+        /// Alias for <see cref="_SelectedPlayerOverviewIndex"/>'s <see cref="PlayerOverview.PlayerUid"/>. Returns <see cref="_Unavailable"/> if nothing is selected or string is empty/null.
+        /// </summary>
         public string SelectedPlayerUid
         {
             get
             {
-                if (SelectedPlayerOverview == null)
+                if (SelectedPlayerOverview == null || string.IsNullOrEmpty(SelectedPlayerOverview.PlayerUid))
                     return _Unavailable;
 
                 return SelectedPlayerOverview.PlayerUid;
             }
         }
 
+        /// <summary>
+        /// Alias for <see cref="_SelectedPlayerOverviewIndex"/>'s <see cref="PlayerOverview.FirstJoinDate"/>. Returns <see cref="_Unavailable"/> if nothing is selected or string is empty/null.
+        /// </summary>
         public string SelectedPlayerFirstJoinDate
         {
             get
             {
-                if (SelectedPlayerOverview == null)
+                if (SelectedPlayerOverview == null || string.IsNullOrEmpty(SelectedPlayerOverview.FirstJoinDate))
                     return _Unavailable;
 
                 return SelectedPlayerOverview.FirstJoinDate;
             }
         }
 
+        /// <summary>
+        /// Alias for <see cref="_SelectedPlayerOverviewIndex"/>'s <see cref="PlayerOverview.LastJoinDate"/>. Returns <see cref="_Unavailable"/> if nothing is selected or string is empty/null.
+        /// </summary>
         public string SelectedPlayerLastJoinDate
         {
             get
             {
-                if (SelectedPlayerOverview == null)
+                if (SelectedPlayerOverview == null || string.IsNullOrEmpty(SelectedPlayerOverview.LastJoinDate))
                     return _Unavailable;
 
                 return SelectedPlayerOverview.LastJoinDate;
             }
         }
 
+        /// <summary>
+        /// Alias for <see cref="_SelectedPlayerOverviewIndex"/>'s <see cref="PlayerOverview.LastKnownName"/>. Returns <see cref="_Unavailable"/> if nothing is selected or string is empty/null.
+        /// </summary>
         public string SelectedPlayerLastKnownName
         {
             get
             {
-                if (SelectedPlayerOverview == null)
+                if (SelectedPlayerOverview == null || string.IsNullOrEmpty(SelectedPlayerOverview.LastKnownName))
                     return _Unavailable;
 
                 return SelectedPlayerOverview.LastKnownName;
             }
         }
 
+        /// <summary>
+        /// Alias for <see cref="_SelectedPlayerOverviewIndex"/>'s <see cref="PlayerOverview.Groups"/>. Returns <see cref="_Unavailable"/> if nothing is selected.
+        /// </summary>
         public string SelectedPlayerGroups
         {
             get
@@ -263,10 +302,16 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
                 if (SelectedPlayerOverview == null)
                     return _Unavailable;
 
+                if (string.IsNullOrEmpty(SelectedPlayerOverview.Groups))
+                    return _NoGroups;
+
                 return SelectedPlayerOverview.Groups;
             }
         }
-
+        
+        /// <summary>
+        /// Whether the player actions on the Player Overview menu (kick/ban/unban) should be possible to execute.
+        /// </summary>
         public bool CanSendPlayerActionCommands
         {
             get
@@ -539,26 +584,11 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <returns>true if it was requested, false otherwise.</returns>
         private bool TryRequestServerStatisticsUpdate()
         {
-            if (IsTaskRunning(_ServerStatisticsUpdateTask))
-                return false;
-
-            try
-            {
-                _ServerStatisticsUpdateTask = ApiConnection.Instance.RequestApiInfo<ServerStatisticsResponse>(new ServerStatisticsRequest() { }, _PollServerCancellationTokenSource.Token);
-                _ServerStatisticsUpdateTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnServerStatisticsUpdateSucceeded, task.Result));
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("ERROR: Unable to invoke server statistics update due to an exception.");
-                Console.WriteLine(e.Message);
-                return false;
-            }
-
-            return true;
+            return TryMakeRequest(ref _ServerStatisticsUpdateTask, _PollServerCancellationTokenSource, new ServerStatisticsRequest(), OnServerStatisticsUpdateSucceeded);
         }
 
         /// <summary>
-        /// Callback for when a <see cref="_ServerStatisticsUpdateTask"/> completes.
+        /// Callback for when a <see cref="_ServerStatisticsUpdateTask"/> completes. Updates currently held statistics value <see cref="_LatestServerStatisticsResponse"/> and notifies any relevant fields.
         /// </summary>
         /// <remarks>
         /// Must be run on the main thread.
@@ -569,21 +599,44 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
                 return;
 
             _LatestServerStatisticsResponse = response.Response;
-            NotifyFieldUpdated(nameof(CpuUsagePercentage));
-            NotifyFieldUpdated(nameof(MemoryUsageMb));
-            NotifyFieldUpdated(nameof(ServerSecondsUptime));
-            NotifyFieldUpdated(nameof(TotalWorldPlaytime));
-            NotifyFieldUpdated(nameof(OnlinePlayerCount));
+            NotifyServerOverviewFieldsUpdated();
 
             ServerStatisticsUpdated?.Invoke(this, response);
         }
 
-        private bool TryRequestPlayersUpdate()
+
+        /// <summary>
+        /// Notify that fields related to the server overview (cpu usage, ram usage) have been updated using <see cref="Presenter.NotifyFieldUpdated(string?)"/>.
+        /// </summary>
+        private void NotifyServerOverviewFieldsUpdated()
         {
-            PlayerOverviewRequest r = new();
-            return TryMakeRequest(ref _PlayerOverviewRequestTask, _PlayerOverviewCancellationTokenSource, r, OnPlayerOverviewRequestComplete);
+            NotifyFieldUpdated(nameof(CpuUsagePercentage));
+            NotifyFieldUpdated(nameof(MemoryUsageMb));
+            NotifyFieldUpdated(nameof(ServerUptime));
+            NotifyFieldUpdated(nameof(TotalWorldPlaytime));
+            NotifyFieldUpdated(nameof(OnlinePlayerCount));
         }
 
+        /// <summary>
+        /// Attempts to make a request to get a new set of player overviews using <see cref="TryMakeRequest{TResponse}(ref Task{ApiResponse{TResponse}}, CancellationTokenSource, RequestBase, Action{ApiResponse{TResponse}})"/>. Calls <see cref="OnPlayerOverviewRequestComplete(ApiResponse{PlayerOverviewResponse})"/> upon completion.
+        /// <br/><br/>
+        /// Expects to be called from <see cref="OnPollServerInterval"/>.
+        /// </summary>
+        /// <returns><c>true</c> if request was made, <c>false</c> if it was not.</returns>
+        private bool TryRequestPlayersUpdate()
+        {
+            return TryMakeRequest(ref _PlayerOverviewRequestTask, _PollServerCancellationTokenSource, new PlayerOverviewRequest(), OnPlayerOverviewRequestComplete);
+        }
+
+        /// <summary>
+        /// Callback for when <see cref="_PlayerOverviewRequestTask"/> completes.
+        /// 
+        /// Updates <see cref="PlayerOverviews"/> and <see cref="_PreviousPlayerOverviewHash"/> (only if recieved hash is mismatched).
+        /// </summary>
+        /// <remarks>
+        /// Must be run on the main thread.
+        /// </remarks>
+        /// <param name="response"></param>
         private void OnPlayerOverviewRequestComplete(ApiResponse<PlayerOverviewResponse> response)
         {
             if (response.ErrorResult != Error.Ok)
@@ -637,6 +690,11 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             return true;
         }
 
+        /// <summary>
+        /// Try to run the /kick command on the currently selected player, if possible.
+        /// </summary>
+        /// <returns>Returns <c>true</c> if it can be run, <c>false</c> if not, depending on <see cref="CanSendPlayerActionCommands"/> and <see cref="TrySendConsoleCommand"/>.</returns>
+
         private bool TryKickCurrentlySelectedPlayer()
         {
             if (!CanSendPlayerActionCommands)
@@ -651,6 +709,11 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
             return returnVal;
         }
+
+        /// <summary>
+        /// Try to run the /ban command on the currently selected player, if possible.
+        /// </summary>
+        /// <returns>Returns <c>true</c> if it can be run, <c>false</c> if not, depending on <see cref="CanSendPlayerActionCommands"/> and <see cref="TrySendConsoleCommand"/>.</returns>
 
         private bool TryBanCurrentlySelectedPlayer()
         {
@@ -667,6 +730,10 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             return returnVal;
         }
 
+        /// <summary>
+        /// Try to run the /unban command on the currently selected player, if possible.
+        /// </summary>
+        /// <returns>Returns <c>true</c> if it can be run, <c>false</c> if not, depending on <see cref="CanSendPlayerActionCommands"/> and <see cref="TrySendConsoleCommand"/>.</returns>
         private bool TryUnbanCurrentlySelectedPlayer()
         {
             if (!CanSendPlayerActionCommands)
@@ -681,18 +748,5 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
             return returnVal;
         }
-    }
-
-
-    internal class PlayerInfoFull
-    {
-        public string Name { get; set; }
-        public string LastKnownName { get; }
-        public string Uid { get; }
-
-        public string FirstJoinDate { get; }
-        public string LastJoinDate { get; }
-
-
     }
 }

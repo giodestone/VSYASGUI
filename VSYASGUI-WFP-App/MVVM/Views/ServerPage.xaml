@@ -36,7 +36,7 @@
                         <Label Content="{Binding Path=MemoryUsageMb}"/>
                         <Separator/>
                         <Label>Server Uptime</Label>
-                        <Label Content="{Binding Path=ServerSecondsUptime}"/>
+                        <Label Content="{Binding Path=ServerUptime}"/>
                         <Separator/>
                         <Label>Total World Playtime</Label>
                         <Label Content="{Binding Path=TotalWorldPlaytime}"/>
@@ -65,7 +65,8 @@
                     <ScrollViewer Grid.Column="1">
                         <StackPanel>
                             <Label FontWeight="Bold">Player Details</Label>
-                            <Separator/>
+                            <TextBlock TextWrapping="Wrap" Margin="6 0 0 0" FontWeight="Thin">Only players which have been online since last server restart are displayed.</TextBlock>
+                            <Separator Visibility="Hidden"/>
                             <Label>Name</Label>
                             <TextBlock Text="{Binding SelectedPlayerName}" TextWrapping="Wrap" Margin="12 0 0 0"/>
                             <Label>Last Known Name</Label>
@@ -78,11 +79,10 @@
                             <TextBlock Text="{Binding SelectedPlayerLastJoinDate}" TextWrapping="Wrap" Margin="12 0 0 0"/>
                             <Label>Groups</Label>
                             <TextBlock Text="{Binding SelectedPlayerGroups}" TextWrapping="Wrap" Margin="12 0 0 0"/>
-                            <Separator/>
-                            <Label>Actions</Label>
-                            <Button Content="Kick" Command="{Binding TryKickCurrentlySelectedPlayerCommand}" IsEnabled="{Binding CanSendPlayerCommands}" Margin="6 0 6 6"/>
-                            <Button Content="Ban" Command="{Binding TryBanCurrentlySelectedPlayerCommand}" IsEnabled="{Binding CanSendPlayerCommands}" Margin="6 0 6 6"/>
-                            <Button Content="Unban" Command="{Binding TryUnbanCurrentlySelectedPlayerCommand}" IsEnabled="{Binding CanSendPlayerCommands}" Margin="6 0 6 6"/>
+                            <Label Margin="0 12 0 0 ">Actions</Label>
+                            <Button Content="Kick" Command="{Binding TryKickCurrentlySelectedPlayerCommand}" IsEnabled="{Binding CanSendPlayerActionCommands}" Margin="6 0 6 6"/>
+                            <Button Content="Ban" Command="{Binding TryBanCurrentlySelectedPlayerCommand}" IsEnabled="{Binding CanSendPlayerActionCommands}" Margin="6 0 6 6"/>
+                            <Button Content="Unban" Command="{Binding TryUnbanCurrentlySelectedPlayerCommand}" IsEnabled="{Binding CanSendPlayerActionCommands}" Margin="6 0 6 6"/>
                         </StackPanel>
                     </ScrollViewer>
                     

@@ -189,9 +189,10 @@ namespace VSYASGUI
                     string playerGroups = string.Empty;
                     foreach (var group in player.Groups)
                     {
-                        playerGroups += group + ", ";
+                        playerGroups += group.GroupName + ", ";
                     }
-                    playerGroups = playerGroups.TrimEnd(',');
+                    playerGroups = playerGroups.Trim();
+                    playerGroups = playerGroups.Trim(',');
 
 
                     // Player name can be null if offline, in which case request the stored data.
