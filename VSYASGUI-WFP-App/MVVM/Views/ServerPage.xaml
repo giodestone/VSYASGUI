@@ -18,9 +18,10 @@
     <Grid>
         <TabControl>
             <TabItem Header="Overview">
-                <Grid Background="#FFE5E5E5">
+                <Grid Background="AliceBlue">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="3*"/>
+                        <ColumnDefinition Width="6"/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
@@ -28,7 +29,10 @@
                     </Grid.RowDefinitions>
                     <UserControls:ServerConsole Grid.Row="0" Grid.Column="0" Margin="0,0,0,1"
                                                 DataContext="{Binding Mode=OneWay}"/>
-                    <StackPanel Grid.Row="0" Grid.Column="1">
+                    <StackPanel Grid.Row="0" Grid.Column="2">
+                        <Label>Server Status</Label>
+                        <Label Content="{Binding Path=ServerStatus}"/>
+                        <Separator/>
                         <Label>CPU Usage %</Label>
                         <Label Content="{Binding Path=CpuUsagePercentage}"/>
                         <Separator/>
@@ -48,9 +52,10 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Players">
-                <Grid Background="#FFE5E5E5">
+                <Grid Background="AliceBlue">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="3"/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <!--<DataGrid d:ItemsSource="{d:SampleData ItemCount=5}"/>-->
@@ -62,7 +67,7 @@
                             <DataGridTextColumn Header="Groups" Binding="{Binding Groups}"/>
                         </DataGrid.Columns>
                     </DataGrid>
-                    <ScrollViewer Grid.Column="1">
+                    <ScrollViewer Grid.Column="2">
                         <StackPanel>
                             <Label FontWeight="Bold">Player Details</Label>
                             <TextBlock TextWrapping="Wrap" Margin="6 0 0 0" FontWeight="Thin">Only players which have been online since last server restart are displayed.</TextBlock>
@@ -89,9 +94,11 @@
 
                 </Grid>
             </TabItem>
-            <TabItem Header="Settings">
-                <Grid Background="#FFE5E5E5"/>
-            </TabItem>
+            <!--<TabItem Header="Settings">
+                <Grid Background="#FFE5E5E5">
+                    <TextBlock Text="GUI Configuration"/>
+                </Grid>
+            </TabItem>-->
         </TabControl>
 
     </Grid>

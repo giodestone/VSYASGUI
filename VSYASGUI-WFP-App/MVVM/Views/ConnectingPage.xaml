@@ -20,19 +20,21 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition/>
+            <RowDefinition Height="100"/>
+            <RowDefinition/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition Width="400"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <Border Grid.Row="0" Grid.Column="1">
-        <StackPanel >
-            <Label Content="Connecting..." FontWeight="Bold"/>
-            <Label Content="Connecting to server."/>
-            <Separator Visibility="Hidden"/>
-            <Button Content="Cancel" Width="50" HorizontalAlignment="Right" Command="{Binding TryCancelConnectionCheckCommand}"/>
-        </StackPanel>
+        <Border Grid.Row="1" Grid.Column="1" Background="AliceBlue"  BorderThickness="1,1,1,1" CornerRadius="6,6,6,6" BorderBrush="#FF616161">
+            <StackPanel Margin="6 6 6 6">
+                <Label Content="Connecting..." FontWeight="Bold"/>
+                <Label Content="Connecting to server."/>
+                <Separator Visibility="Hidden"/>
+                <Button Content="Cancel" Width="100" Command="{Binding TryCancelConnectionCheckCommand}"/>
+            </StackPanel>
         </Border>
 
     </Grid>

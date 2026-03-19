@@ -46,6 +46,8 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         public event EventHandler<ApiResponse<ServerStatisticsResponse>> ServerStatisticsUpdated;
         private Task<ApiResponse<ServerStatisticsResponse>> _ServerStatisticsUpdateTask;
         private ServerStatisticsResponse? _LatestServerStatisticsResponse = null;
+        private string _ServerStatus = _Unavailable;
+        private int _NumRequestsFailed = 0;
 
         public event EventHandler<ApiResponse<PlayerOverviewResponse>> PlayerOverviewChanged;
         private Task<ApiResponse<PlayerOverviewResponse>> _PlayerOverviewRequestTask;
@@ -323,6 +325,14 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             }
         }
 
+        public string ServerStatus
+        {
+            get
+            {
+                return _ServerStatus;
+            }
+        }
+
         /// <summary>
         /// Calls <see cref="ApiConnection.SetupConnection(string, string)"/> if <see cref="ApiConnection.Instance"/> is already null.
         /// </summary>
@@ -573,8 +583,13 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// </remarkls>
         private void OnPollServerInterval()
         {
+            if (TryRequestServerStatisticsUpdate() != Error.Ok)
+            {
+                _ServerStatus = "Status check failed";
+                NotifyFieldUpdated(nameof(ServerStatus));
+            }
+
             TryRequestConsoleUpdate();
-            TryRequestServerStatisticsUpdate();
             TryRequestPlayersUpdate();
         }
 
@@ -582,7 +597,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// Try to request a server update from the tasks. Expects to be called from <see cref="OnPollServerInterval"/>.
         /// </summary>
         /// <returns>true if it was requested, false otherwise.</returns>
-        private bool TryRequestServerStatisticsUpdate()
+        private Error TryRequestServerStatisticsUpdate()
         {
             return TryMakeRequest(ref _ServerStatisticsUpdateTask, _PollServerCancellationTokenSource, new ServerStatisticsRequest(), OnServerStatisticsUpdateSucceeded);
         }
@@ -595,13 +610,46 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// </remarks>
         private void OnServerStatisticsUpdateSucceeded(ApiResponse<ServerStatisticsResponse> response)
         {
-            if (response.ErrorResult != Error.Ok)
-                return;
+            UpdateServerStatus(response);
 
             _LatestServerStatisticsResponse = response.Response;
             NotifyServerOverviewFieldsUpdated();
 
             ServerStatisticsUpdated?.Invoke(this, response);
+        }
+
+        /// <summary>
+        /// Updates <see cref="ServerStatus"/> based on response given by a server statistics update.
+        /// </summary>
+        /// <param name="response"></param>
+        private void UpdateServerStatus(ApiResponse<ServerStatisticsResponse> response)
+        {
+            if (response.ErrorResult == Error.Ok)
+            {
+                _ServerStatus = "Running";
+                NotifyFieldUpdated(nameof(ServerStatus));
+            }
+            else if (response.ErrorResult != Error.Ok)
+            {
+                if (response.ErrorResult == Error.RequestAlreadyInProgress)
+                {
+                    _NumRequestsFailed++;
+
+                    if (_NumRequestsFailed >= Config.Instance.MaxUnfulfilledServerStatusRequestsBeforeError)
+                    {
+                        _ServerStatus = "Unable to reach server";
+                        _NumRequestsFailed = 0;
+                        NotifyFieldUpdated(nameof(ServerStatus));
+                    }
+
+                    return;
+                }
+
+                _ServerStatus = "Failed to check status";
+                NotifyFieldUpdated(nameof(ServerStatus));
+
+                return;
+            }
         }
 
 
@@ -623,7 +671,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// Expects to be called from <see cref="OnPollServerInterval"/>.
         /// </summary>
         /// <returns><c>true</c> if request was made, <c>false</c> if it was not.</returns>
-        private bool TryRequestPlayersUpdate()
+        private Error TryRequestPlayersUpdate()
         {
             return TryMakeRequest(ref _PlayerOverviewRequestTask, _PollServerCancellationTokenSource, new PlayerOverviewRequest(), OnPlayerOverviewRequestComplete);
         }
@@ -667,10 +715,10 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <param name="request">The request to send. Will auto-populate <see cref="RequestBase.ApiKey"/> with <see cref="ApiConnection.RequestApiInfo{TExpectedResponse}(RequestBase, CancellationToken)"/>.</param>
         /// <param name="continuationFunction">Function to call when the request completes. Invoked by the main thread's dispatcher, as defined by <see cref="Application.Current"/>.</param>
         /// <returns><c>true</c> if the request was made, <c>false</c> if it cannot be made either due to an exception or outcome of <see cref="IsTaskRunning(Task)"/>.</returns>
-        private bool TryMakeRequest<TResponse>(ref Task<ApiResponse<TResponse>> baseTask, CancellationTokenSource cancellationTokenSource, RequestBase request, Action<ApiResponse<TResponse>> continuationFunction) where TResponse : ResponseBase, new()
+        private Error TryMakeRequest<TResponse>(ref Task<ApiResponse<TResponse>> baseTask, CancellationTokenSource cancellationTokenSource, RequestBase request, Action<ApiResponse<TResponse>> continuationFunction) where TResponse : ResponseBase, new()
         {
             if (IsTaskRunning(baseTask))
-                return false;
+                return Error.RequestAlreadyInProgress;
 
             try
             {
@@ -684,10 +732,10 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             {
                 Console.WriteLine("ERROR: Unable to invoke task due to an exception.");
                 Console.WriteLine(e.Message);
-                return false;
+                return Error.General;
             }
 
-            return true;
+            return Error.Ok;
         }
 
         /// <summary>

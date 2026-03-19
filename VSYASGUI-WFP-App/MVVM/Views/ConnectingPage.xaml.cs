@@ -41,15 +41,6 @@ namespace VSYASGUI_WFP_App.MVVM.Views
         private void CheckConnection()
         {
             _ConnectionPresenter?.TryBeginConnectionCheck();
-
-
-
-            //ApiConnection.SetupConnection(Config.Instance.CurrentEndpoint, Config.Instance.CurrentApiKey);
-
-            //// Fixes issue with the code in OnCheckConnectionComplete below being ran on the wrong thread.
-            //var t = ApiConnection.Instance.CheckConnection().ContinueWith(
-            //    task => Application.Current.Dispatcher.BeginInvoke(OnCheckConnectionComplete, task.Result
-            
         }
 
         /// <summary>
@@ -85,7 +76,7 @@ namespace VSYASGUI_WFP_App.MVVM.Views
                     break;
                 default:
                     {
-                        ConnectionFailedPage connectionFailedPage = new("Failed to connect.", "Something went wrong when trying to communicate with the server.");
+                        ConnectionFailedPage connectionFailedPage = new("Failed to connect.", "Something went wrong when trying to communicate with the server. Ensure mod is present on the server.");
                         NavigationService.Navigate(connectionFailedPage);
                     }
                     break;

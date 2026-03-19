@@ -12,8 +12,8 @@
         Cancelled,
         Deserialisation,
         NotSent,
-        BadRequest
-
+        BadRequest,
+        RequestAlreadyInProgress,
 
     }
 }
