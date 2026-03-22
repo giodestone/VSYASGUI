@@ -76,7 +76,7 @@ namespace VSYASGUI_WFP_App.MVVM.Views
                     break;
                 default:
                     {
-                        ConnectionFailedPage connectionFailedPage = new("Failed to connect.", "Something went wrong when trying to communicate with the server. Ensure mod is present on the server.");
+                        ConnectionFailedPage connectionFailedPage = new("Failed to connect.", "Something went wrong when trying to communicate with the server. Double check the URL (make sure you're using https:// or http://). Ensure mod is present on the server, and the server is running.");
                         NavigationService.Navigate(connectionFailedPage);
                     }
                     break;

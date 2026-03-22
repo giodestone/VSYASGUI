@@ -339,7 +339,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         public ConnectionPresenter()
         {
             if (ApiConnection.Instance == null)
-                ApiConnection.SetupConnection(Config.Instance.GetUrlForApi, Config.Instance.CurrentApiKey);
+                ApiConnection.SetupConnection(Config.Instance.GetUrlForApi);
 
             _PollServerCancellationTokenSource = new CancellationTokenSource();
             _PollServerTask = PollServer(_PollServerCancellationTokenSource.Token, OnPollServerInterval);
@@ -480,7 +480,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <param name="taskResult">Result of the task.</param>
         private void OnConnectionCheckComplete(ApiResponse<ConnectionCheckResponse> taskResult)
         {
-            CheckInstanceAwareResponseForChange(taskResult);
+            //CheckInstanceAwareResponseForChange(taskResult);
 
             ConnectionCheckComplete.Invoke(this, taskResult.ErrorResult);
         }

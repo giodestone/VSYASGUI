@@ -9,10 +9,16 @@ namespace VSYASGUI_Mod
     internal class Config
     {
         public const string ConfigFileName = "VSYASGUI_Mod-config.json";
-        public string BindURL { get; set; } = "http://127.0.0.1:8181/";
+        public string BindURL { get; set; } = "https://127.0.0.1:8181/";
         public string ApiKey { get; set; } = "changeme";
         public int MaxConsoleEntriesCache { get; set; } = 10000;
         public int CPUUsagePollTimerMs { get; set; } = 2000;
+        public bool EnableHttps { get; set; } = true;
+        public string HttpsPrivateCertificateFileName { get; set; } = "key.pem";
+        public string HttpsPublicCertificateFileName { get; set; } = "cert.pem";
+        public int HttpsDefaultKeyDurationDays { get; set; } = 365*2;
+        public bool HttpsRegenerateAfterExpiryOnRestart { get; set; } = true;
+
 
         /// <summary>
         /// Load the config from the stored file, as defined by <see cref="ConfigFileName"/>, or create a new one at the location if it fails.

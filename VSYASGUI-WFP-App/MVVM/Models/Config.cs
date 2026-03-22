@@ -30,17 +30,17 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// <summary>
         /// History of API keys.
         /// </summary>
-        public List<string> ApiKeyHistory { get; set; } = ["changeme", "test2"];
+        public List<string> ApiKeyHistory { get; set; } = ["changeme"];
 
         /// <summary>
         /// Endpoint which the user has selected.
         /// </summary>
-        public string CurrentEndpoint { get; set; } = ""; // e.g. http://127.0.0.1:8181/
+        public string CurrentEndpoint { get; set; } = ""; // e.g. https://127.0.0.1:8181/
 
         /// <summary>
         /// History of endpoint addresses.
         /// </summary>
-        public List<string> EndpointAddresses { get; set; } = ["http://127.0.0.1:8181/", "test2"];
+        public List<string> EndpointAddresses { get; set; } = ["https://127.0.0.1:8181/"];
 
         /// <summary>
         /// Minimum interval for how often the server will be polled for realtime resources.

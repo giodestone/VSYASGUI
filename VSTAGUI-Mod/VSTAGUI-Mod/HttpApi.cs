@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -22,6 +25,7 @@ namespace VSYASGUI_Mod
         LogCache _LogCache = null;
         Guid _InstanceGuid;
         CpuLoadCalc _CpuLoadCalc;
+        X509Certificate2 HttpsCertificate;
         
         Task _AcceptLoop;
         CancellationTokenSource _AcceptLoopCancellationTokenSource;
@@ -51,6 +55,48 @@ namespace VSYASGUI_Mod
         /// <exception cref="HttpListenerException">Throws various exceptions if the <see cref="HttpListener"/> fails to start.</exception>
         public void Start()
         {
+            if (_Config.EnableHttps)
+            {
+                X509Store store = new X509Store("VSYASGUI-ModStore", StoreLocation.CurrentUser);
+                store.Open(OpenFlags.ReadWrite);
+
+                if (!_Config.BindURL.StartsWith("https"))
+                    throw new Exception("The Bind URL must begin with HTTPs when EnableHttps is set to true in the config.");
+
+                if (!CertificateHelper.DoesPublicCertificateExist(_Config))
+                {
+                    _Api.Logger.Log(Vintagestory.API.Common.EnumLogType.Notification, "Generating new HTTPS certificates for the VSYAGGUI Mod.");
+                    CertificateHelper.MakeAndSaveCert(_Config);
+                }
+
+                HttpsCertificate = CertificateHelper.LoadPublicCertificate(_Config);
+
+                if (CertificateHelper.IsCertificateExpired(HttpsCertificate))
+                {
+                    if (_Config.HttpsRegenerateAfterExpiryOnRestart)
+                    {
+                        store.Remove(HttpsCertificate);
+                        _Api.Logger.Log(Vintagestory.API.Common.EnumLogType.Notification, "Regenerating new HTTPS certificates for the VSYASGUI Mod as they are expired.");
+                        CertificateHelper.RenamePreviousCertificates(_Config);
+                        CertificateHelper.MakeAndSaveCert(_Config);
+                        HttpsCertificate = CertificateHelper.LoadPublicCertificate(_Config);
+                    }
+                    else
+                    {
+                        throw new Exception("HTTPS certificates have expired, and they have not been set to automatically regenerate. Either change the configuration to allow them to regenerate, or provide new certificates.");
+                    }
+                }
+
+
+                store.Add(HttpsCertificate);
+                store.Close();
+            }
+            else
+            {
+                if (_Config.BindURL.StartsWith("https"))
+                    throw new Exception("Endpoint URL starts with 'https' when EnableHttps option is set. Please remove https from the BindURL, or enable Https in the config.");
+            }
+
             try
             {
                 _HttpListener = new HttpListener();
@@ -105,6 +151,7 @@ namespace VSYASGUI_Mod
         /// <returns></returns>
         private async Task HandleRequest(CancellationToken cancellationToken, HttpListenerContext context)
         {
+
             if (!IsApiKeyMatching(context))
             {
                 context.Response.StatusCode = 401;
@@ -146,6 +193,11 @@ namespace VSYASGUI_Mod
             }
         }
 
+        /// <summary>
+        /// Reponds with the player overviews.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
         private async Task SendPlayerOverviewResponse(HttpListenerContext context)
         {
             List<PlayerOverview>? playerOverviews = null;

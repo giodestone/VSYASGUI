@@ -14,6 +14,6 @@
         NotSent,
         BadRequest,
         RequestAlreadyInProgress,
-
+        SecureConnectionError
     }
 }

@@ -1,4 +1,7 @@
-﻿using System.Net.Http;
+﻿using System.Net;
+using System.Net.Http;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using VSYASGUI_CommonLib;
 using VSYASGUI_CommonLib.RequestObjects;
@@ -35,7 +38,15 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         protected ApiConnection(string endpointUri)
         {
             _EndpointUri = endpointUri;
-            _Client = new HttpClient();
+            var handler = new HttpClientHandler();
+            handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+            handler.ServerCertificateCustomValidationCallback += OnServerCertificateCustomValidationCallback;
+            _Client = new HttpClient(handler);
+        }
+
+        private bool OnServerCertificateCustomValidationCallback(HttpRequestMessage message, X509Certificate2? certificate, X509Chain? chain, SslPolicyErrors errors)
+        {
+            return true;
         }
 
 
@@ -93,7 +104,6 @@ namespace VSYASGUI_WFP_App.MVVM.Models
 
             try
             {
-                // TODO: fix this to include the api key in the header
                 HttpContent c = SerialiseObject(request);
                 c.Headers.Add(CommonVariables.RequestHeaderApiKeyName, request.ApiKey);
                 response = await _Client.PostAsync(_EndpointUri + request.Address, c, cancellationToken);
@@ -105,6 +115,9 @@ namespace VSYASGUI_WFP_App.MVVM.Models
                     return new RequestResult(Error.Unauthorised, null);
                 else if (httpRequestException.StatusCode == System.Net.HttpStatusCode.BadRequest)
                     return new RequestResult(Error.BadRequest, null);
+                else if (httpRequestException.HttpRequestError == HttpRequestError.SecureConnectionError)
+                    return new RequestResult(Error.SecureConnectionError, null);
+
                 return new RequestResult(Error.General, null);
             }
             catch (TaskCanceledException cancelledException)
