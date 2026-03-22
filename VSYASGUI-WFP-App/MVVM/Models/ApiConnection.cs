@@ -11,6 +11,9 @@ namespace VSYASGUI_WFP_App.MVVM.Models
     /// </summary>
     internal class ApiConnection
     {
+        /// <summary>
+        /// Content of the request along with the <see cref="Error"/>.
+        /// </summary>
         internal struct RequestResult
         {
             public Error Error;
@@ -27,13 +30,11 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         
         HttpClient _Client;
 
-        string _EndpointUri = string.Empty; // Top level URI, e.g. http://127.0.0.1:8080/
-        string _ApiKey = string.Empty;
+        string _EndpointUri = string.Empty; // Top level URI to send the requests to, e.g. http://127.0.0.1:8080/
 
-        protected ApiConnection(string endpointUri, string apiKey)
+        protected ApiConnection(string endpointUri)
         {
             _EndpointUri = endpointUri;
-            _ApiKey = apiKey;
             _Client = new HttpClient();
         }
 
@@ -41,55 +42,18 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// <summary>
         /// Setup the required connection variables.
         /// </summary>
-        /// <param name="endpointUri"></param>
-        /// <param name="apiKey"></param>
-        public static void SetupConnection(string endpointUri, string apiKey)
+        public static void SetupConnection(string endpointUri)
         {
-            Instance = new ApiConnection(endpointUri, apiKey);
+            Instance = new ApiConnection(endpointUri);
         }
 
-
-        ///// <summary>
-        ///// Check the connection to the specified endpoint using the api key.
-        ///// </summary>
-        ///// <param name="cancellationToken">Token for cancellation.</param>
-        ///// <returns>
-        ///// <list type="bullet">
-        ///// <item><see cref="Error.Ok"/> if status 200 is returned. </item>
-        ///// <item><see cref="Error.Cancelled"/> if cancelled. </item>
-        ///// <item><see cref="Error.Connection"/> if unable to connect, or initialise request. </item> 
-        ///// <item><see cref="Error.Unauthorised"/> if 401 is returned. </item>
-        ///// <item><see cref="Error.General"/> if a different failure occurred (probably due to an OS Error). </item>
-        ///// </list>
-        ///// </returns>
-        //public async Task<Error> CheckConnection(CancellationToken cancellationToken)
-        //{
-        //    ConnectionRequest connectionRequest = new() { ApiKey = _ApiKey };
-        //    return await SendHttpRequest(connectionRequest, cancellationToken);
-        //}
-
-        
-
-        //public async Task<ApiResponse<ConsoleEntriesResponse>> GetConsoleValues(CancellationToken cancellationToken)
-        //{
-        //    ConsoleRequest request = new ConsoleRequest() { ApiKey = Config.Instance.CurrentApiKey };
-        //    var response = await SendHttpRequest(request, cancellationToken);
-
-        //    ConsoleEntriesResponse? serialisedObject = null;
-
-        //    try
-        //    {
-        //        serialisedObject = JsonSerializer.Deserialize<ConsoleEntriesResponse>(response.HttpContent.ReadAsStream());
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return new ApiResponse<ConsoleEntriesResponse>(Error.Deserialisation, null);
-        //    }
-
-        //    return new ApiResponse<ConsoleEntriesResponse>(Error.Ok, serialisedObject);
-
-        //}
-
+        /// <summary>
+        /// Requests information from the API.
+        /// </summary>
+        /// <typeparam name="TExpectedResponse">The type of the expected response. This is checked.</typeparam>
+        /// <param name="request">The request to send.</param>
+        /// <param name="cancellationToken">The token this can be cancelled with.</param>
+        /// <returns>A task that can be cancelled.</returns>
         public async Task<ApiResponse<TExpectedResponse>> RequestApiInfo<TExpectedResponse>(RequestBase request, CancellationToken cancellationToken) where TExpectedResponse : ResponseBase, new()
         {
             request.ApiKey = Config.Instance.CurrentApiKey;
@@ -100,7 +64,7 @@ namespace VSYASGUI_WFP_App.MVVM.Models
 
             TExpectedResponse? serialisedObject = null;
 
-            TExpectedResponse r = new(); // Sureley there is a better wayt to do this.
+            TExpectedResponse r = new(); // Surely there is a better way to do this.
             if (response.HttpContent == null && r.ExpectsResponse)
                 return new ApiResponse<TExpectedResponse>(response.Error, null);
 
@@ -117,6 +81,12 @@ namespace VSYASGUI_WFP_App.MVVM.Models
 
         }
 
+        /// <summary>
+        /// Send a request to the server.
+        /// </summary>
+        /// <param name="request">The request to send.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>A cancellable task with the result of the response, and the returned details (if applicable).</returns>
         private async Task<RequestResult> SendHttpRequest(RequestBase request, CancellationToken cancellationToken)
         {
             HttpResponseMessage? response = null;

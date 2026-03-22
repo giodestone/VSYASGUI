@@ -8,11 +8,9 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Vintagestory.API.Server;
-using Vintagestory.API.Util;
 using VSYASGUI_CommonLib;
 using VSYASGUI_CommonLib.RequestObjects;
 using VSYASGUI_CommonLib.ResponseObjects;
-using VSYASGUI_Mod;
 
 namespace VSYASGUI_Mod
 {
@@ -157,30 +155,6 @@ namespace VSYASGUI_Mod
                 // TODO: Improve this: make only e.g. 10 players run at a time, as otherwise this operation may take too long.
                 
                 playerOverviews = new List<PlayerOverview>(_Api.Server.Players.Length);
-                //Dictionary<string, PlayerOverview> playerUidsDicts = new(_Api.Server.Players.Length);
-                
-                //// Get historical players first.
-                //foreach (var playerData in _Api.PlayerData.PlayerDataByUid)
-                //{
-                //    string groups = string.Empty;
-                //    foreach (var playerGroup in playerData.Value.PlayerGroupMemberships)
-                //    {
-                //        groups += playerGroup.Value.GroupName + ", ";
-                //    }
-                //    groups = groups.TrimEnd(',');
-
-                //    var playerOverview = new PlayerOverview()
-                //    {
-                //        PlayerUid = playerData.Key,
-                //        Name = playerData.Value.LastKnownPlayername,
-                //        ConnectionState = "Offline - Previously Connected",
-                //        Groups = groups
-                //    };
-
-                //    playerUidsDicts.Add(playerData.Key, playerOverview);
-
-                //    playerOverviews.Add(playerOverview);
-                //}
 
                 // Cross reference the ConnectionState with players that have previously connected during this run of the server.
                 foreach (var player in _Api.Server.Players)
@@ -322,7 +296,8 @@ namespace VSYASGUI_Mod
         private async Task SendPlayersOnlineResponse(HttpListenerContext context)
         {
             context.Response.StatusCode = (int)HttpStatusCode.OK;
-            var players = _Api.Server.Players.Where(p => p.ConnectionState != EnumClientState.Offline).Select(p => PlayerDetails.FromServerPlayer(p)).ToList();
+            List<PlayerDetails> players = new List<PlayerDetails>(0);
+            await RunOnApiThread(() => players = _Api.Server.Players.Where(p => p.ConnectionState != EnumClientState.Offline).Select(p => PlayerDetails.FromServerPlayer(p)).ToList());              
             WriteJsonToResponse(context, players);
         }
 
