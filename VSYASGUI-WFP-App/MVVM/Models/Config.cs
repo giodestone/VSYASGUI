@@ -48,12 +48,12 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         public int ServerPollIntervalMilliseconds { get; set; } = 1000;
         
         /// <summary>
-        /// Maximum number of requests that are counted as busy before an error is displayed.
+        /// Maximum number of requests that are counted as busy before an Error is displayed.
         /// </summary>
         public int MaxUnfulfilledServerStatusRequestsBeforeError { get; set; } = 6;
 
         /// <summary>
-        /// Text for an error box that says it has failed to load or create the config file.
+        /// Text for an Error box that says it has failed to load or create the config file.
         /// </summary>
         [JsonIgnore]
         public string FailedToCreateOrLoadConfigText => $"Unable to load or create the configuration file. \n\nNo user settings will be saved. \n\nTry:\n * Removing the config file at {Config.GetPathToConfig()}\n* Checking if your disk is full.\n* That you have write permissions.";
@@ -91,7 +91,7 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// <summary>
         /// Load the config from a file, or create a new one if non functional.<br/>
         /// 
-        /// If there is a load error, returns false.
+        /// If there is a load Error, returns false.
         /// <br/>
         /// <br/>
         /// See also: <seealso cref="FailedToCreateOrLoadConfigText"/>

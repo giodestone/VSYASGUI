@@ -6,7 +6,7 @@
     public sealed class ErrorResponse : ResponseBase
     {
         public override bool ExpectsResponse => true;
-        public string error { get; set; } = "undefined";
+        public string Error { get; set; } = "undefined";
 
     }
 }

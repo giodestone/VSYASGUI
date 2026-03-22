@@ -2,6 +2,11 @@
 
 namespace VSYASGUI_CommonLib.ResponseObjects
 {
+    /// <summary>
+    /// Returns the provided new lines (if any).
+    /// 
+    /// Response for <see cref="VSYASGUI_CommonLib.RequestObjects.ConsoleRequest"/>.
+    /// </summary>
     public class ConsoleEntriesResponse : InstanceAwareResponseBase
     {
         [JsonIgnore]

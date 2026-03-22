@@ -43,7 +43,7 @@ namespace VSYASGUI_WFP_App.UserControls
 
         private void ClearConfigCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // TODO: Make this flow a bit less awful and capable of giving multiple errors. Does the first error even matter to the user?
+            // TODO: Make this flow a bit less awful and capable of giving multiple errors. Does the first Error even matter to the user?
             bool hadProblem = false;
             if (Config.Instance.TryDeleteConfig() == false)
             {

@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace VSYASGUI_CommonLib.ResponseObjects
+﻿namespace VSYASGUI_CommonLib.ResponseObjects
 {
+    /// <summary>
+    /// Provides a list of the current overviews.
+    /// 
+    /// Response for <see cref="VSYASGUI_CommonLib.RequestObjects.PlayerOverviewRequest"/>.
+    /// </summary>
     public class PlayerOverviewResponse : ResponseBase
     {
         public override bool ExpectsResponse => true;

@@ -1,7 +1,7 @@
 ﻿namespace VSYASGUI_WFP_App.MVVM.Models
 {
     /// <summary>
-    /// Provides a way of representing if an error has occurred.
+    /// Provides a way of representing if an Error has occurred.
     /// </summary>
     internal enum Error
     {

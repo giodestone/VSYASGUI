@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace VSYASGUI_CommonLib.ResponseObjects
+﻿namespace VSYASGUI_CommonLib.ResponseObjects
 {
+    /// <summary>
+    /// Response for <seealso cref="VSYASGUI_CommonLib.RequestObjects.ConsoleRequest"/>.
+    /// </summary>
     public class ConsoleCommandResponse : NoResponse
     {
     }

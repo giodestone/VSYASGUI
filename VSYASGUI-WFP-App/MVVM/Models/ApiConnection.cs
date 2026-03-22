@@ -59,7 +59,7 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         ///// <item><see cref="Error.Cancelled"/> if cancelled. </item>
         ///// <item><see cref="Error.Connection"/> if unable to connect, or initialise request. </item> 
         ///// <item><see cref="Error.Unauthorised"/> if 401 is returned. </item>
-        ///// <item><see cref="Error.General"/> if a different failure occurred (probably due to an OS error). </item>
+        ///// <item><see cref="Error.General"/> if a different failure occurred (probably due to an OS Error). </item>
         ///// </list>
         ///// </returns>
         //public async Task<Error> CheckConnection(CancellationToken cancellationToken)

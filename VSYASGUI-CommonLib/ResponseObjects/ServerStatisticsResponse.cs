@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace VSYASGUI_CommonLib.ResponseObjects
 {
     /// <summary>
-    /// Responds with the current process resources used by the process.
+    /// Responds with overview statistics of the running server.
     /// </summary>
     public class ServerStatisticsResponse : ResponseBase
     {

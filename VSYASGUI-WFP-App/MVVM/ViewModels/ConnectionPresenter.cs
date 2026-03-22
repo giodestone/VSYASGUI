@@ -404,7 +404,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <summary>
         /// Try to send the command set in <see cref="SendCommandContents"/> to the server.
         /// </summary>
-        /// <returns><c>true</c> if a command has been sent. <c>false</c> if not, due to the value of <see cref="CanSendConsoleCommand"/> or technical error.</returns>
+        /// <returns><c>true</c> if a command has been sent. <c>false</c> if not, due to the value of <see cref="CanSendConsoleCommand"/> or technical Error.</returns>
         public bool TrySendConsoleCommand()
         {
             if (!CanSendConsoleCommand())

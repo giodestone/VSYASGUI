@@ -385,7 +385,7 @@ namespace VSYASGUI
         /// <summary>
         /// Read the contents of the request as provided by the <paramref name="context"/>.
         /// </summary>
-        /// <returns>Request contents. <see cref="string.Empty"/> if error occurs when reading (or the request contents are empty).</returns>
+        /// <returns>Request contents. <see cref="string.Empty"/> if Error occurs when reading (or the request contents are empty).</returns>
         private async Task<string> ReadRequestContents(HttpListenerContext context)
         {
             string strmContents = string.Empty;
