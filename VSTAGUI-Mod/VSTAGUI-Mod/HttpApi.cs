@@ -293,6 +293,11 @@ namespace VSYASGUI_Mod
             return taskCompletionSource.Task;
         }
 
+        /// <summary>
+        /// Responds with the player details of the currently online player.
+        /// </summary>
+        /// <param name="context">The response.</param>
+        /// <returns></returns>
         private async Task SendPlayersOnlineResponse(HttpListenerContext context)
         {
             context.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -301,9 +306,15 @@ namespace VSYASGUI_Mod
             WriteJsonToResponse(context, players);
         }
 
+        /// <summary>
+        /// Responds with the <see cref="ConnectionCheckResponse"/>.
+        /// </summary>
+        /// <param name="context">The response to reply to.</param>
+        /// <returns></returns>
         private async Task SendConnectionCheckResponse(HttpListenerContext context)
         {
             context.Response.StatusCode = (int)HttpStatusCode.OK;
+            WriteJsonToResponse(context, ResponseFactory.MakeConnectionCheckResponse(this._InstanceGuid));
         }
 
         /// <summary>
