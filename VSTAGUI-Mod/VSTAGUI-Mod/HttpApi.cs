@@ -310,7 +310,6 @@ namespace VSYASGUI_Mod
         /// Responds with the <see cref="ConnectionCheckResponse"/>.
         /// </summary>
         /// <param name="context">The response to reply to.</param>
-        /// <returns></returns>
         private async Task SendConnectionCheckResponse(HttpListenerContext context)
         {
             context.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -318,7 +317,7 @@ namespace VSYASGUI_Mod
         }
 
         /// <summary>
-        /// Send console details.
+        /// Respond with console details.
         /// </summary>
         private async Task SendConsoleResponse(HttpListenerContext context)
         {
@@ -337,6 +336,7 @@ namespace VSYASGUI_Mod
             long lineFrom = -1;
             long lineTo = -1;
 
+            // Would need to guarantee the LogCache is thead safe, which seems like it does not need to be for now.
             await RunOnApiThread(() => _LogCache.GetLog(request.LineFrom, out logLines, out lineFrom, out lineTo));
             
             WriteJsonToResponse(context, ResponseFactory.MakeConsoleEntriesResponse(logLines, lineFrom, lineTo, _InstanceGuid));
