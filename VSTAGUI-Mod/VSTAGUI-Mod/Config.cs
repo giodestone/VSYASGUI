@@ -1,20 +1,14 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 using Vintagestory.API.Server;
 
-namespace VSYASGUI
+namespace VSYASGUI_Mod
 {
     /// <summary>
-    /// Configuration for the API.
+    /// Configuration for the server mod.
     /// </summary>
     internal class Config
     {
-        public const string ConfigFileName = "VSYASGUI-config.json";
+        public const string ConfigFileName = "VSYASGUI_Mod-config.json";
         public string BindURL { get; set; } = "http://127.0.0.1:8181/";
         public string ApiKey { get; set; } = "changeme";
         public int MaxConsoleEntriesCache { get; set; } = 10000;

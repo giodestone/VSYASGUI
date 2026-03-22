@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using VSYASGUI;
 
 namespace VSYASGUI_Mod
 {
@@ -19,8 +15,16 @@ namespace VSYASGUI_Mod
 
         private CancellationTokenSource _CancellationTokenSource;
 
+        /// <summary>
+        /// The current CPU usage as a percentage (0 to 1).
+        /// </summary>
         public double ProcessorUsagePercentage { get; private set; } = 0;
 
+        /// <summary>
+        /// Creates a new task that runs in the background measuing the CPU usage.
+        /// </summary>
+        /// <param name="processToTrack">The process of which the CPU usage should be tracked.</param>
+        /// <param name="config">The configuration.</param>
         public CpuLoadCalc(Process processToTrack, Config config)
         {
             _TrackedProcess = processToTrack;

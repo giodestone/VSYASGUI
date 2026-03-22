@@ -8,7 +8,7 @@ using Vintagestory;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
-using VSYASGUI;
+using VSYASGUI_Mod;
 
 namespace VSYASGUI_Mod
 {

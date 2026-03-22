@@ -14,7 +14,7 @@ using VSYASGUI_CommonLib.RequestObjects;
 using VSYASGUI_CommonLib.ResponseObjects;
 using VSYASGUI_Mod;
 
-namespace VSYASGUI
+namespace VSYASGUI_Mod
 {
     internal class HttpApi
     {
@@ -61,7 +61,7 @@ namespace VSYASGUI
 
                 _AcceptLoopCancellationTokenSource = new CancellationTokenSource();
                 _AcceptLoop = AcceptLoop(_AcceptLoopCancellationTokenSource.Token);
-                _Api.Logger.Notification($"VSYASGUI-Mod: API now ready at {_Config.BindURL}");
+                _Api.Logger.Notification($"VSYASGUI_Mod-Mod: API now ready at {_Config.BindURL}");
             }
             catch
             {
@@ -314,7 +314,7 @@ namespace VSYASGUI
                     taskCompletionSource.SetException(e);
                 }
             },
-            "VSYASGUI-Mod");
+            "VSYASGUI_Mod-Mod");
 
             return taskCompletionSource.Task;
         }
@@ -438,7 +438,7 @@ namespace VSYASGUI
             }
             catch (Exception e)
             {
-                _Api.Logger.Error($"VSYASGUI-Mod: Failed to write response to stream.");
+                _Api.Logger.Error($"VSYASGUI_Mod-Mod: Failed to write response to stream.");
                 _Api.Logger.LogException(Vintagestory.API.Common.EnumLogType.Error, e);
                 return false;
             }
