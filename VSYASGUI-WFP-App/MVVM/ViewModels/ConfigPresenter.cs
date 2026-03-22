@@ -5,6 +5,9 @@ using VSYASGUI_WFP_App.MVVM.ViewModels.Base ;
 
 namespace VSYASGUI_WFP_App.MVVM.ViewModels
 {
+    /// <summary>
+    /// View Model for a <see cref="Config"/>.
+    /// </summary>
     public sealed class ConfigPresenter : Presenter
     {
         private string _CurrentlySelectedApiKey;
@@ -13,9 +16,19 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         private string _CurrentlySelectedEndpoint;
         private ObservableCollection<string> _EndpointHistory;
 
+        /// <summary>
+        /// Previously selected Api key(s).
+        /// </summary>
         public ObservableCollection<string> ApiKeyHistory => _ApiKeyHistory;
+
+        /// <summary>
+        /// Previously selected endpoint(s).
+        /// </summary>
         public ObservableCollection<string> EndpointHistory => _EndpointHistory;
 
+        /// <summary>
+        /// The API key which is currently selected.
+        /// </summary>
         public string CurrentlySelectedApiKey 
         { 
             get => _CurrentlySelectedApiKey; 
@@ -26,6 +39,9 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             }
         }
 
+        /// <summary>
+        /// The endpoint which is currently selected.
+        /// </summary>
         public string CurrentlySelectedEndpoint
         {
             get => _CurrentlySelectedEndpoint;
@@ -47,6 +63,9 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
                 Config.Instance.CurrentEndpoint = Config.Instance.EndpointAddresses[0];
         }
 
+        /// <summary>
+        /// Initialises all observable collections.
+        /// </summary>
         private void InitObservableCollections()
         {
             _ApiKeyHistory = new ObservableCollection<string>(Config.Instance.ApiKeyHistory);

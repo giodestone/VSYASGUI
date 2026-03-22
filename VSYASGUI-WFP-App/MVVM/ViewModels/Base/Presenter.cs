@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace VSYASGUI_WFP_App.MVVM.ViewModels.Base
 {
+    /// <summary>
+    /// Intended base class for all view models, which implements the <see cref="INotifyPropertyChanged"/> interface.
+    /// </summary>
     public abstract class Presenter : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;

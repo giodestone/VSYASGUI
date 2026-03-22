@@ -93,7 +93,7 @@ namespace VSYASGUI_Mod
                 }
 
                 //Task.Run(_ => HandleRequest(cancellationToken, httpListenerContext), httpListenerContext);
-
+                b
                 _ = HandleRequest(cancellationToken, httpListenerContext);
             }
         }
@@ -137,11 +137,8 @@ namespace VSYASGUI_Mod
                     await SendStatisticsResponse(context);
                     break;
                 case "/":
-                    await SendConnectionCheckResponse(context);
-                    break;
                 default:
-                    context.Response.StatusCode = 200;
-                    WriteJsonToResponse(context, ResponseFactory.MakeConnectionCheckResponse(_InstanceGuid));
+                    await SendConnectionCheckResponse(context);
                     break;
             }
         }

@@ -16,6 +16,9 @@ using VSYASGUI_WFP_App.MVVM.ViewModels.Base;
 
 namespace VSYASGUI_WFP_App.MVVM.ViewModels
 {
+    /// <summary>
+    /// View Model for various connection related operations, including checking the connection, updating the console, and player operations.
+    /// </summary>
     internal sealed class ConnectionPresenter : Presenter
     {
         private const string _Unavailable = "Unavailable";
@@ -27,9 +30,15 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         private CancellationTokenSource _ConnectionCheckCancellationTokenSource;
         private Task<ApiResponse<ConnectionCheckResponse>> _CurrentConnectionCheckTask;
 
+        /// <summary>
+        /// Called when the received server instance GUID changes.
+        /// </summary>
         public event EventHandler ServerInstanceGuidChanged;
         private Guid _LatestServerGuid = Guid.Empty;
 
+        /// <summary>
+        /// Called when command details completes. Make sure to check the ApiResponse.
+        /// </summary>
         public event EventHandler<ApiResponse<ConsoleCommandResponse>> SendCommandComplete;
         private Task<ApiResponse<ConsoleCommandResponse>> _SendCommandTask;
         private CancellationTokenSource _SendCommandCancelleationToken;
@@ -38,17 +47,26 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         private Task _PollServerTask;
         private CancellationTokenSource _PollServerCancellationTokenSource;
         
+        /// <summary>
+        /// Called when the console read task completes.
+        /// </summary>
         public event EventHandler<ConsoleEntriesResponse> ConsoleReadSuccessful;
         private Task<ApiResponse<ConsoleEntriesResponse>> _ConsoleEntryRequestTask;
         private long _ConsoleContentsLatestLogLine = 0;
         private string _ConsoleContents = string.Empty;
 
+        /// <summary>
+        /// Called when the server statistics (cpu usage, memory etc.) have changed.
+        /// </summary>
         public event EventHandler<ApiResponse<ServerStatisticsResponse>> ServerStatisticsUpdated;
         private Task<ApiResponse<ServerStatisticsResponse>> _ServerStatisticsUpdateTask;
         private ServerStatisticsResponse? _LatestServerStatisticsResponse = null;
         private string _ServerStatus = _Unavailable;
         private int _NumRequestsFailed = 0;
 
+        /// <summary>
+        /// Called when the player overviews change (usually when a new player is sent).
+        /// </summary>
         public event EventHandler<ApiResponse<PlayerOverviewResponse>> PlayerOverviewChanged;
         private Task<ApiResponse<PlayerOverviewResponse>> _PlayerOverviewRequestTask;
         private CancellationTokenSource _PlayerOverviewCancellationTokenSource;
@@ -339,7 +357,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         public ConnectionPresenter()
         {
             if (ApiConnection.Instance == null)
-                ApiConnection.SetupConnection(Config.Instance.GetUrlForApi, Config.Instance.CurrentApiKey);
+                ApiConnection.SetupConnection(Config.Instance.GetUrlForApi);
 
             _PollServerCancellationTokenSource = new CancellationTokenSource();
             _PollServerTask = PollServer(_PollServerCancellationTokenSource.Token, OnPollServerInterval);
@@ -762,7 +780,6 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// Try to run the /ban command on the currently selected player, if possible.
         /// </summary>
         /// <returns>Returns <c>true</c> if it can be run, <c>false</c> if not, depending on <see cref="CanSendPlayerActionCommands"/> and <see cref="TrySendConsoleCommand"/>.</returns>
-
         private bool TryBanCurrentlySelectedPlayer()
         {
             if (!CanSendPlayerActionCommands)
