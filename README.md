@@ -48,7 +48,7 @@ The interface was separated into two states: not connected and connected. The co
 
 #### User Profile
 
-The user profile that was used to design the current features:
+The user profile which the GUI was designed for is:
 
 * Age: Adult
 * Culture/Language/Geography: Anglosphere
@@ -87,7 +87,7 @@ An exceptional circumstance may be:
 
 ### Code Overview
 
-Error tolerance was implemented using the `Error` enum, where various errors can be represented by a value (where acceptable).
+Error tolerance was implemented using the `Error` enum, where various errors can be represented by a value (where acceptable). This was used to introduce error tolerance, similar to the way Godot Engine does, and also allows for the later read-back of the error.
 
 The views are implemented using `Page` system, as to make state management easier. This removes the need for custom view management code (which would be required if `UserControl` was used). I am aware this is better for web-based applications.
 
@@ -153,4 +153,6 @@ The `PlayerOverview` class could be expanded to take into account offline player
 
 ## Reflection on Suitability
 
-The provided GUI works sufficiently as to allow the exposure of some views. The catgo
+The provided mod and application fulfil the goal of providing an easy to use interface for a locally running server.
+
+The GUI allows access to the server console/log, ability to view player infomration visually, and perform basic player management.
