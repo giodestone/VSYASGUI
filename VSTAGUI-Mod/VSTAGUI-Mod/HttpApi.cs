@@ -14,6 +14,9 @@ using VSYASGUI_CommonLib.ResponseObjects;
 
 namespace VSYASGUI_Mod
 {
+    /// <summary>
+    /// Manages the actual HTTP API provided by the mod.
+    /// </summary>
     internal class HttpApi
     {
         ICoreServerAPI _Api = null;
@@ -92,8 +95,7 @@ namespace VSYASGUI_Mod
                     break; // disposed during shutdown
                 }
 
-                //Task.Run(_ => HandleRequest(cancellationToken, httpListenerContext), httpListenerContext);
-                b
+                //Task.Run(_ => HandleRequest(cancellationToken, httpListenerContext), httpListenerContext
                 _ = HandleRequest(cancellationToken, httpListenerContext);
             }
         }
@@ -143,6 +145,9 @@ namespace VSYASGUI_Mod
             }
         }
 
+        /// <summary>
+        /// Populate the response with <see cref="PlayerOverviewResponse"/>.
+        /// </summary>
         private async Task SendPlayerOverviewResponse(HttpListenerContext context)
         {
             List<PlayerOverview>? playerOverviews = null;
@@ -209,6 +214,9 @@ namespace VSYASGUI_Mod
             context.Response.StatusCode = (int)HttpStatusCode.OK;
         }
 
+        /// <summary>
+        /// Populates the response with <see cref="ServerStatisticsResponse"/>.
+        /// </summary>
         private async Task SendStatisticsResponse(HttpListenerContext context)
         {
 
@@ -240,6 +248,9 @@ namespace VSYASGUI_Mod
             context.Response.StatusCode = (int)HttpStatusCode.OK;
         }
 
+        /// <summary>
+        /// Populate a <see cref="ConsoleCommandResponse"/>.
+        /// </summary>
         private async Task SendCommandResponse(HttpListenerContext context)
         {
             context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
