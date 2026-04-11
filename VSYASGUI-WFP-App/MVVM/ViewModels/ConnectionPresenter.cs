@@ -359,9 +359,27 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             if (ApiConnection.Instance == null)
                 ApiConnection.SetupConnection(Config.Instance.GetUrlForApi);
 
+            BeginPeriodicPolling();
+            ServerInstanceGuidChanged += OnServerGuidChanged_UpdateConsoleLog;
+        }
+
+        /// <summary>
+        /// Begins the polling task (<see cref="_PollServerTask"/>) which takes volatile info from the server.
+        /// </summary>
+        public void BeginPeriodicPolling()
+        {
+            if (_PollServerCancellationTokenSource != null)
+                _PollServerCancellationTokenSource.Cancel();
             _PollServerCancellationTokenSource = new CancellationTokenSource();
             _PollServerTask = PollServer(_PollServerCancellationTokenSource.Token, OnPollServerInterval);
-            ServerInstanceGuidChanged += OnServerGuidChanged_UpdateConsoleLog;
+        }
+
+        /// <summary>
+        /// Stops the polling task (<see cref="_PollServerTask"/>) which takes certain info from the server.
+        /// </summary>
+        public void StopPeriodicPolling()
+        {
+            _PollServerCancellationTokenSource.Cancel();
         }
 
         /// <summary>

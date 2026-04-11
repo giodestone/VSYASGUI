@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:VSYASGUI_WFP_App"
         xmlns:controls="clr-namespace:VSYASGUI_WFP_App.UserControls"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="VSYASGUI: Vintage Story Yet Another Server GUI" Height="450" Width="800">
     <DockPanel>
         <controls:MenuBar DockPanel.Dock="Top"/>
         <Grid>

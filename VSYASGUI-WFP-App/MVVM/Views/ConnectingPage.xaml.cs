@@ -54,6 +54,7 @@ namespace VSYASGUI_WFP_App.MVVM.Views
                     {
                         ServerPage serverPage = new() { DataContext = _ConnectionPresenter };
                         NavigationService.Navigate(serverPage);
+                        _ConnectionPresenter?.BeginPeriodicPolling();
                     }
                     break;
                 case Error.Connection:
