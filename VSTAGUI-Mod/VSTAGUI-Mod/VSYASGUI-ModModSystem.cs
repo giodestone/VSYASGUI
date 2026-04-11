@@ -36,6 +36,7 @@ namespace VSTAGUI_Mod
             } 
             catch (Exception e)
             {
+                // This log is a bit redundant: since changing the LoadOrCreate() always returns a config, and writes to error if needed.
                 api.Logger.Error($"VSYASGUI_Mod: Failed to load config. Please check the config, or delete it and restart the server to generate a new one. The GUI will not function.");
                 api.Logger.LogException(EnumLogType.Error, e);
                 return;

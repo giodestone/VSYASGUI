@@ -19,6 +19,7 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// <summary>
         /// Active instance of the config.
         /// </summary>
+        [JsonIgnore]
         public static Config Instance { get; protected set; }
 
         public const string FileName = "settings.json";

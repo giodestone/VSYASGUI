@@ -37,7 +37,8 @@ namespace VSYASGUI_Mod
             }
             catch
             {
-                throw;
+                api.Logger.Log(Vintagestory.API.Common.EnumLogType.Warning, "SYASGUI_Mod: Failed to load config due to a config. Resuming with default one.");
+                return new Config();
             }
         }
 
