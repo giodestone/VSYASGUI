@@ -4,11 +4,12 @@
 
 Provides a basic GUI for viewing the console and managing players visually. Requires a mod to be installed on the server, which provides a simplified HTTP API for the GUI to interface with.
 
-The goal of this project was to create an easy to use GUI which allows for management of the Vintage Story Server. The secondary goals were learn about creating code mods for the Vintage Story API, and learning WPF (Windows Presentation Foundation).
-
-The GUI is written in C# and WPF (Windows Platform Foundation) and uses MVVM (Model, View, View Model/Model View Controller).
-
-The mod is written in C# and utilizes the Vintage Story modding API.
+Key features:
+* View server resource usage
+* View console history
+* Issue commands
+* View connected players
+* Kick, ban, unban recently connected players
 
 
 # Installation
@@ -18,7 +19,7 @@ This mod is provided in two parts: the GUI and mod that must be added to the ser
 2. Place all DLLs from the mod zip into the relevant folder. On Windows that is: `%AppData%\Roaming\VintagestoryData\Mods`
 3. Extract and open the GUI exe.
 
-**Note: the API does not use HTTPS.** Therefore, please **do not expose the endpoint (:8181) to the internet**. The API key can be extracted from your usage of the GUI using a man in the middle attack and used to execute commands on the server. By default, the endpoint is bound to localhost (your local machine), so unless you port forward your internal ports from your computer, you should not be at risk.
+**Note: the API does not use HTTPS.** Therefore, please **do not expose the endpoint (port 8181) to the internet**. The API key can be extracted from your usage of the GUI using a man in the middle attack and used to execute commands on the server. By default, you should not be at risk, as the endpoint is bound to localhost (your local machine), so unless you port forward these ports ports from your computer.
 
 
 
@@ -78,6 +79,12 @@ New versions of both the GUI may be created by right clicking on `VSYUASGUI-Mod`
 
 
 # Implementation Details
+
+The goal of this project was to create an easy to use GUI which allows for management of the Vintage Story Server. The secondary goals were learn about creating code mods for the Vintage Story API, and learning WPF (Windows Presentation Foundation).
+
+The GUI is written in C# and WPF (Windows Platform Foundation) and uses MVVM (Model, View, View Model/Model View Controller).
+
+The mod is written in C# and utilizes the Vintage Story modding API.
 
 This project is split across three .sln: The Mod for the server (`VSYUASGUI-Mod`), the GUI (`VSYASGUI-WPF-App`), and the shared/common classes (`VSYASGUI-CommonLib`).
 
@@ -218,6 +225,6 @@ The `PlayerOverview` class could be expanded to take into account offline player
 
 The provided mod and application fulfil the goal of providing an easy to use interface for a locally running server.
 
-The GUI allows access to the server console/log, ability to view player information visually, and perform basic player management.
+The GUI allows access to the server console/log, ability to view player information visually, and perform basic player management. An explicit disconnection screen would be beneficial.
 
 The API provides stateless access to core features of the server. The API could be made using more than just POST method. HTTPS implementation would provide further security.
