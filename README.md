@@ -17,10 +17,11 @@ Please report any bugs or enhancements to [issues tab](https://github.com/giodes
 # Installation
 This mod is provided in two parts: the GUI and mod that must be added to the server.
 
+The mod (not GUI) can be downloaded directly from the Vintage Story ModDB: https://mods.vintagestory.at/show/mod/46221 
+
 1. Download vsyasgui and vsyasguizip from [the releases page](https://github.com/giodestone/VSYASGUI/releases).
-    a. The mod (not GUI) can be downloaded directly from the Vintage Story ModDB: https://mods.vintagestory.at/show/mod/46221 
-3. Place all DLLs from the mod zip into the relevant folder. On Windows that is: `%AppData%\Roaming\VintagestoryData\Mods`
-4. Extract and open the GUI exe.
+2. Place all DLLs from the mod zip into the relevant folder. On Windows that is: `%AppData%\Roaming\VintagestoryData\Mods`
+3. Extract and open the GUI exe.
 
 **Note: the API does not use HTTPS.** Therefore, please **do not expose the endpoint (port 8181) to the internet**. The API key can be extracted from your usage of the GUI using a man in the middle attack and used to execute commands on the server. By default, you should not be at risk, as the endpoint is bound to localhost (your local machine), so unless you port forward these ports ports from your computer.
 
