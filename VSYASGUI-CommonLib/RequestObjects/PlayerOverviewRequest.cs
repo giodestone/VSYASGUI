@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace VSYASGUI_CommonLib.RequestObjects
 {
     /// <summary>
-    /// Request overview of all players.
+    /// Request overview of all players. Response <see cref="VSYASGUI_CommonLib.ResponseObjects.PlayerOverviewResponse"/>
     /// </summary>
     public class PlayerOverviewRequest : RequestBase
     {

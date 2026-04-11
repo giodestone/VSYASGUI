@@ -45,12 +45,12 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// <summary>
         /// Minimum interval for how often the server will be polled for realtime resources.
         /// </summary>
-        public int ServerPollIntervalMilliseconds { get; set; } = 1000;
+        public int ServerPollIntervalMs { get; set; } = 1000;
         
         /// <summary>
         /// Maximum number of requests that are counted as busy before an Error is displayed.
         /// </summary>
-        public int MaxUnfulfilledServerStatusRequestsBeforeError { get; set; } = 6;
+        public int MaxFailedConnectionRequests { get; set; } = 6;
 
         /// <summary>
         /// Text for an Error box that says it has failed to load or create the config file.

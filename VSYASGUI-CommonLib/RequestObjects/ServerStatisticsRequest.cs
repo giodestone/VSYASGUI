@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace VSYASGUI_CommonLib.RequestObjects
 {
     /// <summary>
-    /// Request the current server resource usage (CPU, RAM).
+    /// Request the current server resource usage (CPU, RAM). Response <see cref="VSYASGUI_CommonLib.ResponseObjects.ServerStatisticsResponse"/>
     /// </summary>
     public class ServerStatisticsRequest : RequestBase
     {

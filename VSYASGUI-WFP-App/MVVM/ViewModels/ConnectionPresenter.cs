@@ -574,7 +574,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
 
         /// <summary>
-        /// Task for waiting the time defined by <see cref="Config.ServerPollIntervalMilliseconds"/>, then invoking <paramref name="onPeriodExceeded"/> on the current thread.
+        /// Task for waiting the time defined by <see cref="Config.ServerPollIntervalMs"/>, then invoking <paramref name="onPeriodExceeded"/> on the current thread.
         /// </summary>
         private async Task PollServer(CancellationToken cancellationToken, Action onPeriodExceeded)
         {
@@ -586,7 +586,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(Config.Instance.ServerPollIntervalMilliseconds, cancellationToken);
+                await Task.Delay(Config.Instance.ServerPollIntervalMs, cancellationToken);
                 await Application.Current.Dispatcher.BeginInvoke(onPeriodExceeded);
                 if (this == null)
                     return;
@@ -653,7 +653,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
                 {
                     _NumRequestsFailed++;
 
-                    if (_NumRequestsFailed >= Config.Instance.MaxUnfulfilledServerStatusRequestsBeforeError)
+                    if (_NumRequestsFailed >= Config.Instance.MaxFailedConnectionRequests)
                     {
                         _ServerStatus = "Unable to reach server";
                         _NumRequestsFailed = 0;

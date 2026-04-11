@@ -7,19 +7,54 @@ The GUI is written in C# and WPF (Windows Platform Foundation) and uses MVVM (Mo
 
 The mod is written in C# and utilizes the Vintage Story modding API.
 
+
+
 # Installation
-TODO
+This mod is provided in two parts: the GUI and mod that must be added to the server.
+
+1. Download both from [the releases page](https://github.com/giodestone/VSYASGUI/releases).
+2. Place all DLLs from the mod zip into the relevant folder. On Windows that is: `%AppData%\Roaming\VintagestoryData\Mods`
+3. Extract and open the GUI exe.
+
+**Note: the API does not use HTTPS.** Therefore, please **do not expose the endpoint (:8181) to the internet**. The API key can be extracted from your usage of the GUI using a man in the middle attack and used to execute commands on the server. By default, the endpoint is bound to localhost (your local machine), so unless you port forward your internal ports from your computer, you should not be at risk.
 
 
 
+# Configuration
+
+Configuration files provided may be used to change certain behaviours.
+
+## Mod
+The config is stored in `VSYASGUI_Mod-config.json`.
+
+* bindurl: the URL the HTTP Client will bind to.
+* apikey: the key that should be used to perform authenticated principles.
+* maxconsoleentriescache: the maximum number of log entries (does not correspond to lines) that will be cached for retrieval by the GUI.
+* cpuusagepolltimems: every how many milliseconds to poll the CPU usage
+
+## GUI
+The recently connected endpoints/api keys can be cleared by selecting Application > Clear Configuration.
+
+The config is stored in `settings.json`.
+
+* currentapikey: most recently selected api key.
+* apikeyhistory: previously selected api keys (including the most recently selected).
+* currentendpoint: most recently selected endpoint.
+* endpointaddresses: previously selected endpoints.
+* serverpollintervalms: every how many milliseconds to poll the server for things like statistics
+* maxfailedconnectionrequests: how many times a the connection request fail before considering the server offline.
 
 
 
 # Building
+
+Follow [this guide to setup your development environment](https://wiki.vintagestory.at/Modding:Setting_up_your_Development_Environment#Setup_the_Environment).
+
 The solution is built with Visual Studio 2026 (not code) with WPF extensions added targeting .NET 8.
 
+Vintage Story should be installed.
 
-
+New versions of both the GUI may be created by right clicking on `VSYUASGUI-Mod` or `VSYASGUI-WPF-App` projects, and selecting 'Publish'.
 
 
 
@@ -115,13 +150,22 @@ Ban/kick reason and duration should be customisable.
 
 ## Mod/HTTP API
 
-The API is stateless, as to respect RESTful principles. Only an API key is required to correctly communicate.
+The API is stateless, as to respect RESTful principles. Only an API key is required to correctly communicate. POST is used exclusively at the moment, as some of the requests need to send over a body, and no robust method of checking GET requests has been implemented.
 
 Error tolerance was built in, as I don't think a HTTP API should crash the server.
 
 The `HttpApi` class contains the majority of the logic for responding to the API. Each endpoint is implemented as a task.
 
 The HTTP API runs asynchronously, with the `RunOnApiThread(...)` function being used on any VintageStory API related operations, as the API is not considered threadsafe. 
+
+### API Endpoints
+| Endpoint    | Method | Request Class              | Response Class             | Purpose                                     |
+|-------------|--------|----------------------------|----------------------------|---------------------------------------------|
+| /           | POST   | `ConnectionRequest`        | `ConnectionCheckResponse`  | For connection checking.                    |
+| /command    | POST   | `CommandRequest`           | `ConsoleCommandResponse`   | Send command to be executed.                |
+| /console    | POST   | `ConsoleRequest`           | `ConsoleEntriesResponse`   | Retrieve console entries.                   |
+| /players    | POST   | `PlayerOverviewRequest`    | `PlayerOverviewResponse`   | Retrieve overview of all connected players. |
+| /statistics | POST   | `ServerStatisticsRequest`  | `ServerStatisticsResponse` | Retrieve server statistics.                 |
 
 ### Improvements
 
@@ -155,4 +199,6 @@ The `PlayerOverview` class could be expanded to take into account offline player
 
 The provided mod and application fulfil the goal of providing an easy to use interface for a locally running server.
 
-The GUI allows access to the server console/log, ability to view player infomration visually, and perform basic player management.
+The GUI allows access to the server console/log, ability to view player information visually, and perform basic player management.
+
+The API provides stateless access to core features of the server. The API could be made using more than just POST method. HTTPS implementation would provide further security.
