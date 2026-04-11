@@ -1,6 +1,6 @@
 # Vintage Story Yet Another Simple GUI (VSYASGUI)
 
-![image showing server page of GUI](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image2.png)
+![server overview page of GUI](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image2.png)
 
 Provides a basic GUI for viewing the console and managing players visually. Requires a mod to be installed on the server, which provides a simplified HTTP API for the GUI to interface with.
 
@@ -50,10 +50,18 @@ The config is stored in `settings.json`.
 
 # Gallery
 
-![image showing server page of GUI](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image1.png)
-![image showing server page of GUI](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image2.png)
-![image showing server page of GUI](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image3.png)
-![image showing server page of GUI](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image4.png)
+![login page](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image1.png)
+*Login page*
+![server overview showing console and resources used by process](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image2.png)
+*Overview page*
+![player overview page with a player selected along with join dates, groups etc.](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image3.png)
+*Player overview page - player details*
+![player overview page showing a players details focusing in on the ban unban and kick buttons](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image4.png)
+*Player overview page - player options*
+![connecting page with cancel button](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image5.png)
+*Connecting page*
+![connection failed page with reason](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image6.png)
+*Connection failed page*
 
 
 
