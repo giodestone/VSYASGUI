@@ -1,4 +1,4 @@
-# Vintage Story Yet Another Simple GUI (VSYASGUI)
+# Vintage Story Yet Another Server GUI (VSYASGUI)
 
 ![server overview page of GUI](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image2.png)
 
@@ -10,6 +10,8 @@ Key features:
 * Issue commands
 * View connected players
 * Kick, ban, unban recently connected players
+
+Please report any bugs or enhancements to [issues tab](https://github.com/giodestone/VSYASGUI/issues).
 
 
 # Installation
@@ -101,7 +103,7 @@ The GUI is implemented using multiple pages which try to have a 'connection' flo
 
 ### Design
 
-In this project, Figma was used to prototype the GUI. Notably, the Figma templates use the material design (which is unavailable in WPF without a lot of work). The [images are available here](TODO).
+In this project, Figma was used to prototype the GUI. Notably, the Figma templates use the material design (which is unavailable in WPF without a lot of work).
 
 [Google's Material 3 Foundations](https://m3.material.io/foundations) were used as guiding principles. However, as a lot of them are specific to mobile-first design using the Material 3 GUI framework these had to be adapted. Due to scope, accessibility using screen readers was not tested, nor accommodations provided.
 
@@ -225,6 +227,6 @@ The `PlayerOverview` class could be expanded to take into account offline player
 
 The provided mod and application fulfil the goal of providing an easy to use interface for a locally running server.
 
-The GUI allows access to the server console/log, ability to view player information visually, and perform basic player management. An explicit disconnection screen would be beneficial.
+The GUI allows access to the server console/log, ability to view player information visually, and perform basic player management. An explicit disconnection screen would be beneficial. Moving to [Avolina](https://avaloniaui.net/) to allow cross-platform support would also help, as Vintage Story is multi-platform.
 
 The API provides stateless access to core features of the server. The API could be made using more than just POST method. HTTPS implementation would provide further security.
