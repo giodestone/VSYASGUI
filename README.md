@@ -189,6 +189,9 @@ The `HttpApi` class contains the majority of the logic for responding to the API
 The HTTP API runs asynchronously, with the `RunOnApiThread(...)` function being used on any VintageStory API related operations, as the API is not considered threadsafe. 
 
 ### API Endpoints
+
+The API key must be provided in the header under the `ApiKey` key.
+
 | Endpoint    | Method | Request Class              | Response Class             | Purpose                                     |
 |-------------|--------|----------------------------|----------------------------|---------------------------------------------|
 | /           | POST   | `ConnectionRequest`        | `ConnectionCheckResponse`  | For connection checking.                    |
