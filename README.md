@@ -1,4 +1,7 @@
 # Vintage Story Yet Another Simple GUI (VSYASGUI)
+
+![image showing server page of GUI](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image2.png)
+
 Provides a basic GUI for viewing the console and managing players visually. Requires a mod to be installed on the server, which provides a simplified HTTP API for the GUI to interface with.
 
 The goal of this project was to create an easy to use GUI which allows for management of the Vintage Story Server. The secondary goals were learn about creating code mods for the Vintage Story API, and learning WPF (Windows Presentation Foundation).
@@ -6,7 +9,6 @@ The goal of this project was to create an easy to use GUI which allows for manag
 The GUI is written in C# and WPF (Windows Platform Foundation) and uses MVVM (Model, View, View Model/Model View Controller).
 
 The mod is written in C# and utilizes the Vintage Story modding API.
-
 
 
 # Installation
@@ -43,6 +45,15 @@ The config is stored in `settings.json`.
 * endpointaddresses: previously selected endpoints.
 * serverpollintervalms: every how many milliseconds to poll the server for things like statistics
 * maxfailedconnectionrequests: how many times a the connection request fail before considering the server offline.
+
+
+
+# Gallery
+
+![image showing server page of GUI](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image1.png)
+![image showing server page of GUI](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image2.png)
+![image showing server page of GUI](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image3.png)
+![image showing server page of GUI](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image4.png)
 
 
 
