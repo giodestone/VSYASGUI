@@ -48,9 +48,9 @@ The config is stored in `settings.json`.
 
 # Building
 
-Follow [this guide to setup your development environment](https://wiki.vintagestory.at/Modding:Setting_up_your_Development_Environment#Setup_the_Environment).
+Follow [this guide to setup your development environment](https://wiki.vintagestory.at/Modding:Setting_up_your_Development_Environment#Setup_the_Environment) for Vintage Story Code Mod development.
 
-The solution is built with Visual Studio 2026 (not code) with WPF extensions added targeting .NET 8.
+The solution is built with Visual Studio 2026 (not code) with WPF extensions added.
 
 Vintage Story should be installed.
 
