@@ -28,9 +28,9 @@ This mod is provided in two parts: the GUI and mod that must be added to the ser
 Configuration files provided may be used to change certain behaviours.
 
 ## Mod
-The config is stored in `VSYASGUI_Mod-config.json`.
+The config is stored in `vsyasgui-mod-config.json` in the Vintage Story Mod Config Directory. On Windows, that is: `%AppData%\Roaming\VintagestoryData\ModConfig`
 
-* bindurl: the URL the HTTP Client will bind to.
+* bindurl: the URL the HTTP Client will bind to. Security warning: exposing the endpoint API to the internet is not recommended.
 * apikey: the key that should be used to perform authenticated principles.
 * maxconsoleentriescache: the maximum number of log entries (does not correspond to lines) that will be cached for retrieval by the GUI.
 * cpuusagepolltimems: every how many milliseconds to poll the CPU usage
