@@ -4,12 +4,12 @@
   "modid": "vsyasguimod",
   "name": "Vintage Story Yet Another Server GUI Mod",
   "authors": [
-    "giodestone"
+    "croissant aka giodestone"
   ],
-  "description": "Part of Vintage Story Yet Another Server GUI. Provides a HTTP RESTful API to allow remote management of server.",
+  "description": "GUI downloaded seperately (see https://github.com/giodestone/VSYASGUI/releases). Part of Vintage Story Yet Another Server GUI. Provides a HTTP RESTful API to allow remote management of server.",
   "version": "1.0.0",
   "dependencies": {
-    "game": "1.21.0"
+    "game": "1.22.0"
   },
   "requiredOnClient": false,
   "requiredOnServer": true
