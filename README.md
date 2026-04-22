@@ -25,7 +25,7 @@ The mod may be download through [the Vintage Story Mod DB](https://mods.vintages
 4. Extract the GUI `vsyasgui-x.x.x.zip`
 5. Open the exe
 
-**Note: the API does not use HTTPS.** Therefore, please **do not expose the endpoint (port 8181) to the internet**. The API key can be extracted from your usage of the GUI using a man in the middle attack and used to execute commands on the server. By default, you should not be at risk, as the endpoint is bound to localhost (your local machine).
+**Note: the API does not use HTTPS.** Therefore, please **do not expose the endpoint port (by default 8181) to the internet**. The API key can be extracted from your usage of the GUI using a man in the middle attack and used to execute commands on the server. By default, you should not be at risk, as the endpoint is bound to localhost (the local machine running the server).
 
 Note: The mod may be used by the host in the Vintage Story game. However, the server will not process any commands when paused.
 
