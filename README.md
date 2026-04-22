@@ -69,7 +69,7 @@ The config is stored in `settings.json`.
 *Connection failed page*
 ![connection failed page with reason](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image6.png)
 *About page*
-![about page with creator information, and license information](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image6.png)
+![about page with creator information, and license information](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image7.png)
 
 
 
