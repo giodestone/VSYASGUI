@@ -19,10 +19,10 @@ This mod is provided in two parts: the GUI and mod that must be added to the ser
 The mod may be download through [the Vintage Story Mod DB](https://mods.vintagestory.at/show/mod/46221#tab-description).
 
 0. Install .NET 10 Desktop runtime - already required for Vintage Story >=1.22.0 (Windows: https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
-1. Download `vsyasguimod-x.x.x.zip` from [the releases page](https://github.com/giodestone/VSYASGUI/releases)
+1. Download the mod `vsyasguimod-x.x.x.zip` from [the releases page](https://github.com/giodestone/VSYASGUI/releases)
 2. Place into your dedicated server's mod folder.
-3. Download `vsyasgui-x.x.x.zip` from [the releases page](https://github.com/giodestone/VSYASGUI/releases)
-4. Extract `vsyasgui-x.x.x.zip`
+3. Download the GUI `vsyasgui-x.x.x.zip` from [the releases page](https://github.com/giodestone/VSYASGUI/releases)
+4. Extract the GUI `vsyasgui-x.x.x.zip`
 5. Open the exe
 
 **Note: the API does not use HTTPS.** Therefore, please **do not expose the endpoint (port 8181) to the internet**. The API key can be extracted from your usage of the GUI using a man in the middle attack and used to execute commands on the server. By default, you should not be at risk, as the endpoint is bound to localhost (your local machine).
