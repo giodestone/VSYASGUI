@@ -10,10 +10,12 @@
     <UserControl.CommandBindings>
         <CommandBinding Command="self:MenuBarCommands.ExitCommand" CanExecute="ExitCommand_CanExecute" Executed="ExitCommand_Executed" />
         <CommandBinding Command="self:MenuBarCommands.ClearConfigurationCommand" CanExecute="ClearConfigurationCommand_CanExecute" Executed="ClearConfigCommand_Executed"/>
+        <CommandBinding Command="self:MenuBarCommands.ViewAboutCommand" CanExecute="ViewAboutCommand_CanExecute" Executed="ViewAboutCommand_Executed"/>
     </UserControl.CommandBindings>
     <Menu>
         <MenuItem Header="_Application">
             <MenuItem Header="Clear Configuration" Command="self:MenuBarCommands.ClearConfigurationCommand"/>
+            <MenuItem Header="About" Command="self:MenuBarCommands.ViewAboutCommand"/>
             <MenuItem Header="_Exit" Command="self:MenuBarCommands.ExitCommand"/>
         </MenuItem>
     </Menu>

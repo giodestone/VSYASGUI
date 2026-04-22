@@ -62,11 +62,26 @@ namespace VSYASGUI_WFP_App.UserControls
                 MessageBox.Show("Configuration reset successfully.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
+
+        private void ViewAboutCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;
+        }
+
+        private void ViewAboutCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            AboutWindow aboutWindow = new AboutWindow();
+            aboutWindow.Show();
+        }
     }
 
+    /// <summary>
+    /// Collection of commands that the <see cref="MenuBar"/> can exectue.
+    /// </summary>
     public static class MenuBarCommands
     {
         public static readonly RoutedUICommand ExitCommand = new RoutedUICommand("Exit", "Exit", typeof(MenuBarCommands), new InputGestureCollection());
         public static readonly RoutedUICommand ClearConfigurationCommand = new RoutedUICommand("Clear Configuration", "Clear Configuration", typeof(MenuBarCommands), new InputGestureCollection());
+        public static readonly RoutedUICommand ViewAboutCommand = new RoutedUICommand("View About", "View About", typeof(MenuBarCommands), new InputGestureCollection());
     }
 }
