@@ -7,7 +7,7 @@
     "croissant aka giodestone"
   ],
   "description": "GUI downloaded seperately (see https://github.com/giodestone/VSYASGUI/releases). Part of Vintage Story Yet Another Server GUI. Provides a HTTP RESTful API to allow remote management of server.",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "dependencies": {
     "game": "1.22.0"
   },
