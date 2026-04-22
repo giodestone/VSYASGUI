@@ -17,7 +17,9 @@ Please report any bugs or enhancements to [issues tab](https://github.com/giodes
 # Installation
 This mod is provided in two parts: the GUI and mod that must be added to the server.
 
-1. Download both from [the releases page](https://github.com/giodestone/VSYASGUI/releases).
+The mod (not GUI) can be downloaded directly from the Vintage Story ModDB: https://mods.vintagestory.at/show/mod/46221 
+
+1. Download vsyasgui and vsyasguizip from [the releases page](https://github.com/giodestone/VSYASGUI/releases).
 2. Place all DLLs from the mod zip into the relevant folder. On Windows that is: `%AppData%\Roaming\VintagestoryData\Mods`
 3. Extract and open the GUI exe.
 
@@ -187,6 +189,9 @@ The `HttpApi` class contains the majority of the logic for responding to the API
 The HTTP API runs asynchronously, with the `RunOnApiThread(...)` function being used on any VintageStory API related operations, as the API is not considered threadsafe. 
 
 ### API Endpoints
+
+The API key must be provided in the header under the `ApiKey` key.
+
 | Endpoint    | Method | Request Class              | Response Class             | Purpose                                     |
 |-------------|--------|----------------------------|----------------------------|---------------------------------------------|
 | /           | POST   | `ConnectionRequest`        | `ConnectionCheckResponse`  | For connection checking.                    |
