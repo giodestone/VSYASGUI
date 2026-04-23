@@ -24,6 +24,7 @@ The mod may be download through [the Vintage Story Mod DB](https://mods.vintages
 3. Download the GUI `vsyasgui-x.x.x.zip` from [the releases page](https://github.com/giodestone/VSYASGUI/releases)
 4. Extract the GUI `vsyasgui-x.x.x.zip`
 5. Open the exe
+6. Optionally, change the `BindURL` in the `data/ModConfig/` folder to point to the IP address of the machine (e.g. `http://192.168.0.2:8181/`), to allow access on LAN.
 
 **Note: the API does not use HTTPS.** Therefore, please **do not expose the endpoint port (by default 8181) to the internet**. The API key can be extracted from your usage of the GUI using a man in the middle attack and used to execute commands on the server. By default, you should not be at risk, as the endpoint is bound to localhost (the local machine running the server).
 
