@@ -24,9 +24,9 @@ namespace VSYASGUI_CommonLib
         /// <remarks>
         /// The HTTP API may respond with HTTP error codes.
         /// </remarks>
-        public static ErrorResponse MakeErrorBadRequest()
+        public static ErrorResponse MakeErrorBadRequest(String errorText="bad-request")
         {
-            return new ErrorResponse() { Error = "bad-request" };
+            return new ErrorResponse() { Error = errorText };
         }
 
         /// <summary>

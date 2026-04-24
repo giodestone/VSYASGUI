@@ -94,11 +94,13 @@
 
                 </Grid>
             </TabItem>
-            <!--<TabItem Header="Settings">
+            <TabItem Header="World">
                 <Grid Background="#FFE5E5E5">
-                    <TextBlock Text="GUI Configuration"/>
+                    <StackPanel>
+                        <Button Content="Download World" Command="{Binding TryRequestWorldSaveCommand}"/>
+                    </StackPanel>
                 </Grid>
-            </TabItem>-->
+            </TabItem>
         </TabControl>
 
     </Grid>

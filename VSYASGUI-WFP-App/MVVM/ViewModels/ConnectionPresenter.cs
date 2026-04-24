@@ -74,6 +74,10 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         private ObservableCollection<PlayerOverview> _PlayerOverviews = new ObservableCollection<PlayerOverview>();
         private int _SelectedPlayerOverviewIndex = -1;
 
+
+        private Task<ApiResponse<NoResponse>> _DownloadFileRequestTask;
+        private CancellationTokenSource _DownloadFileCancellationTokenSource;
+
         /// <summary>
         /// Command form of <see cref="TryBeginConnectionCheck"/>.
         /// </summary>
@@ -103,6 +107,10 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// Command form of <see cref="TryUnbanCurrentlySelectedPlayer"/>.
         /// </summary>
         public ICommand TryUnbanCurrentlySelectedPlayerCommand => new Command(_ => TryUnbanCurrentlySelectedPlayer());
+
+        public ICommand TryRequestWorldSaveCommand => new Command(_ => TryRequestWorldSave());
+
+
 
         /// <summary>
         /// The contents of the send command.
@@ -830,6 +838,20 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             _SendCommandContents = previousConsoleContents;
 
             return returnVal;
+        }
+
+        private bool TryRequestWorldSave()
+        {
+            _DownloadFileCancellationTokenSource = new CancellationTokenSource();
+            _DownloadFileRequestTask = ApiConnection.Instance.RequestApiInfo<NoResponse>(new WorldDownloadRequest(), _DownloadFileCancellationTokenSource.Token);
+            //_DownloadFileRequestTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnWorldDownloadComplete, task.Result));
+
+            return true;
+        }
+
+        private void OnWorldDownloadComplete()
+        {
+
         }
     }
 }

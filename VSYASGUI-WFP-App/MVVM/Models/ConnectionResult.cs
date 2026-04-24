@@ -14,6 +14,7 @@
         NotSent,
         BadRequest,
         RequestAlreadyInProgress,
+        BadType
 
     }
 }

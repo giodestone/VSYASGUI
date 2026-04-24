@@ -1,8 +1,11 @@
-﻿using System.Net.Http;
+﻿using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using VSYASGUI_CommonLib;
 using VSYASGUI_CommonLib.RequestObjects;
 using VSYASGUI_CommonLib.ResponseObjects;
+using static System.Net.WebRequestMethods;
 
 namespace VSYASGUI_WFP_App.MVVM.Models
 {
@@ -121,17 +124,76 @@ namespace VSYASGUI_WFP_App.MVVM.Models
                 return new RequestResult(Error.Connection, null);
             }
 
-            string contentString = await response.Content.ReadAsStringAsync();
-
-            switch (response.StatusCode)
+            if (response.Content.Headers.ContentType?.MediaType == System.Net.Mime.MediaTypeNames.Application.Octet)
             {
-                case System.Net.HttpStatusCode.OK:
-                    return new RequestResult(Error.Ok, contentString);
-                case System.Net.HttpStatusCode.Unauthorized:
-                    return new RequestResult(Error.Unauthorised, contentString);
-                default:
-                    return new RequestResult(Error.General, contentString);
+                // this is a file to be downloaded - must be handled appropriately.
+                await HandleFileResponse(response);
+                return new RequestResult(Error.Ok, null);
             }
+            else if (response.Content.Headers.ContentType?.MediaType == System.Net.Mime.MediaTypeNames.Application.Json)
+            {
+                // This can be parsed into a response type.
+                string contentString = await response.Content.ReadAsStringAsync();
+
+                switch (response.StatusCode)
+                {
+                    case System.Net.HttpStatusCode.OK:
+                        return new RequestResult(Error.Ok, contentString);
+                    case System.Net.HttpStatusCode.Unauthorized:
+                        return new RequestResult(Error.Unauthorised, contentString);
+                    default:
+                        return new RequestResult(Error.General, contentString);
+                }
+            }
+            else
+            {
+                return new RequestResult(Error.BadType, null);
+            }
+        }
+
+        /// <summary>
+        /// Handles a file response.
+        /// </summary>
+        /// <param name="response"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private async Task HandleFileResponse(HttpResponseMessage response)
+        {
+            if (response.Content.Headers.ContentType?.MediaType != System.Net.Mime.MediaTypeNames.Application.Octet)
+                return;
+
+            // Make temp file to recieve to
+            var fileOutPath = Path.GetTempPath() + "vsyasgui-download_" + Guid.NewGuid().ToString() + ".txt";
+            FileStream? outStream = null;
+
+            try
+            {
+                outStream = System.IO.File.Create(fileOutPath);
+            }
+            catch (Exception e)
+            {
+                outStream?.Close();
+                return;
+            }
+
+            try
+            {
+                using (Stream input = response.Content.ReadAsStream())
+                {
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        outStream.Write(buffer, 0, bytesRead);
+                    }
+                }
+            }
+            catch
+            {
+                outStream.Close();
+                return;
+            }
+
+            outStream.Close();
         }
 
         /// <summary>

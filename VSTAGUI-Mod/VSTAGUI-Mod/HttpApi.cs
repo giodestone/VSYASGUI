@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -138,11 +140,150 @@ namespace VSYASGUI_Mod
                 case "/statistics":
                     await SendStatisticsResponse(context);
                     break;
+                case "/world-download":
+                    await SendFileResponse(context, "Backups/test1"); // TEMP
+                    break;
                 case "/":
                 default:
                     await SendConnectionCheckResponse(context);
                     break;
             }
+        }
+
+        /// <summary>
+        /// Responds with a file.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="filePathRelativeToData">Relative path to file, do not include leading / .</param>
+        /// <returns></returns>
+        private async Task SendFileResponse(HttpListenerContext context, string filePathRelativeToData)
+        {
+            // Confirm file can be accessed.
+            FileInfo? requestedFileInfo = null;
+            try
+            {
+                requestedFileInfo = new FileInfo(_Api.DataBasePath + Path.DirectorySeparatorChar + filePathRelativeToData);
+            }
+            catch (UnauthorizedAccessException uex)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                ResponseFactory.MakeErrorBadRequest("Unable to provide file due to access/permission issue: " + uex.Message);
+                return;
+            }
+            catch (Exception e)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                ResponseFactory.MakeErrorBadRequest("Unable to provide file due to an exception: " + e.Message);
+                return;
+            }
+
+            // Confirm file exists.
+            if (!requestedFileInfo.Exists)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                ResponseFactory.MakeErrorBadRequest("Unable to provide file as it doesn't exist.");
+                return;
+            }
+
+            try
+            {
+                var response = context.Response;
+                using (FileStream fs = File.OpenRead(requestedFileInfo.FullName))
+                {
+                    string filename = Path.GetFileName(requestedFileInfo.FullName);
+                    //response is HttpListenerContext.Response...
+                    response.ContentLength64 = fs.Length;
+                    response.SendChunked = false;
+                    response.ContentType = System.Net.Mime.MediaTypeNames.Application.Octet;
+                    response.AddHeader("Content-disposition", "attachment; filename=" + filename);
+
+                    byte[] buffer = new byte[64 * 1024];
+                    int read;
+                    using (BinaryWriter bw = new BinaryWriter(response.OutputStream))
+                    {
+                        while ((read = fs.Read(buffer, 0, buffer.Length)) > 0)
+                        {
+                            bw.Write(buffer, 0, read);
+                            bw.Flush(); //seems to have no effect
+                        }
+
+                        bw.Close();
+                    }
+
+                    response.StatusCode = (int)HttpStatusCode.OK;
+                    response.StatusDescription = "OK";
+                    response.OutputStream.Close();
+                }
+            }
+            catch (Exception e)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                ResponseFactory.MakeErrorBadRequest("Unable to send file due to an exception: " + e.Message);
+                return;
+            }
+
+
+
+            //var fileOutPath = Path.GetTempPath() + Guid.NewGuid().ToString() + ".txt";
+            //FileStream? tempBase64FileStream = null;
+
+            //try
+            //{
+            //    tempBase64FileStream = File.Create(fileOutPath);
+            //}
+            //catch (Exception e)
+            //{
+            //    context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            //    ResponseFactory.MakeErrorBadRequest("Unable to provide file due to an exception when creating a temporary intermediary file: " + e.Message);
+            //    return;
+            //}
+
+            //using (var cs = new CryptoStream(tempBase64FileStream, new ToBase64Transform(),
+            //                                         CryptoStreamMode.Write))
+            //{
+            //    using (var fi = File.Open(filein, FileMode.Open))
+            //    {
+            //        fi.CopyTo(cs);
+            //    }
+            //}
+
+
+
+            //// Convert file to base64 string.
+            //string fileString = string.Empty;
+
+            //try
+            //{
+            //    var fileBytes = await File.ReadAllBytesAsync(requestedFileInfo.FullName);
+            //    fileString = Convert.ToBase64String(fileBytes);
+            //}
+            //catch (Exception e)
+            //{
+            //    context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            //    ResponseFactory.MakeErrorBadRequest("Unable to provide file due to an exception: " + e.Message);
+            //    return;
+            //}
+
+            //SHA256.HashData()
+
+
+            //string worldBackupFileName = "vsyasguimod_world_download_" + DateTime.Now.ToString("hh_mm_ss_dd_MM_YYYY") + ".temp";
+
+            //await RunOnApiThread(() => _Api.InjectConsole("/genbackup " + worldBackupFileName));
+
+            //string fullPathToBackedUpFile = _Api.DataBasePath + "/Backups/" + worldBackupFileName;
+
+            //FileInfo fileInfo = new FileInfo(fullPathToBackedUpFile);
+            //var lastFileWriteTime = fileInfo.LastWriteTime;
+
+            //while (fileInfo.LastWriteTime)
+
+
+            // make response that includes details on how to download it
+            // give URL where the response may be gotten.
+            // up to client to begin download.
+            // link is terminated after download is completed.
+
         }
 
         /// <summary>
@@ -425,7 +566,7 @@ namespace VSYASGUI_Mod
                 JsonSerializerOptions options = new JsonSerializerOptions() { IncludeFields = true };
                 string serialisedObj = JsonSerializer.Serialize(objToJsonise, options);
                 byte[] byteSerialisedObj = Encoding.UTF8.GetBytes(serialisedObj);
-                context.Response.ContentType = "application/json";
+                context.Response.ContentType = System.Net.Mime.MediaTypeNames.Application.Json;
                 context.Response.OutputStream.Write(byteSerialisedObj, 0, byteSerialisedObj.Length);
                 context.Response.Close();
                 return true;
