@@ -28,7 +28,7 @@ The mod may be download through [the Vintage Story Mod DB](https://mods.vintages
 
 **Note: the API does not use HTTPS.** Therefore, please **do not expose the endpoint port (by default 8181) to the internet**. The API key can be extracted from your usage of the GUI using a man in the middle attack and used to execute commands on the server. By default, you should not be at risk, as the endpoint is bound to localhost (the local machine running the server).
 
-Note: The mod may be used by the host in the Vintage Story game. However, the server will not process any commands when paused.
+Note: The mod may be used in a non-dedicated server. However, the API does not work when paused.
 
 # Configuration
 
