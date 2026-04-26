@@ -5,16 +5,12 @@ using System.Text;
 namespace VSYASGUI_CommonLib.ResponseObjects
 {
     /// <summary>
-    /// Represents a file sent by the server.
+    /// Represents a directory listicle.
     /// </summary>
-    public class FileResponse : ResponseBase
+    public class DirectoryResponse : ResponseBase
     {
         public override bool ExpectsResponse => true;
 
-        public string FileHashSha256;
-
-        public ulong FileLengthBytes;
-
-        public string FileBase64;
+        public List<string> Files;
     }
 }

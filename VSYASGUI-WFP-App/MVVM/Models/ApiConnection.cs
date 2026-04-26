@@ -1,10 +1,16 @@
 ﻿using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Mime;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text.Json;
+using System.Windows.Media.Animation;
 using VSYASGUI_CommonLib;
 using VSYASGUI_CommonLib.RequestObjects;
+using VSYASGUI_CommonLib.RequestObjects.FileRequests;
 using VSYASGUI_CommonLib.ResponseObjects;
+using VSYASGUI_CommonLib.ResponseObjects.ClientSide;
 using static System.Net.WebRequestMethods;
 
 namespace VSYASGUI_WFP_App.MVVM.Models
@@ -12,23 +18,8 @@ namespace VSYASGUI_WFP_App.MVVM.Models
     /// <summary>
     /// Represents a connection to the VS Server.
     /// </summary>
-    internal class ApiConnection
+    internal partial class ApiConnection
     {
-        /// <summary>
-        /// Content of the request along with the <see cref="Error"/>.
-        /// </summary>
-        internal struct RequestResult
-        {
-            public Error Error;
-            public string HttpContent;
-
-            public RequestResult(Error error, string httpContent)
-            {
-                Error = error;
-                HttpContent = httpContent;
-            }
-        }
-
         public static ApiConnection? Instance { get; protected set; }
         
         HttpClient _Client;
@@ -57,13 +48,16 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// <param name="request">The request to send.</param>
         /// <param name="cancellationToken">The token this can be cancelled with.</param>
         /// <returns>A task that can be cancelled.</returns>
-        public async Task<ApiResponse<TExpectedResponse>> RequestApiInfo<TExpectedResponse>(RequestBase request, CancellationToken cancellationToken) where TExpectedResponse : ResponseBase, new()
+        public async Task<ApiResponse<TExpectedResponse>> RequestApiInfoJson<TExpectedResponse>(RequestBase request, CancellationToken cancellationToken) where TExpectedResponse : ResponseBase, new()
         {
             request.ApiKey = Config.Instance.CurrentApiKey;
             var response = await SendHttpRequest(request, cancellationToken);
 
             if (response.Error != Error.Ok)
                 return new ApiResponse<TExpectedResponse>(response.Error, null);
+
+            if (response.ResultMediaType != RequestResult.MediaType.Json)
+                return new ApiResponse<TExpectedResponse>(Error.UnexpectedResponse, null);
 
             TExpectedResponse? serialisedObject = null;
 
@@ -85,15 +79,33 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         }
 
         /// <summary>
+        /// Request a file from a server.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>A task which can be cancelled.</returns>
+        public async Task<ApiResponse<FileResponse>> RequestFileFromApi(FileRequest request, CancellationToken cancellationToken)
+        {
+            request.ApiKey = Config.Instance.CurrentApiKey;
+            var response = await SendHttpRequest(request, cancellationToken);
+
+            if (response.ResultMediaType != RequestResult.MediaType.File)
+                return new ApiResponse<FileResponse>(Error.UnexpectedResponse, null);
+
+            return new ApiResponse<FileResponse>(response.Error, new FileResponse() { SavedFile = response.FileInfo });
+        }
+
+        /// <summary>
         /// Send a request to the server.
         /// </summary>
         /// <param name="request">The request to send.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>A cancellable task with the result of the response, and the returned details (if applicable).</returns>
+        /// <returns>A cancellable task with the result of the response. The response contains information and the content, if applicable.</returns>
         private async Task<RequestResult> SendHttpRequest(RequestBase request, CancellationToken cancellationToken)
         {
             HttpResponseMessage? response = null;
 
+            // SEND
             try
             {
                 // TODO: fix this to include the api key in the header
@@ -105,49 +117,59 @@ namespace VSYASGUI_WFP_App.MVVM.Models
             catch (HttpRequestException httpRequestException)
             {
                 if (httpRequestException.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                    return new RequestResult(Error.Unauthorised, null);
+                    return RequestResult.FromJson(Error.Unauthorised, null);
                 else if (httpRequestException.StatusCode == System.Net.HttpStatusCode.BadRequest)
-                    return new RequestResult(Error.BadRequest, null);
-                return new RequestResult(Error.General, null);
+                    return RequestResult.FromJson(Error.BadRequest, null);
+                return RequestResult.FromJson(Error.General, null);
             }
             catch (TaskCanceledException cancelledException)
             {
-                return new RequestResult(Error.Cancelled, null);
+                return RequestResult.FromJson(Error.Cancelled, null);
             }
             catch (Exception e)
             {
-                return new RequestResult(Error.General, null);
+                return RequestResult.FromJson(Error.General, null);
             }
 
             if (response == null)
             {
-                return new RequestResult(Error.Connection, null);
+                return RequestResult.FromJson(Error.Connection, null);
             }
 
+            // RESPOND
             if (response.Content.Headers.ContentType?.MediaType == System.Net.Mime.MediaTypeNames.Application.Octet)
             {
-                // this is a file to be downloaded - must be handled appropriately.
-                await HandleFileResponse(response);
-                return new RequestResult(Error.Ok, null);
+                // this is a file to be downloaded - must be handled appropriately
+                return await HandleFileResponse(cancellationToken, response);
             }
             else if (response.Content.Headers.ContentType?.MediaType == System.Net.Mime.MediaTypeNames.Application.Json)
             {
-                // This can be parsed into a response type.
-                string contentString = await response.Content.ReadAsStringAsync();
-
-                switch (response.StatusCode)
-                {
-                    case System.Net.HttpStatusCode.OK:
-                        return new RequestResult(Error.Ok, contentString);
-                    case System.Net.HttpStatusCode.Unauthorized:
-                        return new RequestResult(Error.Unauthorised, contentString);
-                    default:
-                        return new RequestResult(Error.General, contentString);
-                }
+                return await HandleJsonResponse(response);
             }
             else
             {
-                return new RequestResult(Error.BadType, null);
+                return RequestResult.FromUnsupportedType();
+            }
+        }
+
+        /// <summary>
+        /// Handles a JSON response.
+        /// </summary>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        private static async Task<RequestResult> HandleJsonResponse(HttpResponseMessage response)
+        {
+            // This can be parsed into a response type.
+            string contentString = await response.Content.ReadAsStringAsync();
+
+            switch (response.StatusCode)
+            {
+                case System.Net.HttpStatusCode.OK:
+                    return RequestResult.FromJson(Error.Ok, contentString);
+                case System.Net.HttpStatusCode.Unauthorized:
+                    return RequestResult.FromJson(Error.Unauthorised, contentString);
+                default:
+                    return RequestResult.FromJson(Error.General, contentString);
             }
         }
 
@@ -156,10 +178,11 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// </summary>
         /// <param name="response"></param>
         /// <exception cref="NotImplementedException"></exception>
-        private async Task HandleFileResponse(HttpResponseMessage response)
+        /// <returns>Task with completion success.</returns>
+        private async Task<RequestResult> HandleFileResponse(CancellationToken cancellationToken, HttpResponseMessage response)
         {
             if (response.Content.Headers.ContentType?.MediaType != System.Net.Mime.MediaTypeNames.Application.Octet)
-                return;
+                return RequestResult.FromFile(Error.BadType, null);
 
             // Make temp file to recieve to
             var fileOutPath = Path.GetTempPath() + "vsyasgui-download_" + Guid.NewGuid().ToString() + ".txt";
@@ -172,8 +195,10 @@ namespace VSYASGUI_WFP_App.MVVM.Models
             catch (Exception e)
             {
                 outStream?.Close();
-                return;
+                return RequestResult.FromFile(Error.FileError, null);
             }
+
+            FileInfo outFileInfo = new FileInfo(fileOutPath);
 
             try
             {
@@ -183,6 +208,13 @@ namespace VSYASGUI_WFP_App.MVVM.Models
                     int bytesRead;
                     while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
                     {
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            outStream.Close();
+                            outFileInfo.Delete();
+                            return RequestResult.FromFile(Error.Cancelled, null);
+                        }
+
                         outStream.Write(buffer, 0, bytesRead);
                     }
                 }
@@ -190,10 +222,18 @@ namespace VSYASGUI_WFP_App.MVVM.Models
             catch
             {
                 outStream.Close();
-                return;
+
+                try
+                {
+                    outFileInfo.Delete();
+                }
+                catch { }
+
+                return RequestResult.FromFile(Error.StreamError, null);
             }
 
             outStream.Close();
+            return RequestResult.FromFile(Error.Ok, outFileInfo);
         }
 
         /// <summary>

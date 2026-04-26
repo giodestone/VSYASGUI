@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Printing;
 using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,7 +11,10 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using VSYASGUI_CommonLib;
 using VSYASGUI_CommonLib.RequestObjects;
+using VSYASGUI_CommonLib.RequestObjects.DirectoryRequests;
+using VSYASGUI_CommonLib.RequestObjects.FileRequests;
 using VSYASGUI_CommonLib.ResponseObjects;
+using VSYASGUI_CommonLib.ResponseObjects.ClientSide;
 using VSYASGUI_WFP_App.MVVM.Models;
 using VSYASGUI_WFP_App.MVVM.ViewModels.Base;
 
@@ -75,7 +79,13 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         private int _SelectedPlayerOverviewIndex = -1;
 
 
-        private Task<ApiResponse<NoResponse>> _DownloadFileRequestTask;
+        public event EventHandler<ApiResponse<DirectoryResponse>> BackupsDirectoryChanged;
+        private Task<ApiResponse<DirectoryResponse>> _BackupDirectoryLookupTask;
+        private CancellationTokenSource _BackupDirectoryCancelllationTokenSource;
+        private ObservableCollection<string> _BackupDirectoryFiles = new ObservableCollection<string>();
+        private int _BackupDirectorySelectedIndex = -1;
+
+        private Task<ApiResponse<FileResponse>> _DownloadFileRequestTask;
         private CancellationTokenSource _DownloadFileCancellationTokenSource;
 
         /// <summary>
@@ -110,6 +120,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
         public ICommand TryRequestWorldSaveCommand => new Command(_ => TryRequestWorldSave());
 
+        public ICommand TryRequestBackupDirectoryCommand => new Command(_ => TryRequestBackupDirectory());
 
 
         /// <summary>
@@ -403,7 +414,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             _ConnectionCheckCancellationTokenSource = new CancellationTokenSource();
             try
             {
-                _CurrentConnectionCheckTask = ApiConnection.Instance.RequestApiInfo<ConnectionCheckResponse>(new ConnectionRequest(), _ConnectionCheckCancellationTokenSource.Token);
+                _CurrentConnectionCheckTask = ApiConnection.Instance.RequestApiInfoJson<ConnectionCheckResponse>(new ConnectionRequest(), _ConnectionCheckCancellationTokenSource.Token);
                 _CurrentConnectionCheckTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnConnectionCheckComplete, task.Result));
             }
             catch (Exception e)
@@ -460,7 +471,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             try
             {
                 _SendCommandCancelleationToken = new CancellationTokenSource();
-                _SendCommandTask = ApiConnection.Instance.RequestApiInfo<ConsoleCommandResponse>(new CommandRequest() { Command = SendCommandContents }, _SendCommandCancelleationToken.Token);
+                _SendCommandTask = ApiConnection.Instance.RequestApiInfoJson<ConsoleCommandResponse>(new CommandRequest() { Command = SendCommandContents }, _SendCommandCancelleationToken.Token);
                 _SendCommandTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnSendCommandComplete, task.Result));
                 SendCommandContents = string.Empty;
             }
@@ -489,7 +500,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
             try
             {
-                _ConsoleEntryRequestTask = ApiConnection.Instance.RequestApiInfo<ConsoleEntriesResponse>(new ConsoleRequest() { LineFrom = _ConsoleContentsLatestLogLine }, _PollServerCancellationTokenSource.Token);
+                _ConsoleEntryRequestTask = ApiConnection.Instance.RequestApiInfoJson<ConsoleEntriesResponse>(new ConsoleRequest() { LineFrom = _ConsoleContentsLatestLogLine }, _PollServerCancellationTokenSource.Token);
                 _ConsoleEntryRequestTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnRequestConsoleUpdateSucceeded, task.Result));
             }
             catch (Exception e)
@@ -501,6 +512,25 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
             return true;
         }
+
+        /// <summary>
+        /// Contents of the backup directory and its files.
+        /// </summary>
+        public ObservableCollection<string> BackupDirectoryFiles
+        {
+            get { return _BackupDirectoryFiles; }
+            set { UpdateFieldWithValue(ref _BackupDirectoryFiles, value, nameof(BackupDirectoryFiles)); }
+        }
+
+        /// <summary>
+        /// Which backup directory is currently selected.
+        /// </summary>
+        public int SelectedBackupDirectoryFileIndex
+        {
+            get => _BackupDirectorySelectedIndex;
+            set => UpdateFieldWithValue(ref _BackupDirectorySelectedIndex, value, nameof(BackupDirectoryFiles));
+        }
+
 
         /// <summary>
         /// Callback to clear the current server lgo.
@@ -751,12 +781,12 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         }
 
         /// <summary>
-        /// Try to make a request in a wrapped way with <see cref="ApiConnection.RequestApiInfo{TExpectedResponse}(RequestBase, CancellationToken)"/>.
+        /// Try to make a request in a wrapped way with <see cref="ApiConnection.RequestApiInfoJson{TExpectedResponse}(RequestBase, CancellationToken)"/>.
         /// </summary>
         /// <typeparam name="TResponse">Type of the expected response.</typeparam>
         /// <param name="baseTask">Where the launched task gets stored.</param>
         /// <param name="cancellationTokenSource">Cancellation token.</param>
-        /// <param name="request">The request to send. Will auto-populate <see cref="RequestBase.ApiKey"/> with <see cref="ApiConnection.RequestApiInfo{TExpectedResponse}(RequestBase, CancellationToken)"/>.</param>
+        /// <param name="request">The request to send. Will auto-populate <see cref="RequestBase.ApiKey"/> with <see cref="ApiConnection.RequestApiInfoJson{TExpectedResponse}(RequestBase, CancellationToken)"/>.</param>
         /// <param name="continuationFunction">Function to call when the request completes. Invoked by the main thread's dispatcher, as defined by <see cref="Application.Current"/>.</param>
         /// <returns><c>true</c> if the request was made, <c>false</c> if it cannot be made either due to an exception or outcome of <see cref="IsTaskRunning(Task)"/>.</returns>
         private Error TryMakeRequest<TResponse>(ref Task<ApiResponse<TResponse>> baseTask, CancellationTokenSource cancellationTokenSource, RequestBase request, Action<ApiResponse<TResponse>> continuationFunction) where TResponse : ResponseBase, new()
@@ -769,7 +799,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
                 if (cancellationTokenSource == null)
                     cancellationTokenSource = new CancellationTokenSource();
 
-                baseTask = ApiConnection.Instance.RequestApiInfo<TResponse>(request, cancellationTokenSource.Token);
+                baseTask = ApiConnection.Instance.RequestApiInfoJson<TResponse>(request, cancellationTokenSource.Token);
                 baseTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(continuationFunction, task.Result));
             }
             catch (Exception e)
@@ -842,16 +872,80 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
         private bool TryRequestWorldSave()
         {
-            _DownloadFileCancellationTokenSource = new CancellationTokenSource();
-            _DownloadFileRequestTask = ApiConnection.Instance.RequestApiInfo<NoResponse>(new WorldDownloadRequest(), _DownloadFileCancellationTokenSource.Token);
-            //_DownloadFileRequestTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnWorldDownloadComplete, task.Result));
+            // TODO: ADD GUARD TO ACTUALLY BAN REQUESTS AND PREVENT DANGLING ONES
+            // TODO: UNTIL THEN, THE FUNCTION IS INCOMPLETE
+
+            if (BackupDirectoryFiles.Count == 0)
+                return false;
+            if (SelectedBackupDirectoryFileIndex != 0)
+                return false;
+            if (SelectedBackupDirectoryFileIndex > BackupDirectoryFiles.Count - 1)
+                return false;
+
+            if (IsTaskRunning(_DownloadFileRequestTask))
+                return false;
+
+            try
+            {
+                _DownloadFileCancellationTokenSource = new CancellationTokenSource();
+                _DownloadFileRequestTask = ApiConnection.Instance.RequestFileFromApi(new WorldDownloadRequest() { FileName = BackupDirectoryFiles[SelectedBackupDirectoryFileIndex] }, _DownloadFileCancellationTokenSource.Token);
+                _DownloadFileRequestTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnWorldDownloadComplete, task.Result));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("ERROR: Unable to invoke task due to an exception.");
+                Console.WriteLine(e.Message);
+                return false;
+            }
 
             return true;
         }
 
-        private void OnWorldDownloadComplete()
+        private void OnWorldDownloadComplete(ApiResponse<FileResponse> response)
         {
+            if (response.ErrorResult != Error.Ok)
+            {
+                MessageBox.Show("Failed to download the save download. \n\nError: " + response.ErrorResult, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
+            if (response.Response == null)
+            {
+                MessageBox.Show("Failed to download save due to programming error. Please submit a bug report on the GitHub issue page.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = "Vintage Story Save Backup"; // Default file name
+            dlg.DefaultExt = ".vcdbs"; // Default file extension
+
+            // Show save file dialog box
+            Nullable<bool> result = dlg.ShowDialog();
+
+            // Process save file dialog box results
+            if (result == true)
+            {
+                // Save document
+                string filename = dlg.FileName;
+
+                response.Response.SavedFile.MoveTo(filename);
+            }
         }
+
+        private bool TryRequestBackupDirectory()
+        {
+            return TryMakeRequest<DirectoryResponse>(ref _BackupDirectoryLookupTask, _BackupDirectoryCancelllationTokenSource, new BackupDirectoryRequest(), OnBackupDirectoryRequestComplete) == Error.Ok;
+        }
+
+        private void OnBackupDirectoryRequestComplete(ApiResponse<DirectoryResponse> response)
+        {
+            // TODO: Make this nicer maybe? It clears the whole field, which isn't good.
+
+            if (response.ErrorResult != Error.Ok)
+                return;
+
+            BackupDirectoryFiles = new ObservableCollection<string>(response.Response.Files);
+        }
+
     }
 }

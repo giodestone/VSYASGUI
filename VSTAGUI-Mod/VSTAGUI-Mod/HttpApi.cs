@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Vintagestory.API.Server;
 using VSYASGUI_CommonLib;
 using VSYASGUI_CommonLib.RequestObjects;
+using VSYASGUI_CommonLib.RequestObjects.FileRequests;
 using VSYASGUI_CommonLib.ResponseObjects;
 
 namespace VSYASGUI_Mod
@@ -140,8 +141,11 @@ namespace VSYASGUI_Mod
                 case "/statistics":
                     await SendStatisticsResponse(context);
                     break;
-                case "/world-download":
-                    await SendFileResponse(context, "Backups/test1"); // TEMP
+                case "/backup-download":
+                    await SendBackupFileResponse(context); // TEMP
+                    break;
+                case "/save-backups":
+                    await SendDirectoryInfo(context, "Backups");
                     break;
                 case "/":
                 default:
@@ -150,30 +154,87 @@ namespace VSYASGUI_Mod
             }
         }
 
+        private async Task SendDirectoryInfo(HttpListenerContext context, string directoryName)
+        {
+            DirectoryInfo directoryInfo;
+            try
+            {
+                directoryInfo = new DirectoryInfo(_Api.DataBasePath + Path.DirectorySeparatorChar + directoryName);
+            }
+            catch (Exception ex)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                WriteJsonToResponse(context, ResponseFactory.MakeErrorBadRequest("Unable to find directory."));
+                return;
+            }
+
+            List<string> fileNames = new List<string>();
+
+            foreach (var file in directoryInfo.EnumerateFiles())
+            {
+                fileNames.Add(file.Name);
+            }
+
+            context.Response.StatusCode = (int)HttpStatusCode.OK;
+            WriteJsonToResponse(context, ResponseFactory.MakeDirectoryResponse(fileNames));
+        }
+
         /// <summary>
         /// Responds with a file.
         /// </summary>
         /// <param name="context"></param>
         /// <param name="filePathRelativeToData">Relative path to file, do not include leading / .</param>
         /// <returns></returns>
-        private async Task SendFileResponse(HttpListenerContext context, string filePathRelativeToData)
+        private async Task SendBackupFileResponse(HttpListenerContext context)
         {
+            DirectoryInfo directoryInfo = new DirectoryInfo(_Api.DataBasePath + Path.DirectorySeparatorChar + "Backups");
+
+            WorldDownloadRequest? request = null;
+
+            try
+            {
+                // TODO: Add cancellation token.
+                request = await JsonSerializer.DeserializeAsync<WorldDownloadRequest>(context.Request.InputStream);
+            } 
+            catch (Exception e)
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                WriteJsonToResponse(context, ResponseFactory.MakeErrorBadRequest("Failed to read request: " + e.Message));
+                return;
+            }
+
+            // TODO: I think just sending a UUID for each file is much safer, as this is a silly amount of injection checking and it probably doesn't cover all bases...
+            if (request == null || string.IsNullOrEmpty(request.FileName) || string.IsNullOrWhiteSpace(request.FileName) || request.FileName.Contains(Path.PathSeparator) || request.FileName.Contains(Path.DirectorySeparatorChar) || request.FileName.ContainsAny(Path.GetInvalidFileNameChars()) || request.FileName.Contains('*'))
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                WriteJsonToResponse(context, ResponseFactory.MakeErrorBadRequest("Bad file name."));
+                return;
+            }
+
+            // TODO: This is a file system operation... which could stall. This should become its own task that we wait for.
+            if (!directoryInfo.EnumerateFiles().Any(f => f.Name == request.FileName))
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                WriteJsonToResponse(context, ResponseFactory.MakeErrorBadRequest("File does not exist."));
+                return;
+            }
+
             // Confirm file can be accessed.
             FileInfo? requestedFileInfo = null;
             try
             {
-                requestedFileInfo = new FileInfo(_Api.DataBasePath + Path.DirectorySeparatorChar + filePathRelativeToData);
+                requestedFileInfo = new FileInfo(_Api.DataBasePath + Path.DirectorySeparatorChar + request.FileName);
             }
             catch (UnauthorizedAccessException uex)
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                ResponseFactory.MakeErrorBadRequest("Unable to provide file due to access/permission issue: " + uex.Message);
+                WriteJsonToResponse(context, ResponseFactory.MakeErrorBadRequest("Unable to provide file due to access/permission issue: " + uex.Message));
                 return;
             }
             catch (Exception e)
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                ResponseFactory.MakeErrorBadRequest("Unable to provide file due to an exception: " + e.Message);
+                WriteJsonToResponse(context, ResponseFactory.MakeErrorBadRequest("Unable to provide file due to an exception: " + e.Message));
                 return;
             }
 
@@ -181,7 +242,7 @@ namespace VSYASGUI_Mod
             if (!requestedFileInfo.Exists)
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                ResponseFactory.MakeErrorBadRequest("Unable to provide file as it doesn't exist.");
+                WriteJsonToResponse(context, ResponseFactory.MakeErrorBadRequest("Unable to provide file as it doesn't exist."));
                 return;
             }
 
@@ -218,7 +279,7 @@ namespace VSYASGUI_Mod
             catch (Exception e)
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                ResponseFactory.MakeErrorBadRequest("Unable to send file due to an exception: " + e.Message);
+                WriteJsonToResponse(context, ResponseFactory.MakeErrorBadRequest("Unable to send file due to an exception: " + e.Message));
                 return;
             }
 

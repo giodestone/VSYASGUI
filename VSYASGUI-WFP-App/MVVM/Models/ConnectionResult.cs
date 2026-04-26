@@ -14,7 +14,10 @@
         NotSent,
         BadRequest,
         RequestAlreadyInProgress,
-        BadType
-
+        BadType,
+        FileError,
+        StreamError,
+        Unsupported,
+        UnexpectedResponse
     }
 }

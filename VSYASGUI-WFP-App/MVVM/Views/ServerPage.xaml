@@ -97,6 +97,10 @@
             <TabItem Header="World">
                 <Grid Background="#FFE5E5E5">
                     <StackPanel>
+                        <Label>Backup directory</Label>
+                        <Label>Make sure the backup is complete before downloading, as it is possible to download a partial backup!</Label>
+                        <DataGrid ItemsSource="{Binding BackupDirectoryFiles}" SelectedIndex="{Binding SelectedBackupDirectoryFileIndex}" Height="200"/>
+                        <Button Content="Refresh" Command="{Binding TryRequestBackupDirectoryCommand}"/>
                         <Button Content="Download World" Command="{Binding TryRequestWorldSaveCommand}"/>
                     </StackPanel>
                 </Grid>

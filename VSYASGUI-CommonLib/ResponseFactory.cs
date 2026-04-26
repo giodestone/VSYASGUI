@@ -99,5 +99,10 @@ namespace VSYASGUI_CommonLib
                 HashOfPlayerOverviews = playerOverviewHashString
             };
         }
+
+        public static DirectoryResponse MakeDirectoryResponse(List<string> fileNames)
+        {
+            return new DirectoryResponse() { Files = fileNames };
+        }
     }
 }
