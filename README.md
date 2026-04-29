@@ -91,7 +91,7 @@ The goal of this project was to create an easy to use GUI which allows for manag
 
 The GUI is written in C# and WPF (Windows Platform Foundation) and uses MVVM (Model, View, View Model/Model View Controller).
 
-The mod is written in C# and utilizes the Vintage Story modding API.
+The mod is written in C# and utilizes the Vintage Story modding API, then provides certain functions over a HTTP API. This approach is more favourable than e.g. attaching to the server stream as it allows for greater flexibility for e.g. verifying input and providing additional utilites. As of writing, this is the only mod that takes this approach, except from the RCON mod (Remote CONsole, a standard created/used by Valve's Source games) - but it does not provide a GUI.
 
 This project is split across three .sln: The Mod for the server (`VSYUASGUI-Mod`), the GUI (`VSYASGUI-WPF-App`), and the shared/common classes (`VSYASGUI-CommonLib`).
 
@@ -238,3 +238,5 @@ The provided mod and application fulfil the goal of providing an easy to use int
 The GUI allows access to the server console/log, ability to view player information visually, and perform basic player management. An explicit disconnection screen would be beneficial. Moving to [Avolina](https://avaloniaui.net/) to allow cross-platform support would also help, as Vintage Story is multi-platform.
 
 The API provides stateless access to core features of the server. The API could be made using more than just POST method. HTTPS implementation would provide further security.
+
+Additional functionality would be useful, such as a way to upload/download saves & configs securely, provide a 'restart' applet/script (allowing the server to auto-restart), and more GUI wrappers for console functions.
