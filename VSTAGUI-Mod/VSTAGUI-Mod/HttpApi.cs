@@ -122,46 +122,91 @@ namespace VSYASGUI_Mod
                 return;
             }
 
-            switch (context.Request.Url.AbsolutePath.TrimEnd('/'))
+
+            string[] splitLocalUrl = GetSplitLocalUrl(context);
+            var firstPartOfUrl = string.Empty;
+            if (splitLocalUrl.Length > 0)
+            {
+                firstPartOfUrl = splitLocalUrl[0];
+            }
+            else
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+            }
+
+            switch (firstPartOfUrl)
             {
                 // todo: axe this endpoint.
                 //case "/players-online":
                 //    await SendPlayersOnlineResponse(context);
                 //    break;
-                case "/" + ApiEndpointConstants.PlayerOverviewAddress:
+                case ApiEndpointConstants.PlayerOverviewAddress:
                     await SendPlayerOverviewResponse(context);
                     break;
-                case "/" + ApiEndpointConstants.ConsoleFromAddress:
-                    // TODO: This WONT work at all because the args are not parsed from the url, this technically won't even hit!
+                case ApiEndpointConstants.ConsoleFromAddress:
                     await SendConsoleResponse(context);
                     break;
-                case "/" + ApiEndpointConstants.ConsolePostAddress:
-                    // TODO: This WONT work at all because the args are not parsed from the url, this technically won't even hit!
-                    // TODO: METHOD MUST BE VERIFIED
+                case ApiEndpointConstants.ConsolePostAddress:
                     await SendCommandResponse(context);
                     break;
-                case "/" + ApiEndpointConstants.ServerStatisticsAddress:
+                case ApiEndpointConstants.ServerStatisticsAddress:
                     await SendStatisticsResponse(context);
                     break;
-                    // TODO START: MERGE THE TWO DEPENDING ON ARGS
-                case "/" + ApiEndpointConstants.BackupDirectoryAddress:
-                    await SendBackupFileResponse(context); // TEMP
+                case ApiEndpointConstants.BackupDirectoryAddress:
+                    bool flowControl = await HandleBackupFileRequest(context);
+                    if (!flowControl)
+                    {
+                        return;
+                    }
                     break;
-                case "/" + ApiEndpointConstants.BackupDownloadAddress:
-                    await SendDirectoryInfo(context, "Backups");
-                    break;
-                    // TODO END.
-                case "/" + ApiEndpointConstants.ConnectionCheckAddress:
+                case ApiEndpointConstants.ConnectionCheckAddress:
+                    // TODO
                     await SendConnectionCheckResponse(context);
                     break;
                 default:
                     context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                     break;
             }
+
+            context.Response.Close();
+        }
+
+        private async Task<bool> HandleBackupFileRequest(HttpListenerContext context)
+        {
+            // Check for if ever the command constants do not equal, because this logic would have to be changed.
+            if (ApiEndpointConstants.BackupDirectoryAddress != ApiEndpointConstants.BackupDownloadAddress)
+            {
+                await RunOnApiThread(() => _Api.Logger.Error("VSYASGUI_Mod: Internal programming error, backup endpoint will not work correctly."));
+                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                return false;
+            }
+
+            if (GetSplitLocalUrl(context).Length == 1)
+                await SendDirectoryInfo(context, "Backups");
+            else if (GetSplitLocalUrl(context).Length == 2)
+                await SendBackupFileResponse(context); // TEMP
+            else
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return false;
+            }
+
+            return true;
+        }
+
+        private static string[] GetSplitLocalUrl(HttpListenerContext context)
+        {
+            return context.Request.Url.LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
         }
 
         private async Task SendDirectoryInfo(HttpListenerContext context, string directoryName)
         {
+            if (GetSplitLocalUrl(context).Length != 1 || context.Request.HttpMethod != "GET")
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return;
+            }
+
             DirectoryInfo directoryInfo;
             try
             {
@@ -193,6 +238,12 @@ namespace VSYASGUI_Mod
         /// <returns></returns>
         private async Task SendBackupFileResponse(HttpListenerContext context)
         {
+            if (GetSplitLocalUrl(context).Length != 1 || context.Request.HttpMethod != "GET")
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return;
+            }
+
             DirectoryInfo directoryInfo = new DirectoryInfo(_Api.DataBasePath + Path.DirectorySeparatorChar + "Backups");
 
             WorldDownloadRequest? request = null;
@@ -358,6 +409,12 @@ namespace VSYASGUI_Mod
         /// </summary>
         private async Task SendPlayerOverviewResponse(HttpListenerContext context)
         {
+            if (GetSplitLocalUrl(context).Length != 1 || context.Request.HttpMethod != "GET")
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return;
+            }
+
             List<PlayerOverview>? playerOverviews = null;
 
             await RunOnApiThread(() =>
@@ -427,6 +484,11 @@ namespace VSYASGUI_Mod
         /// </summary>
         private async Task SendStatisticsResponse(HttpListenerContext context)
         {
+            if (GetSplitLocalUrl(context).Length != 1 || context.Request.HttpMethod != "GET")
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return;
+            }
 
             double cpuUsagePercentage = -1;
             long memUsageBytes = -1;
@@ -461,15 +523,27 @@ namespace VSYASGUI_Mod
         /// </summary>
         private async Task SendCommandResponse(HttpListenerContext context)
         {
-            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-
-            string requestBody = await ReadRequestContents(context);
-            CommandRequest? request = DeserialiseIntoRequestObject<CommandRequest>(requestBody);
-
-            if (request == null)
+            // Bad num args, bad method
+            if (GetSplitLocalUrl(context).Length != 2 || context.Request.HttpMethod != "POST")
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return;
+            }
 
-            await RunOnApiThread(() => { _Api.InjectConsole(request.Command); });         
+            // Check for bad argument.
+            string decodedCommand = string.Empty;
+
+            try
+            {
+                decodedCommand = Uri.UnescapeDataString(GetSplitLocalUrl(context)[1]);
+            }
+            catch
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return;
+            }
+
+            await RunOnApiThread(() => { _Api.InjectConsole(decodedCommand); });         
 
             context.Response.StatusCode = (int)HttpStatusCode.OK;
         }
@@ -537,14 +611,19 @@ namespace VSYASGUI_Mod
         /// </summary>
         private async Task SendConsoleResponse(HttpListenerContext context)
         {
+            if (GetSplitLocalUrl(context).Length != 2 || context.Request.HttpMethod != "POST")
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return;
+            }
+
             context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
 
-            string strmContents = await ReadRequestContents(context);
-
-            ConsoleRequest? request = DeserialiseIntoRequestObject<ConsoleRequest>(strmContents);
-
-            if (request == null)
+            if (!long.TryParse(GetSplitLocalUrl(context)[1], out var requestedLineFrom))
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return;
+            }
 
             context.Response.StatusCode = 200;
 
@@ -553,58 +632,9 @@ namespace VSYASGUI_Mod
             long lineTo = -1;
 
             // Would need to guarantee the LogCache is thead safe, which seems like it does not need to be for now.
-            await RunOnApiThread(() => _LogCache.GetLog(request.LineFrom, out logLines, out lineFrom, out lineTo));
+            await RunOnApiThread(() => _LogCache.GetLog(requestedLineFrom, out logLines, out lineFrom, out lineTo));
             
             WriteJsonToResponse(context, ResponseFactory.MakeConsoleEntriesResponse(logLines, lineFrom, lineTo, _InstanceGuid));
-        }
-        
-        /// <summary>
-        /// Deserialise the given string into a response object.
-        /// </summary>
-        /// <remarks>
-        /// The expected size of the obect is rather small. If parsing in large objects, consider using <see cref="JsonSerializer.DeserializeAsync{TValue}(System.IO.Stream, JsonSerializerOptions?, System.Threading.CancellationToken)"/>.
-        /// <br/>
-        /// Consider <typeparamref name="T"/> carefully: it is possible for a base class to incorrectly be considered.
-        /// </remarks>
-        /// <typeparam name="T">Type of request.</typeparam>
-        /// <param name="json">Processed string into json.</param>
-        /// <returns>The object if successful</returns>
-        private T DeserialiseIntoRequestObject<T>(string json) where T : RequestBase
-        {
-            T? request = null;
-            try
-            {
-                request = JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions() { IncludeFields = true });
-            }
-            catch
-            {
-                return null;
-            }
-
-            return request;
-        }
-
-        /// <summary>
-        /// Read the contents of the request as provided by the <paramref name="context"/>.
-        /// </summary>
-        /// <returns>Request contents. <see cref="string.Empty"/> if Error occurs when reading (or the request contents are empty).</returns>
-        private async Task<string> ReadRequestContents(HttpListenerContext context)
-        {
-            string strmContents = string.Empty;
-            try
-            {
-                byte[] bytes = new byte[CommonVariables.MaxRequestSize];
-                int strRead = await context.Request.InputStream.ReadAsync(bytes, 0, CommonVariables.MaxRequestSize);
-
-                // Convert byte array to a text string.
-                strmContents = context.Request.ContentEncoding.GetString(bytes, 0, strRead);
-            }
-            catch
-            {
-                return strmContents;
-            }
-
-            return strmContents;
         }
 
         /// <summary>
@@ -635,7 +665,6 @@ namespace VSYASGUI_Mod
                 byte[] byteSerialisedObj = Encoding.UTF8.GetBytes(serialisedObj);
                 context.Response.ContentType = System.Net.Mime.MediaTypeNames.Application.Json;
                 context.Response.OutputStream.Write(byteSerialisedObj, 0, byteSerialisedObj.Length);
-                context.Response.Close();
                 return true;
             }
             catch (Exception e)
