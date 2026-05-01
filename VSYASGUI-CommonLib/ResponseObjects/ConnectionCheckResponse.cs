@@ -1,7 +1,7 @@
 ﻿namespace VSYASGUI_CommonLib.ResponseObjects
 {
     /// <summary>
-    /// Relevant response for <seealso cref="VSYASGUI_CommonLib.RequestObjects.ConnectionRequest"/>.
+    /// Response for a connection check. Keeps track of instance, otherwise no response is expected (only HTTP 200 OK).
     /// </summary>
     public class ConnectionCheckResponse : InstanceAwareResponseBase
     {

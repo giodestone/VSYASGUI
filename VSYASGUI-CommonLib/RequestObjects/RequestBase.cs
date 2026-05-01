@@ -7,12 +7,10 @@ namespace VSYASGUI_CommonLib.RequestObjects
     /// </summary>
     public abstract class RequestBase
     {
+
         /// <summary>
         /// Where the request should go. Must include a leading /
         /// </summary>
         public abstract string Address { get; }
-
-        [JsonIgnore]
-        public string ApiKey = string.Empty;
     }
 }

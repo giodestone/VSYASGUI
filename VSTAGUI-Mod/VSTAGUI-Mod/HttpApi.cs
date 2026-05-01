@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -12,7 +11,6 @@ using System.Threading.Tasks;
 using Vintagestory.API.Server;
 using VSYASGUI_CommonLib;
 using VSYASGUI_CommonLib.RequestObjects;
-using VSYASGUI_CommonLib.RequestObjects.FileRequests;
 using VSYASGUI_CommonLib.ResponseObjects;
 
 namespace VSYASGUI_Mod
@@ -126,30 +124,38 @@ namespace VSYASGUI_Mod
 
             switch (context.Request.Url.AbsolutePath.TrimEnd('/'))
             {
-                case "/players-online":
-                    await SendPlayersOnlineResponse(context);
-                    break;
-                case "/players":
+                // todo: axe this endpoint.
+                //case "/players-online":
+                //    await SendPlayersOnlineResponse(context);
+                //    break;
+                case "/" + ApiEndpointConstants.PlayerOverviewAddress:
                     await SendPlayerOverviewResponse(context);
                     break;
-                case "/console":
+                case "/" + ApiEndpointConstants.ConsoleFromAddress:
+                    // TODO: This WONT work at all because the args are not parsed from the url, this technically won't even hit!
                     await SendConsoleResponse(context);
                     break;
-                case "/command":
+                case "/" + ApiEndpointConstants.ConsolePostAddress:
+                    // TODO: This WONT work at all because the args are not parsed from the url, this technically won't even hit!
+                    // TODO: METHOD MUST BE VERIFIED
                     await SendCommandResponse(context);
                     break;
-                case "/statistics":
+                case "/" + ApiEndpointConstants.ServerStatisticsAddress:
                     await SendStatisticsResponse(context);
                     break;
-                case "/backup-download":
+                    // TODO START: MERGE THE TWO DEPENDING ON ARGS
+                case "/" + ApiEndpointConstants.BackupDirectoryAddress:
                     await SendBackupFileResponse(context); // TEMP
                     break;
-                case "/save-backups":
+                case "/" + ApiEndpointConstants.BackupDownloadAddress:
                     await SendDirectoryInfo(context, "Backups");
                     break;
-                case "/":
-                default:
+                    // TODO END.
+                case "/" + ApiEndpointConstants.ConnectionCheckAddress:
                     await SendConnectionCheckResponse(context);
+                    break;
+                default:
+                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                     break;
             }
         }

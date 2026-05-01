@@ -2,8 +2,6 @@
 {
     /// <summary>
     /// Provides a list of the current overviews.
-    /// 
-    /// Response for <see cref="VSYASGUI_CommonLib.RequestObjects.PlayerOverviewRequest"/>.
     /// </summary>
     public class PlayerOverviewResponse : ResponseBase
     {

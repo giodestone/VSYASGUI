@@ -7,8 +7,6 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Windows.Media.Animation;
 using VSYASGUI_CommonLib;
-using VSYASGUI_CommonLib.RequestObjects;
-using VSYASGUI_CommonLib.RequestObjects.FileRequests;
 using VSYASGUI_CommonLib.ResponseObjects;
 using VSYASGUI_CommonLib.ResponseObjects.ClientSide;
 using static System.Net.WebRequestMethods;
@@ -48,9 +46,8 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// <param name="request">The request to send.</param>
         /// <param name="cancellationToken">The token this can be cancelled with.</param>
         /// <returns>A task that can be cancelled.</returns>
-        public async Task<ApiResponse<TExpectedResponse>> RequestApiInfoJson<TExpectedResponse>(RequestBase request, CancellationToken cancellationToken) where TExpectedResponse : ResponseBase, new()
+        public async Task<ApiResponse<TExpectedResponse>> RequestApiInfoJson<TExpectedResponse>(ApiRequest request, CancellationToken cancellationToken) where TExpectedResponse : ResponseBase, new()
         {
-            request.ApiKey = Config.Instance.CurrentApiKey;
             var response = await SendHttpRequest(request, cancellationToken);
 
             if (response.Error != Error.Ok)
@@ -101,7 +98,7 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// <param name="request">The request to send.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A cancellable task with the result of the response. The response contains information and the content, if applicable.</returns>
-        private async Task<RequestResult> SendHttpRequest(RequestBase request, CancellationToken cancellationToken)
+        private async Task<RequestResult> SendHttpRequest(ApiRequest request, CancellationToken cancellationToken)
         {
             HttpResponseMessage? response = null;
 
@@ -110,9 +107,30 @@ namespace VSYASGUI_WFP_App.MVVM.Models
             {
                 // TODO: fix this to include the api key in the header
                 HttpContent c = SerialiseObject(request);
-                c.Headers.Add(CommonVariables.RequestHeaderApiKeyName, request.ApiKey);
-                response = await _Client.PostAsync(_EndpointUri + request.Address, c, cancellationToken);
-                response.EnsureSuccessStatusCode();
+                c.Headers.Add(CommonVariables.RequestHeaderApiKeyName, Config.Instance.CurrentApiKey);
+
+                switch (request.RequestMethod)
+                {
+                    case RequestMethods.DELETE:
+                        response = await _Client.DeleteAsync(request.ToAddress(_EndpointUri), cancellationToken);
+                        break;
+                    case RequestMethods.GET:
+                        response = await _Client.GetAsync(request.ToAddress(_EndpointUri), cancellationToken);
+                        break;
+                    case RequestMethods.PATCH:
+                        response = await _Client.PatchAsync(request.ToAddress(_EndpointUri), null, cancellationToken);
+                        break;
+                    case RequestMethods.POST:
+                        response = await _Client.PostAsync(request.ToAddress(_EndpointUri), null, cancellationToken);
+                        break;
+                    case RequestMethods.PUT:
+                        response = await _Client.PostAsync(request.ToAddress(_EndpointUri), null, cancellationToken);
+                        break;
+                    case RequestMethods.Undefined:
+                        throw new Exception("Invalid request method.");
+                }
+
+                response?.EnsureSuccessStatusCode();
             }
             catch (HttpRequestException httpRequestException)
             {
