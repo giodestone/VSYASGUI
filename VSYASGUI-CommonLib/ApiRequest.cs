@@ -12,17 +12,17 @@ namespace VSYASGUI_CommonLib
         /// <summary>
         /// Top level address, the one after the provided API url.
         /// </summary>
-        public string ApiEndpointUrl { get; init; }
+        public required string ApiEndpointUrl { get; init; }
 
         /// <summary>
         /// Additional arguments after the endpoint URL.
         /// </summary>
-        public List<string> Arguments { get; init; }
+        public List<string> Arguments { get; set; } = new();
 
         /// <summary>
         /// The method used to send to the server.
         /// </summary>
-        public RequestMethods RequestMethod { get; init; }
+        public required RequestMethods RequestMethod { get; init; }
 
         /// <summary>
         /// Converts the <see cref="ApiEndpointUrl"/> and <see cref="Arguments"/> into a nice string.
@@ -36,9 +36,12 @@ namespace VSYASGUI_CommonLib
         public string ToAddress(string endpointUrl)
         {
             string concatenatedArgs = string.Empty;
-            foreach (var item in Arguments)
+            if (Arguments != null)
             {
-                concatenatedArgs += Uri.EscapeDataString(item) + "/";
+                foreach (var item in Arguments)
+                {
+                    concatenatedArgs += Uri.EscapeDataString(item) + "/";
+                }
             }
 
             return endpointUrl + ApiEndpointUrl + "/" + concatenatedArgs;
