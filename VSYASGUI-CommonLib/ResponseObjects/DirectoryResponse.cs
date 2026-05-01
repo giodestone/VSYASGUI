@@ -11,6 +11,6 @@ namespace VSYASGUI_CommonLib.ResponseObjects
     {
         public override bool ExpectsResponse => true;
 
-        public List<string> Files;
+        public List<string> FileNames;
     }
 }

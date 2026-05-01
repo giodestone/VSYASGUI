@@ -32,6 +32,7 @@ namespace VSYASGUI_CommonLib
         /// </example>
         /// <returns></returns>
         /// <param name="endpointUrl">The URL, with a trailing <c>/</c>.</param>
+        /// <exception cref="Exception">Does not handle errors relating to <see cref="Uri.EscapeDataString"/>.</exception>
         public string ToAddress(string endpointUrl)
         {
             string concatenatedArgs = string.Empty;

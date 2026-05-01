@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Vintagestory.API.Server;
 using VSYASGUI_CommonLib;
-using VSYASGUI_CommonLib.RequestObjects;
 using VSYASGUI_CommonLib.ResponseObjects;
 
 namespace VSYASGUI_Mod
@@ -238,7 +237,20 @@ namespace VSYASGUI_Mod
         /// <returns></returns>
         private async Task SendBackupFileResponse(HttpListenerContext context)
         {
-            if (GetSplitLocalUrl(context).Length != 1 || context.Request.HttpMethod != "GET")
+            if (GetSplitLocalUrl(context).Length != 2 || context.Request.HttpMethod != "GET")
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return;
+            }
+
+            // Check for bad argument.
+            string decodedFileName = string.Empty;
+
+            try
+            {
+                decodedFileName = Uri.UnescapeDataString(GetSplitLocalUrl(context)[1]);
+            }
+            catch
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return;
@@ -246,22 +258,8 @@ namespace VSYASGUI_Mod
 
             DirectoryInfo directoryInfo = new DirectoryInfo(_Api.DataBasePath + Path.DirectorySeparatorChar + "Backups");
 
-            WorldDownloadRequest? request = null;
-
-            try
-            {
-                // TODO: Add cancellation token.
-                request = await JsonSerializer.DeserializeAsync<WorldDownloadRequest>(context.Request.InputStream);
-            } 
-            catch (Exception e)
-            {
-                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                WriteJsonToResponse(context, ResponseFactory.MakeErrorBadRequest("Failed to read request: " + e.Message));
-                return;
-            }
-
             // TODO: I think just sending a UUID for each file is much safer, as this is a silly amount of injection checking and it probably doesn't cover all bases...
-            if (request == null || string.IsNullOrEmpty(request.FileName) || string.IsNullOrWhiteSpace(request.FileName) || request.FileName.Contains(Path.PathSeparator) || request.FileName.Contains(Path.DirectorySeparatorChar) || request.FileName.ContainsAny(Path.GetInvalidFileNameChars()) || request.FileName.Contains('*'))
+            if (string.IsNullOrEmpty(decodedFileName) || string.IsNullOrWhiteSpace(decodedFileName) || decodedFileName.Contains(Path.PathSeparator) || decodedFileName.Contains(Path.DirectorySeparatorChar) || decodedFileName.ContainsAny(Path.GetInvalidFileNameChars()) || decodedFileName.Contains('*'))
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 WriteJsonToResponse(context, ResponseFactory.MakeErrorBadRequest("Bad file name."));
@@ -269,7 +267,7 @@ namespace VSYASGUI_Mod
             }
 
             // TODO: This is a file system operation... which could stall. This should become its own task that we wait for.
-            if (!directoryInfo.EnumerateFiles().Any(f => f.Name == request.FileName))
+            if (!directoryInfo.EnumerateFiles().Any(f => f.Name == decodedFileName))
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 WriteJsonToResponse(context, ResponseFactory.MakeErrorBadRequest("File does not exist."));
@@ -280,7 +278,7 @@ namespace VSYASGUI_Mod
             FileInfo? requestedFileInfo = null;
             try
             {
-                requestedFileInfo = new FileInfo(_Api.DataBasePath + Path.DirectorySeparatorChar + request.FileName);
+                requestedFileInfo = new FileInfo(_Api.DataBasePath + Path.DirectorySeparatorChar + decodedFileName);
             }
             catch (UnauthorizedAccessException uex)
             {

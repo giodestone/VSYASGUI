@@ -102,7 +102,7 @@ namespace VSYASGUI_CommonLib
 
         public static DirectoryResponse MakeDirectoryResponse(List<string> fileNames)
         {
-            return new DirectoryResponse() { Files = fileNames };
+            return new DirectoryResponse() { FileNames = fileNames };
         }
     }
 }

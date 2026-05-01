@@ -1,18 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Printing;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using VSYASGUI_CommonLib;
-using VSYASGUI_CommonLib.RequestObjects;
-using VSYASGUI_CommonLib.RequestObjects.DirectoryRequests;
-using VSYASGUI_CommonLib.RequestObjects.FileRequests;
 using VSYASGUI_CommonLib.ResponseObjects;
 using VSYASGUI_CommonLib.ResponseObjects.ClientSide;
 using VSYASGUI_WFP_App.MVVM.Models;
@@ -414,7 +403,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             _ConnectionCheckCancellationTokenSource = new CancellationTokenSource();
             try
             {
-                _CurrentConnectionCheckTask = ApiConnection.Instance.RequestApiInfoJson<ConnectionCheckResponse>(new ConnectionRequest(), _ConnectionCheckCancellationTokenSource.Token);
+                _CurrentConnectionCheckTask = ApiConnection.Instance.RequestApiInfoJson<ConnectionCheckResponse>(RequestFactory.MakeConnectionCheckRequest(), _ConnectionCheckCancellationTokenSource.Token);
                 _CurrentConnectionCheckTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnConnectionCheckComplete, task.Result));
             }
             catch (Exception e)
@@ -471,7 +460,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             try
             {
                 _SendCommandCancelleationToken = new CancellationTokenSource();
-                _SendCommandTask = ApiConnection.Instance.RequestApiInfoJson<ConsoleCommandResponse>(new CommandRequest() { Command = SendCommandContents }, _SendCommandCancelleationToken.Token);
+                _SendCommandTask = ApiConnection.Instance.RequestApiInfoJson<ConsoleCommandResponse>(RequestFactory.MakeConsoleCommandRequest(SendCommandContents), _SendCommandCancelleationToken.Token);
                 _SendCommandTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnSendCommandComplete, task.Result));
                 SendCommandContents = string.Empty;
             }
@@ -500,7 +489,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
             try
             {
-                _ConsoleEntryRequestTask = ApiConnection.Instance.RequestApiInfoJson<ConsoleEntriesResponse>(new ConsoleRequest() { LineFrom = _ConsoleContentsLatestLogLine }, _PollServerCancellationTokenSource.Token);
+                _ConsoleEntryRequestTask = ApiConnection.Instance.RequestApiInfoJson<ConsoleEntriesResponse>(RequestFactory.MakeConsoleLineSinceRequest(_ConsoleContentsLatestLogLine), _PollServerCancellationTokenSource.Token);
                 _ConsoleEntryRequestTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnRequestConsoleUpdateSucceeded, task.Result));
             }
             catch (Exception e)
@@ -673,7 +662,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <returns>true if it was requested, false otherwise.</returns>
         private Error TryRequestServerStatisticsUpdate()
         {
-            return TryMakeRequest(ref _ServerStatisticsUpdateTask, _PollServerCancellationTokenSource, new ServerStatisticsRequest(), OnServerStatisticsUpdateSucceeded);
+            return TryMakeRequest(ref _ServerStatisticsUpdateTask, _PollServerCancellationTokenSource, RequestFactory.MakeStatisticsRequest(), OnServerStatisticsUpdateSucceeded);
         }
 
         /// <summary>
@@ -747,7 +736,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <returns><c>true</c> if request was made, <c>false</c> if it was not.</returns>
         private Error TryRequestPlayersUpdate()
         {
-            return TryMakeRequest(ref _PlayerOverviewRequestTask, _PollServerCancellationTokenSource, new PlayerOverviewRequest(), OnPlayerOverviewRequestComplete);
+            return TryMakeRequest(ref _PlayerOverviewRequestTask, _PollServerCancellationTokenSource, RequestFactory.MakePlayerOverviewRequest(), OnPlayerOverviewRequestComplete);
         }
 
         /// <summary>
@@ -789,7 +778,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <param name="request">The request to send. Will auto-populate <see cref="RequestBase.ApiKey"/> with <see cref="ApiConnection.RequestApiInfoJson{TExpectedResponse}(RequestBase, CancellationToken)"/>.</param>
         /// <param name="continuationFunction">Function to call when the request completes. Invoked by the main thread's dispatcher, as defined by <see cref="Application.Current"/>.</param>
         /// <returns><c>true</c> if the request was made, <c>false</c> if it cannot be made either due to an exception or outcome of <see cref="IsTaskRunning(Task)"/>.</returns>
-        private Error TryMakeRequest<TResponse>(ref Task<ApiResponse<TResponse>> baseTask, CancellationTokenSource cancellationTokenSource, RequestBase request, Action<ApiResponse<TResponse>> continuationFunction) where TResponse : ResponseBase, new()
+        private Error TryMakeRequest<TResponse>(ref Task<ApiResponse<TResponse>> baseTask, CancellationTokenSource cancellationTokenSource, ApiRequest request, Action<ApiResponse<TResponse>> continuationFunction) where TResponse : ResponseBase, new()
         {
             if (IsTaskRunning(baseTask))
                 return Error.RequestAlreadyInProgress;
@@ -888,7 +877,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             try
             {
                 _DownloadFileCancellationTokenSource = new CancellationTokenSource();
-                _DownloadFileRequestTask = ApiConnection.Instance.RequestFileFromApi(new WorldDownloadRequest() { FileName = BackupDirectoryFiles[SelectedBackupDirectoryFileIndex] }, _DownloadFileCancellationTokenSource.Token);
+                _DownloadFileRequestTask = ApiConnection.Instance.RequestFileFromApi(RequestFactory.MakeBackupDownloadRequest(BackupDirectoryFiles[SelectedBackupDirectoryFileIndex]), _DownloadFileCancellationTokenSource.Token);
                 _DownloadFileRequestTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnWorldDownloadComplete, task.Result));
             }
             catch (Exception e)
@@ -934,7 +923,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
         private bool TryRequestBackupDirectory()
         {
-            return TryMakeRequest<DirectoryResponse>(ref _BackupDirectoryLookupTask, _BackupDirectoryCancelllationTokenSource, new BackupDirectoryRequest(), OnBackupDirectoryRequestComplete) == Error.Ok;
+            return TryMakeRequest<DirectoryResponse>(ref _BackupDirectoryLookupTask, _BackupDirectoryCancelllationTokenSource, RequestFactory.MakeBackupDirectoryRequest(), OnBackupDirectoryRequestComplete) == Error.Ok;
         }
 
         private void OnBackupDirectoryRequestComplete(ApiResponse<DirectoryResponse> response)
@@ -944,7 +933,13 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             if (response.ErrorResult != Error.Ok)
                 return;
 
-            BackupDirectoryFiles = new ObservableCollection<string>(response.Response.Files);
+            if (response.Response == null)
+            {
+                Console.Error.WriteLine(nameof(ConnectionPresenter) + ": Request has no response, when one was expected.");
+                return;
+            }
+
+            BackupDirectoryFiles = new ObservableCollection<string>(response.Response.FileNames);
         }
 
     }

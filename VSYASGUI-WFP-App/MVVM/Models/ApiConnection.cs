@@ -81,10 +81,9 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// <param name="request">The request.</param>
         /// <param name="cancellationToken"></param>
         /// <returns>A task which can be cancelled.</returns>
-        public async Task<ApiResponse<FileResponse>> RequestFileFromApi(FileRequest request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<FileResponse>> RequestFileFromApi(ApiRequest request, CancellationToken cancellationToken)
         {
-            request.ApiKey = Config.Instance.CurrentApiKey;
-            var response = await SendHttpRequest(request, cancellationToken);
+            var response = await SendHttpRequest(request, cancellationToken, true);
 
             if (response.ResultMediaType != RequestResult.MediaType.File)
                 return new ApiResponse<FileResponse>(Error.UnexpectedResponse, null);
@@ -98,7 +97,7 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// <param name="request">The request to send.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>A cancellable task with the result of the response. The response contains information and the content, if applicable.</returns>
-        private async Task<RequestResult> SendHttpRequest(ApiRequest request, CancellationToken cancellationToken)
+        private async Task<RequestResult> SendHttpRequest(ApiRequest request, CancellationToken cancellationToken, bool tolerateNonJsonResponses=false)
         {
             HttpResponseMessage? response = null;
 
@@ -109,26 +108,7 @@ namespace VSYASGUI_WFP_App.MVVM.Models
                 HttpContent c = SerialiseObject(request);
                 c.Headers.Add(CommonVariables.RequestHeaderApiKeyName, Config.Instance.CurrentApiKey);
 
-                switch (request.RequestMethod)
-                {
-                    case RequestMethods.DELETE:
-                        response = await _Client.DeleteAsync(request.ToAddress(_EndpointUri), cancellationToken);
-                        break;
-                    case RequestMethods.GET:
-                        response = await _Client.GetAsync(request.ToAddress(_EndpointUri), cancellationToken);
-                        break;
-                    case RequestMethods.PATCH:
-                        response = await _Client.PatchAsync(request.ToAddress(_EndpointUri), null, cancellationToken);
-                        break;
-                    case RequestMethods.POST:
-                        response = await _Client.PostAsync(request.ToAddress(_EndpointUri), null, cancellationToken);
-                        break;
-                    case RequestMethods.PUT:
-                        response = await _Client.PostAsync(request.ToAddress(_EndpointUri), null, cancellationToken);
-                        break;
-                    case RequestMethods.Undefined:
-                        throw new Exception("Invalid request method.");
-                }
+                response = await MakeRequestAccordingToRequestMethod(request, cancellationToken);
 
                 response?.EnsureSuccessStatusCode();
             }
@@ -155,7 +135,7 @@ namespace VSYASGUI_WFP_App.MVVM.Models
             }
 
             // RESPOND
-            if (response.Content.Headers.ContentType?.MediaType == System.Net.Mime.MediaTypeNames.Application.Octet)
+            if (response.Content.Headers.ContentType?.MediaType == System.Net.Mime.MediaTypeNames.Application.Octet && tolerateNonJsonResponses)
             {
                 // this is a file to be downloaded - must be handled appropriately
                 return await HandleFileResponse(cancellationToken, response);
@@ -168,6 +148,41 @@ namespace VSYASGUI_WFP_App.MVVM.Models
             {
                 return RequestResult.FromUnsupportedType();
             }
+        }
+
+        /// <summary>
+        /// Call the relevant function in the client to request the file.
+        /// </summary>
+        /// <param name="request">The request to send.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns></returns>
+        /// <exception cref="Exception">Throws exceptions on sending the messages, or from <see cref="ApiRequest.ToAddress(string)"/>.</exception>
+        private async Task<HttpResponseMessage?> MakeRequestAccordingToRequestMethod(ApiRequest request, CancellationToken cancellationToken)
+        {
+            HttpResponseMessage? response = null;
+
+            switch (request.RequestMethod)
+            {
+                case RequestMethods.DELETE:
+                    response = await _Client.DeleteAsync(request.ToAddress(_EndpointUri), cancellationToken);
+                    break;
+                case RequestMethods.GET:
+                    response = await _Client.GetAsync(request.ToAddress(_EndpointUri), cancellationToken);
+                    break;
+                case RequestMethods.PATCH:
+                    response = await _Client.PatchAsync(request.ToAddress(_EndpointUri), null, cancellationToken);
+                    break;
+                case RequestMethods.POST:
+                    response = await _Client.PostAsync(request.ToAddress(_EndpointUri), null, cancellationToken);
+                    break;
+                case RequestMethods.PUT:
+                    response = await _Client.PostAsync(request.ToAddress(_EndpointUri), null, cancellationToken);
+                    break;
+                case RequestMethods.Undefined:
+                    throw new Exception("Invalid request method.");
+            }
+
+            return response;
         }
 
         /// <summary>
