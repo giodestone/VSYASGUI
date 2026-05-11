@@ -151,7 +151,7 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         }
 
         /// <summary>
-        /// Call the relevant function in the client to request the file.
+        /// Call the relevant function in the client to request the file. Make sure to do this in a try-catch block.
         /// </summary>
         /// <param name="request">The request to send.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
@@ -161,22 +161,26 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         {
             HttpResponseMessage? response = null;
 
+            string address = request.ToAddress(_EndpointUri);
+
+            _Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(Config.Instance.CurrentApiKey);
+
             switch (request.RequestMethod)
             {
                 case RequestMethods.DELETE:
-                    response = await _Client.DeleteAsync(request.ToAddress(_EndpointUri), cancellationToken);
+                    response = await _Client.DeleteAsync(address, cancellationToken);
                     break;
                 case RequestMethods.GET:
-                    response = await _Client.GetAsync(request.ToAddress(_EndpointUri), cancellationToken);
+                    response = await _Client.GetAsync(address, HttpCompletionOption.ResponseContentRead, cancellationToken);
                     break;
                 case RequestMethods.PATCH:
-                    response = await _Client.PatchAsync(request.ToAddress(_EndpointUri), null, cancellationToken);
+                    response = await _Client.PatchAsync(address, null, cancellationToken);
                     break;
                 case RequestMethods.POST:
-                    response = await _Client.PostAsync(request.ToAddress(_EndpointUri), null, cancellationToken);
+                    response = await _Client.PostAsync(address, null, cancellationToken);
                     break;
                 case RequestMethods.PUT:
-                    response = await _Client.PostAsync(request.ToAddress(_EndpointUri), null, cancellationToken);
+                    response = await _Client.PutAsync(address, null, cancellationToken);
                     break;
                 case RequestMethods.Undefined:
                     throw new Exception("Invalid request method.");

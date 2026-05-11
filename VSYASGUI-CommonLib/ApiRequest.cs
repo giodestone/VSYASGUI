@@ -40,11 +40,14 @@ namespace VSYASGUI_CommonLib
             {
                 foreach (var item in Arguments)
                 {
-                    concatenatedArgs += Uri.EscapeDataString(item) + "/";
+                    concatenatedArgs += Uri.EscapeDataString(item) + '/';
                 }
             }
 
-            return endpointUrl + ApiEndpointUrl + "/" + concatenatedArgs;
+            if (endpointUrl.Last() == '/')
+                return endpointUrl + ApiEndpointUrl + '/' + concatenatedArgs;
+            else
+                return endpointUrl + '/' + ApiEndpointUrl + '/' + concatenatedArgs;
         }
     }
 }

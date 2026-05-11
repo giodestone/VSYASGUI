@@ -111,6 +111,7 @@ namespace VSYASGUI_Mod
             {
                 context.Response.StatusCode = 401;
                 WriteJsonToResponse(context, ResponseFactory.MakeErrorUnauthorised());
+                context.Response.Close();
                 return;
             }
 
@@ -118,6 +119,7 @@ namespace VSYASGUI_Mod
             {
                 context.Response.StatusCode = 400;
                 WriteJsonToResponse(context, ResponseFactory.MakeErrorBadRequest());
+                context.Response.Close();
                 return;
             }
 
@@ -166,7 +168,7 @@ namespace VSYASGUI_Mod
                     context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                     break;
             }
-
+            
             context.Response.Close();
         }
 
@@ -636,11 +638,14 @@ namespace VSYASGUI_Mod
         }
 
         /// <summary>
-        /// Returns true if the recieved API key in the header matches <see cref="Config.ApiKey"/>.
+        /// Returns true if the recieved API key (either under the key <see cref="CommonVariables.RequestHeaderApiKeyName"/> or <c>"Authorization"</c>) in the header matches <see cref="Config.ApiKey"/>.
         /// </summary>
         private bool IsApiKeyMatching(HttpListenerContext context)
         {
-            var recievedKey = context.Request.Headers[CommonVariables.RequestHeaderApiKeyName];
+            string? recievedKey = context.Request.Headers[CommonVariables.RequestHeaderApiKeyName];
+
+            if (recievedKey == null)
+                recievedKey = context.Request.Headers["Authorization"];
 
             if (recievedKey == null)
                 return false;
