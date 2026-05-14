@@ -523,25 +523,37 @@ namespace VSYASGUI_Mod
         /// </summary>
         private async Task SendCommandResponse(HttpListenerContext context)
         {
-            // Bad num args, bad method
-            if (GetSplitLocalUrl(context).Length != 2 || context.Request.HttpMethod != "POST")
+            // bad method
+            if (context.Request.HttpMethod != "POST")
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return;
             }
 
-            // Check for bad argument.
-            string decodedCommand = string.Empty;
+            const string localUrlFirstPart = "/" + ApiEndpointConstants.ConsolePostAddress + "/";
 
-            try
+            // url is somehow malformed in a mysterious way.
+            if (context.Request.Url == null || context.Request.Url.LocalPath == null)
             {
-                decodedCommand = Uri.UnescapeDataString(GetSplitLocalUrl(context)[1]);
+                _Api.Logger.Warning("VSYASGUIMod: URL data structure issue when trying to process command request. Command will not be processed.");
+                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                return;
             }
-            catch
+
+            // command is everything after the start of the LocalPath, exlcuding the the ending /
+            // therefore, this requires special logic to change it.
+            string decodedCommand = context.Request.Url.LocalPath.Replace(localUrlFirstPart, string.Empty);
+
+            // no command sent
+            if (string.IsNullOrWhiteSpace(decodedCommand))
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return;
             }
+
+            // remove trailing slash if present in URL. May cause issues if the command has a trailing URL.
+            if (decodedCommand[decodedCommand.Length - 1] == '/')
+                decodedCommand = decodedCommand.Remove(decodedCommand.Length - 1);
 
             await RunOnApiThread(() => { _Api.InjectConsole(decodedCommand); });         
 
@@ -611,7 +623,7 @@ namespace VSYASGUI_Mod
         /// </summary>
         private async Task SendConsoleResponse(HttpListenerContext context)
         {
-            if (GetSplitLocalUrl(context).Length != 2 || context.Request.HttpMethod != "POST")
+            if (GetSplitLocalUrl(context).Length != 2 || context.Request.HttpMethod != "GET")
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return;

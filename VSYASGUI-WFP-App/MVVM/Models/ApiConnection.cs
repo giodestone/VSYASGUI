@@ -105,8 +105,8 @@ namespace VSYASGUI_WFP_App.MVVM.Models
             try
             {
                 // TODO: fix this to include the api key in the header
-                HttpContent c = SerialiseObject(request);
-                c.Headers.Add(CommonVariables.RequestHeaderApiKeyName, Config.Instance.CurrentApiKey);
+                //HttpContent c = SerialiseObject(request);
+                //c.Headers.Add(CommonVariables.RequestHeaderApiKeyName, Config.Instance.CurrentApiKey);
 
                 response = await MakeRequestAccordingToRequestMethod(request, cancellationToken);
 
@@ -162,7 +162,8 @@ namespace VSYASGUI_WFP_App.MVVM.Models
             HttpResponseMessage? response = null;
 
             string address = request.ToAddress(_EndpointUri);
-
+            
+            // TODO: Move this somewhere more sensible.
             _Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(Config.Instance.CurrentApiKey);
 
             switch (request.RequestMethod)

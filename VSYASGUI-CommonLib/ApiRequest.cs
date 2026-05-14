@@ -15,7 +15,7 @@ namespace VSYASGUI_CommonLib
         public required string ApiEndpointUrl { get; init; }
 
         /// <summary>
-        /// Additional arguments after the endpoint URL.
+        /// Additional arguments after the endpoint URL. These get appened to the end of the URL, delimited by a <c>/</c>.
         /// </summary>
         public List<string> Arguments { get; set; } = new();
 
