@@ -7,5 +7,6 @@
     {
         public const string RequestHeaderApiKeyName = "api-key";
         public const int MaxRequestSize = 4096; // If any massive requests get added, this needs to be changed.
+        public const string BackupsDirectoryName = "Backups";
     }
 }

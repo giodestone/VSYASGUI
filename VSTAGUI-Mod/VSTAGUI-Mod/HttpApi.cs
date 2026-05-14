@@ -280,7 +280,7 @@ namespace VSYASGUI_Mod
             FileInfo? requestedFileInfo = null;
             try
             {
-                requestedFileInfo = new FileInfo(_Api.DataBasePath + Path.DirectorySeparatorChar + decodedFileName);
+                requestedFileInfo = new FileInfo(_Api.DataBasePath + Path.DirectorySeparatorChar + CommonVariables.BackupsDirectoryName + Path.DirectorySeparatorChar + decodedFileName);
             }
             catch (UnauthorizedAccessException uex)
             {
