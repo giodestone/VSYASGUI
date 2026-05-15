@@ -12,7 +12,7 @@
             <DockPanel DockPanel.Dock="Top">
                 <Label Content="Server Console"/>
                 <Label HorizontalAlignment="Right">
-                    <!--<CheckBox DockPanel.Dock="Right" IsChecked="{Binding AutomaticallyScrollToBottom, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:ServerConsole}}}">Automatically Scroll to Bottom</CheckBox>-->
+                    <CheckBox DockPanel.Dock="Right" IsChecked="{Binding AutomaticallyScrollToBottom, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:ServerConsole}}}">Automatically Scroll to Bottom</CheckBox>
                 </Label>
             </DockPanel>
             <!--<Label DockPanel.Dock="Top" Content="Server Console"/>-->
@@ -24,13 +24,11 @@
                     <ColumnDefinition/>
                     <ColumnDefinition Width="100"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Grid.Row="1" Grid.Column="0" x:Name="CommandTextBox" Text="{Binding Path=SendCommandContents}"/>
-                <Button Grid.Row="1" Grid.Column="1" x:Name="SendCommandButton" Content="Send Command" Margin="4 0 0 0" Command="{Binding TrySendCommandToServerCommand}" />
+                <TextBox Grid.Row="1" Grid.Column="0" x:Name="CommandTextBox" Text="{Binding Path=SendCommandContents, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" KeyDown="CommandTextBox_KeyDown"/>
+                <Button Grid.Row="1" Grid.Column="1" x:Name="SendCommandButton" Content="Send Command" Margin="4 0 0 0" Command="{Binding TrySendCommandToServerCommand}"/>
             </Grid>
 
-            <ScrollViewer>
-                <TextBox x:Name="ConsoleTextBox" IsReadOnly="True" Text="{Binding Path=ConsoleContents}"/>
-            </ScrollViewer>
+            <TextBox x:Name="ConsoleTextBox" IsReadOnly="True" Text="{Binding Path=ConsoleContents}" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"/>
         </DockPanel>
 
         

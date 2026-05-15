@@ -51,7 +51,7 @@ namespace VSYASGUI_WFP_App.UserControls
             _ConnectionPresenter = DataContext as ConnectionPresenter;
             if (_ConnectionPresenter == null)
             {
-                Console.WriteLine("ERROR: Unable to find the data context. Will not begin tasks.");
+                Console.WriteLine("ERROR: Unable to find the data context. Will not function nor begin setup tasks.");
                 return;
             }
 
@@ -74,8 +74,18 @@ namespace VSYASGUI_WFP_App.UserControls
         {             
             if (AutomaticallyScrollToBottom)
             {
-                ConsoleTextBox.UpdateLayout();
+                ConsoleTextBox.IsReadOnly = false;
+                ConsoleTextBox.CaretIndex = ConsoleTextBox.Text.Length;
                 ConsoleTextBox.ScrollToEnd();
+                ConsoleTextBox.IsReadOnly = true;
+            }
+        }
+
+        private void CommandTextBox_KeyDown(object sender, KeyEventArgs e)
+        {   
+            if (e.Key == Key.Return)
+            {
+                _ConnectionPresenter.TrySendConsoleCommand();
             }
         }
     }

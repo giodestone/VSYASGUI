@@ -131,7 +131,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         public string SendCommandContents
         {
             get => _SendCommandContents;
-            set => UpdateFieldWithValue(ref _SendCommandContents, value, "SendCommandContents");   
+            set => UpdateFieldWithValue(ref _SendCommandContents, value, nameof(SendCommandContents));   
         }
 
         /// <summary>
