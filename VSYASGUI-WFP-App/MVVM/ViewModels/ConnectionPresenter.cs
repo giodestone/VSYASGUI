@@ -75,6 +75,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         private ObservableCollection<ApiFileInfo> _BackupDirectoryFiles = new();
         private int _BackupDirectorySelectedIndex = -1;
         private DateTime _LastSuccessfulBackupDirectoryRefresh = DateTime.UnixEpoch;
+        private bool _IsBackupDownloadInProgress = false;
 
         private Task<ApiResponse<FileResponse>> _DownloadFileRequestTask;
         private CancellationTokenSource _DownloadFileCancellationTokenSource;
@@ -588,6 +589,15 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             }
         }
 
+        /// <summary>
+        /// Whether there is currently a world backup in progress.
+        /// </summary>
+        public bool IsBackupDownloadInProgress 
+        { 
+            get => _IsBackupDownloadInProgress; 
+            set => UpdateFieldWithValue(ref _IsBackupDownloadInProgress, value, nameof(IsBackupDownloadInProgress)); 
+        }
+
 
         /// <summary>
         /// Callback to clear the current server lgo.
@@ -946,14 +956,19 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             if (IsTaskRunning(_DownloadFileRequestTask))
                 return false;
 
+            if (_IsBackupDownloadInProgress)
+                return false;
+
             try
             {
+                IsBackupDownloadInProgress = true;
                 _DownloadFileCancellationTokenSource = new CancellationTokenSource();
                 _DownloadFileRequestTask = ApiConnection.Instance.RequestFileFromApi(RequestFactory.MakeBackupDownloadRequest(BackupDirectoryFiles[SelectedBackupDirectoryFileIndex].FileName), _DownloadFileCancellationTokenSource.Token);
                 _DownloadFileRequestTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnWorldDownloadComplete, task.Result));
             }
             catch (Exception e)
             {
+                IsBackupDownloadInProgress = false;
                 Console.WriteLine("ERROR: Unable to invoke task due to an exception.");
                 Console.WriteLine(e.Message);
                 return false;
@@ -964,6 +979,11 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
         private void OnWorldDownloadComplete(ApiResponse<FileResponse> response)
         {
+            if (!IsBackupDownloadInProgress)
+            {
+                Console.Error.WriteLine(nameof(ConnectionPresenter) + ": the variable " + nameof(IsBackupDownloadInProgress) + " should be true at this point! The download will continue, but this may cause disaster at some point, and is a programming error.");
+            }
+
             if (response.ErrorResult != Error.Ok)
             {
                 MessageBox.Show("Failed to download the save download. \n\nError: " + response.ErrorResult, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -977,8 +997,9 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             }
 
             Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
-            dlg.FileName = "Vintage Story Save Backup"; // Default file name
+            dlg.FileName = "WorldBackup_" + DateTime.Now.ToString("HH_mm_ss_dd_MM_yyyy"); // Default file name
             dlg.DefaultExt = ".vcdbs"; // Default file extension
+            dlg.Filter = "Vintage Story World Files (*.vcdbs) |*.vcdbs|All Files(*.*)|*.*";
 
             // Show save file dialog box
             Nullable<bool> result = dlg.ShowDialog();
@@ -991,6 +1012,8 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
                 response.Response.SavedFile.MoveTo(filename, true);
             }
+
+            IsBackupDownloadInProgress = false;
         }
 
         private bool TryRequestBackupDirectory()

@@ -111,7 +111,7 @@
                             </StackPanel>
 
 
-                            <DataGrid x:Name="BackupDirectoryFilesDataView" ItemsSource="{Binding BackupDirectoryFiles}" SelectedIndex="{Binding SelectedBackupDirectoryFileIndex}" Height="200" ColumnWidth="Auto" AutoGenerateColumns="False">
+                            <DataGrid x:Name="BackupDirectoryFilesDataView" ItemsSource="{Binding BackupDirectoryFiles}" SelectedIndex="{Binding SelectedBackupDirectoryFileIndex}" Height="200" ColumnWidth="Auto" AutoGenerateColumns="False" IsReadOnly="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="File Name" Binding="{Binding FileName}"/>
                                     <DataGridTextColumn Header="Creation Time" Binding="{Binding CreationTime}"/>
@@ -123,7 +123,11 @@
                                 <Label>Actions</Label>
                                 <StackPanel Orientation="Vertical">
                                     <Button Content="Make backup" Width="200" HorizontalAlignment="Left" Padding="5" Margin="5" Command="{Binding TryMakeWorldBackupCommand}"/>
-                                    <Button Content="Download" Width="200" Command="{Binding TryRequestWorldSaveCommand}" IsEnabled="{Binding IsBackupSelected}" HorizontalAlignment="Left" Padding="5" Margin="5"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="Download" Width="200" Command="{Binding TryRequestWorldSaveCommand}" IsEnabled="{Binding IsBackupSelected}" HorizontalAlignment="Left" Padding="5" Margin="5"/>
+                                        <Label>Progress:</Label>
+                                        <Label>TODO</Label>
+                                    </StackPanel>
                                 </StackPanel>
                             </StackPanel>
                         </StackPanel>
