@@ -54,6 +54,11 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         public int MaxFailedConnectionRequests { get; set; } = 6;
 
         /// <summary>
+        /// Whether to automatically scroll the console to the bottom.
+        /// </summary>
+        public bool AutomaticallyScrollConsoleToBottom { get; set; } = true;
+
+        /// <summary>
         /// Text for an Error box that says it has failed to load or create the config file.
         /// </summary>
         [JsonIgnore]

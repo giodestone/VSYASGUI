@@ -27,16 +27,14 @@ namespace VSYASGUI_WFP_App.UserControls
     {
         ConnectionPresenter _ConnectionPresenter;
 
-        private bool _AutomaticallyScrollToBottom = true;
-
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public bool AutomaticallyScrollToBottom
         {
-            get => _AutomaticallyScrollToBottom;
+            get => Config.Instance.AutomaticallyScrollConsoleToBottom;
             set
             {
-                _AutomaticallyScrollToBottom = value;
+                Config.Instance.AutomaticallyScrollConsoleToBottom = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AutomaticallyScrollToBottom)));
             }
         }
@@ -74,10 +72,7 @@ namespace VSYASGUI_WFP_App.UserControls
         {             
             if (AutomaticallyScrollToBottom)
             {
-                ConsoleTextBox.IsReadOnly = false;
-                ConsoleTextBox.CaretIndex = ConsoleTextBox.Text.Length;
                 ConsoleTextBox.ScrollToEnd();
-                ConsoleTextBox.IsReadOnly = true;
             }
         }
 
