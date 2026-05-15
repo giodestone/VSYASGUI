@@ -85,24 +85,49 @@
                             <Label>Groups</Label>
                             <TextBlock Text="{Binding SelectedPlayerGroups}" TextWrapping="Wrap" Margin="12 0 0 0"/>
                             <Label Margin="0 12 0 0 ">Actions</Label>
-                            <Button Content="Kick" Command="{Binding TryKickCurrentlySelectedPlayerCommand}" IsEnabled="{Binding CanSendPlayerActionCommands}" Margin="6 0 6 6"/>
-                            <Button Content="Ban" Command="{Binding TryBanCurrentlySelectedPlayerCommand}" IsEnabled="{Binding CanSendPlayerActionCommands}" Margin="6 0 6 6"/>
-                            <Button Content="Unban" Command="{Binding TryUnbanCurrentlySelectedPlayerCommand}" IsEnabled="{Binding CanSendPlayerActionCommands}" Margin="6 0 6 6"/>
+                            <Button Content="Kick" Command="{Binding TryKickCurrentlySelectedPlayerCommand}" IsEnabled="{Binding IsPlayerSelected}" Margin="6 0 6 6"/>
+                            <Button Content="Ban" Command="{Binding TryBanCurrentlySelectedPlayerCommand}" IsEnabled="{Binding IsPlayerSelected}" Margin="6 0 6 6"/>
+                            <Button Content="Unban" Command="{Binding TryUnbanCurrentlySelectedPlayerCommand}" IsEnabled="{Binding IsPlayerSelected}" Margin="6 0 6 6"/>
                         </StackPanel>
                     </ScrollViewer>
                     
 
                 </Grid>
             </TabItem>
-            <TabItem Header="World">
+            <TabItem Header="World Backups">
                 <Grid Background="#FFE5E5E5">
-                    <StackPanel>
-                        <Label>Backup directory</Label>
-                        <Label>Make sure the backup is complete before downloading, as it is possible to download a partial backup!</Label>
-                        <DataGrid ItemsSource="{Binding BackupDirectoryFiles}" SelectedIndex="{Binding SelectedBackupDirectoryFileIndex}" Height="200"/>
-                        <Button Content="Refresh" Command="{Binding TryRequestBackupDirectoryCommand}"/>
-                        <Button Content="Download World" Command="{Binding TryRequestWorldSaveCommand}"/>
-                    </StackPanel>
+                    <ScrollViewer>
+                        <StackPanel>
+                            <Label>World Backups</Label>
+                            <TextBlock Margin="5,5,5,5">
+                                Displays the contents of the Backups folder in the Vintage Story Data directory.
+                                <LineBreak/>
+                                Make sure the backup is complete before downloading, as it is possible to download a partial backup!
+                            </TextBlock>
+                            <StackPanel Orientation="Horizontal" Margin="5,5,5,5">
+                                <Button Content="Refresh Contents" Command="{Binding TryRequestBackupDirectoryCommand}" Width="100"/>
+                                <Label>Overview last refreshed: </Label>
+                                <Label Content="{Binding LastSuccessfulBackupDirectoryRefreshHumanReadable}"/>
+                            </StackPanel>
+
+
+                            <DataGrid x:Name="BackupDirectoryFilesDataView" ItemsSource="{Binding BackupDirectoryFiles}" SelectedIndex="{Binding SelectedBackupDirectoryFileIndex}" Height="200" ColumnWidth="Auto" AutoGenerateColumns="False">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="File Name" Binding="{Binding FileName}"/>
+                                    <DataGridTextColumn Header="Creation Time" Binding="{Binding CreationTime}"/>
+                                    <DataGridTextColumn Header="Last Modified Time" Binding="{Binding LastWriteTime}"/>
+                                    <DataGridTextColumn Header="Size (MB)" Binding="{Binding FileLengthMb}"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <StackPanel>
+                                <Label>Actions</Label>
+                                <StackPanel Orientation="Vertical">
+                                    <Button Content="Make backup" Width="200" HorizontalAlignment="Left" Padding="5" Margin="5" Command="{Binding TryMakeWorldBackupCommand}"/>
+                                    <Button Content="Download" Width="200" Command="{Binding TryRequestWorldSaveCommand}" IsEnabled="{Binding IsBackupSelected}" HorizontalAlignment="Left" Padding="5" Margin="5"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
                 </Grid>
             </TabItem>
         </TabControl>

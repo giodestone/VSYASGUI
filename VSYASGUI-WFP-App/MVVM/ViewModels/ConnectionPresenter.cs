@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Input;
 using VSYASGUI_CommonLib;
+using VSYASGUI_CommonLib.FileManagement;
 using VSYASGUI_CommonLib.ResponseObjects;
 using VSYASGUI_CommonLib.ResponseObjects.ClientSide;
 using VSYASGUI_WFP_App.MVVM.Models;
@@ -64,15 +65,16 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         private Task<ApiResponse<PlayerOverviewResponse>> _PlayerOverviewRequestTask;
         private CancellationTokenSource _PlayerOverviewCancellationTokenSource;
         private string _PreviousPlayerOverviewHash = string.Empty;
-        private ObservableCollection<PlayerOverview> _PlayerOverviews = new ObservableCollection<PlayerOverview>();
+        private ObservableCollection<PlayerOverview> _PlayerOverviews = new();
         private int _SelectedPlayerOverviewIndex = -1;
 
 
         public event EventHandler<ApiResponse<DirectoryResponse>> BackupsDirectoryChanged;
         private Task<ApiResponse<DirectoryResponse>> _BackupDirectoryLookupTask;
         private CancellationTokenSource _BackupDirectoryCancelllationTokenSource;
-        private ObservableCollection<string> _BackupDirectoryFiles = new ObservableCollection<string>();
+        private ObservableCollection<ApiFileInfo> _BackupDirectoryFiles = new();
         private int _BackupDirectorySelectedIndex = -1;
+        private DateTime _LastSuccessfulBackupDirectoryRefresh = DateTime.UnixEpoch;
 
         private Task<ApiResponse<FileResponse>> _DownloadFileRequestTask;
         private CancellationTokenSource _DownloadFileCancellationTokenSource;
@@ -107,10 +109,20 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// </summary>
         public ICommand TryUnbanCurrentlySelectedPlayerCommand => new Command(_ => TryUnbanCurrentlySelectedPlayer());
 
+        /// <summary>
+        /// Try to request the saved world.
+        /// </summary>
         public ICommand TryRequestWorldSaveCommand => new Command(_ => TryRequestWorldSave());
 
+        /// <summary>
+        /// Try to request the contents of the backup directory.
+        /// </summary>
         public ICommand TryRequestBackupDirectoryCommand => new Command(_ => TryRequestBackupDirectory());
 
+        /// <summary>
+        /// Send a command to make a world backup.
+        /// </summary>
+        public ICommand TryMakeWorldBackupCommand => new Command(_ => TryMakeWorldBackup());
 
         /// <summary>
         /// The contents of the send command.
@@ -232,7 +244,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
                 NotifyFieldUpdated(nameof(SelectedPlayerLastJoinDate));
                 NotifyFieldUpdated(nameof(SelectedPlayerLastKnownName));
                 NotifyFieldUpdated(nameof(SelectedPlayerGroups));
-                NotifyFieldUpdated(nameof(CanSendPlayerActionCommands));
+                NotifyFieldUpdated(nameof(IsPlayerSelected));
             }
         }
 
@@ -336,15 +348,32 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
                 return SelectedPlayerOverview.Groups;
             }
         }
-        
+
         /// <summary>
         /// Whether the player actions on the Player Overview menu (kick/ban/unban) should be possible to execute.
         /// </summary>
-        public bool CanSendPlayerActionCommands
+        public bool IsPlayerSelected
         {
             get
             {
                 if (SelectedPlayerOverview == null)
+                    return false;
+
+                return CanSendConsoleCommand();
+            }
+        }
+
+        /// <summary>
+        /// Tells you if a world backup is selected, and whether related operations can be performed.
+        /// </summary>
+        public bool IsBackupSelected
+        {
+            get
+            {
+                if (SelectedBackupDirectoryFileIndex == -1)
+                    return false;
+
+                if (SelectedBackupDirectoryFileIndex >= BackupDirectoryFiles.Count)
                     return false;
 
                 return CanSendConsoleCommand();
@@ -453,7 +482,9 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         {
             if (!CanSendConsoleCommand())
             {
-                NotifyFieldUpdated(nameof(CanSendPlayerActionCommands));
+                // TODO: fix these repetitions.
+                NotifyFieldUpdated(nameof(IsPlayerSelected));
+                NotifyFieldUpdated(nameof(IsBackupSelected));
                 return false;
             }
 
@@ -470,11 +501,17 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
                 Console.WriteLine(e.Message);
                 OnSendCommandComplete(new ApiResponse<ConsoleCommandResponse>(Error.NotSent, null));
 
-                NotifyFieldUpdated(nameof(CanSendPlayerActionCommands));
+                // TODO: fix these repetitions.
+                NotifyFieldUpdated(nameof(IsPlayerSelected));
+                NotifyFieldUpdated(nameof(IsBackupSelected));
+
                 return false;
             }
 
-            NotifyFieldUpdated(nameof(CanSendPlayerActionCommands));
+            // TODO: fix these repetitions.
+            NotifyFieldUpdated(nameof(IsPlayerSelected));
+            NotifyFieldUpdated(nameof(IsBackupSelected));
+
             return true;
         }
 
@@ -505,7 +542,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <summary>
         /// Contents of the backup directory and its files.
         /// </summary>
-        public ObservableCollection<string> BackupDirectoryFiles
+        public ObservableCollection<ApiFileInfo> BackupDirectoryFiles
         {
             get { return _BackupDirectoryFiles; }
             set { UpdateFieldWithValue(ref _BackupDirectoryFiles, value, nameof(BackupDirectoryFiles)); }
@@ -517,7 +554,38 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         public int SelectedBackupDirectoryFileIndex
         {
             get => _BackupDirectorySelectedIndex;
-            set => UpdateFieldWithValue(ref _BackupDirectorySelectedIndex, value, nameof(BackupDirectoryFiles));
+            set
+            {
+                UpdateFieldWithValue(ref _BackupDirectorySelectedIndex, value, nameof(BackupDirectoryFiles));
+                NotifyFieldUpdated(nameof(IsBackupSelected));
+            }
+        }
+
+        /// <summary>
+        /// When <see cref="OnBackupDirectoryRequestComplete(ApiResponse{DirectoryResponse})"/> last completed successfully.
+        /// </summary>
+        public DateTime LastSuccessfulBackupDirectoryRefresh 
+        { 
+            get => _LastSuccessfulBackupDirectoryRefresh; 
+            set
+            {
+                UpdateFieldWithValue(ref _LastSuccessfulBackupDirectoryRefresh, value, nameof(LastSuccessfulBackupDirectoryRefresh));
+                NotifyFieldUpdated(nameof(LastSuccessfulBackupDirectoryRefreshHumanReadable));
+            }
+        }
+
+        /// <summary>
+        /// Returns a more human readable version of <see cref="LastSuccessfulBackupDirectoryRefresh"/>, where if never updated, it tells user it has never been updated.
+        /// </summary>
+        public string LastSuccessfulBackupDirectoryRefreshHumanReadable
+        {
+            get
+            {
+                if (LastSuccessfulBackupDirectoryRefresh == DateTime.UnixEpoch)
+                    return "Never";
+                else
+                    return LastSuccessfulBackupDirectoryRefresh.ToString();
+            }
         }
 
 
@@ -614,7 +682,9 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         {
             SendCommandComplete?.Invoke(this, response);
 
-            NotifyFieldUpdated(nameof(CanSendPlayerActionCommands));
+            // TODO: fix these repetitions.
+            NotifyFieldUpdated(nameof(IsPlayerSelected));
+            NotifyFieldUpdated(nameof(IsBackupSelected));
         }
 
 
@@ -804,11 +874,11 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <summary>
         /// Try to run the /kick command on the currently selected player, if possible.
         /// </summary>
-        /// <returns>Returns <c>true</c> if it can be run, <c>false</c> if not, depending on <see cref="CanSendPlayerActionCommands"/> and <see cref="TrySendConsoleCommand"/>.</returns>
+        /// <returns>Returns <c>true</c> if it can be run, <c>false</c> if not, depending on <see cref="IsPlayerSelected"/> and <see cref="TrySendConsoleCommand"/>.</returns>
 
         private bool TryKickCurrentlySelectedPlayer()
         {
-            if (!CanSendPlayerActionCommands)
+            if (!IsPlayerSelected)
                 return false;
 
             string previousConsoleContents = _SendCommandContents;
@@ -824,10 +894,11 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <summary>
         /// Try to run the /ban command on the currently selected player, if possible.
         /// </summary>
-        /// <returns>Returns <c>true</c> if it can be run, <c>false</c> if not, depending on <see cref="CanSendPlayerActionCommands"/> and <see cref="TrySendConsoleCommand"/>.</returns>
+        /// <returns>Returns <c>true</c> if it can be run, <c>false</c> if not, depending on <see cref="IsPlayerSelected"/> and <see cref="TrySendConsoleCommand"/>.</returns>
         private bool TryBanCurrentlySelectedPlayer()
         {
-            if (!CanSendPlayerActionCommands)
+
+            if (!IsPlayerSelected)
                 return false;
 
             string previousConsoleContents = _SendCommandContents;
@@ -843,10 +914,11 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <summary>
         /// Try to run the /unban command on the currently selected player, if possible.
         /// </summary>
-        /// <returns>Returns <c>true</c> if it can be run, <c>false</c> if not, depending on <see cref="CanSendPlayerActionCommands"/> and <see cref="TrySendConsoleCommand"/>.</returns>
+        /// <returns>Returns <c>true</c> if it can be run, <c>false</c> if not, depending on <see cref="IsPlayerSelected"/> and <see cref="TrySendConsoleCommand"/>.</returns>
         private bool TryUnbanCurrentlySelectedPlayer()
         {
-            if (!CanSendPlayerActionCommands)
+
+            if (!IsPlayerSelected)
                 return false;
 
             string previousConsoleContents = _SendCommandContents;
@@ -866,7 +938,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
             if (BackupDirectoryFiles.Count == 0)
                 return false;
-            if (SelectedBackupDirectoryFileIndex != 0)
+            if (SelectedBackupDirectoryFileIndex < 0)
                 return false;
             if (SelectedBackupDirectoryFileIndex > BackupDirectoryFiles.Count - 1)
                 return false;
@@ -877,7 +949,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             try
             {
                 _DownloadFileCancellationTokenSource = new CancellationTokenSource();
-                _DownloadFileRequestTask = ApiConnection.Instance.RequestFileFromApi(RequestFactory.MakeBackupDownloadRequest(BackupDirectoryFiles[SelectedBackupDirectoryFileIndex]), _DownloadFileCancellationTokenSource.Token);
+                _DownloadFileRequestTask = ApiConnection.Instance.RequestFileFromApi(RequestFactory.MakeBackupDownloadRequest(BackupDirectoryFiles[SelectedBackupDirectoryFileIndex].FileName), _DownloadFileCancellationTokenSource.Token);
                 _DownloadFileRequestTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnWorldDownloadComplete, task.Result));
             }
             catch (Exception e)
@@ -917,7 +989,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
                 // Save document
                 string filename = dlg.FileName;
 
-                response.Response.SavedFile.MoveTo(filename);
+                response.Response.SavedFile.MoveTo(filename, true);
             }
         }
 
@@ -939,8 +1011,25 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
                 return;
             }
 
-            BackupDirectoryFiles = new ObservableCollection<string>(response.Response.FileNames);
+            LastSuccessfulBackupDirectoryRefresh = DateTime.Now;
+
+            BackupDirectoryFiles = new ObservableCollection<ApiFileInfo>(response.Response.FileInfos);
         }
 
+        /// <summary>
+        /// Wrapper for <c>/genbackup [world name]</c> command. The file name is set to current date/time
+        /// </summary>
+        /// <returns>True if possible; false if not.</returns>
+        private bool TryMakeWorldBackup()
+        { 
+            string previousConsoleContents = _SendCommandContents;
+            _SendCommandContents = "/genbackup " + "backup_" + DateTime.Now.ToString("HH_mm_ss_dd_MM_yyyy");
+
+            bool returnVal = TrySendConsoleCommand();
+
+            _SendCommandContents = previousConsoleContents;
+
+            return returnVal;
+        }
     }
 }

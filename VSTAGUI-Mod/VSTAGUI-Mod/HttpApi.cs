@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Vintagestory.API.Server;
 using VSYASGUI_CommonLib;
+using VSYASGUI_CommonLib.FileManagement;
 using VSYASGUI_CommonLib.ResponseObjects;
 
 namespace VSYASGUI_Mod
@@ -220,15 +221,15 @@ namespace VSYASGUI_Mod
                 return;
             }
 
-            List<string> fileNames = new List<string>();
+            List<ApiFileInfo> fileInfos = new();
 
             foreach (var file in directoryInfo.EnumerateFiles())
             {
-                fileNames.Add(file.Name);
+                fileInfos.Add(ApiFileInfo.FromFileInfo(file));
             }
 
             context.Response.StatusCode = (int)HttpStatusCode.OK;
-            WriteJsonToResponse(context, ResponseFactory.MakeDirectoryResponse(fileNames));
+            WriteJsonToResponse(context, ResponseFactory.MakeDirectoryResponse(fileInfos));
         }
 
         /// <summary>

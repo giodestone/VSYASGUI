@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using VSYASGUI_CommonLib.FileManagement;
 
 namespace VSYASGUI_CommonLib.ResponseObjects
 {
@@ -11,6 +12,6 @@ namespace VSYASGUI_CommonLib.ResponseObjects
     {
         public override bool ExpectsResponse => true;
 
-        public List<string> FileNames;
+        public List<ApiFileInfo> FileInfos;
     }
 }

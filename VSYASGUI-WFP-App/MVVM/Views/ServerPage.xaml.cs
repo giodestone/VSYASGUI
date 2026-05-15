@@ -30,5 +30,10 @@ namespace VSYASGUI_WFP_App.MVVM.Views
         {
 
         }
+
+        private void ServerConsole_Loaded(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

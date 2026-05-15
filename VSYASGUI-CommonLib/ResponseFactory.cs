@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using VSYASGUI_CommonLib.FileManagement;
 using VSYASGUI_CommonLib.ResponseObjects;
 
 namespace VSYASGUI_CommonLib
@@ -100,9 +101,13 @@ namespace VSYASGUI_CommonLib
             };
         }
 
-        public static DirectoryResponse MakeDirectoryResponse(List<string> fileNames)
+        /// <summary>
+        /// Returns a response which provides info on the requested directory.
+        /// </summary>
+        /// <param name="fileInfos">Created file infos.</param>
+        public static DirectoryResponse MakeDirectoryResponse(List<ApiFileInfo> fileInfos)
         {
-            return new DirectoryResponse() { FileNames = fileNames };
+            return new DirectoryResponse() { FileInfos = fileInfos };
         }
     }
 }
