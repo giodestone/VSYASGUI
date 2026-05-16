@@ -16,8 +16,6 @@ Please report any bugs or enhancements to [issues tab](https://github.com/giodes
 # Installation
 This mod is provided in two parts: the GUI and mod for the server.
 
-The mod may be download from [the releases page](https://github.com/giodestone/VSYASGUI/releases) or [the Vintage Story Mod DB](https://mods.vintagestory.at/show/mod/46221#tab-description).
-
 0. Install .NET 10 Desktop runtime - already required for Vintage Story >=1.22.0 (Windows: https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 1. Download the mod `vsyasguimod-x.x.x.zip` from [the releases page](https://github.com/giodestone/VSYASGUI/releases)
 2. Place into your dedicated server's mod folder.
