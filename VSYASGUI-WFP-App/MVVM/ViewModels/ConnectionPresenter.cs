@@ -943,9 +943,6 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
         private bool TryRequestWorldSave()
         {
-            // TODO: ADD GUARD TO ACTUALLY BAN REQUESTS AND PREVENT DANGLING ONES
-            // TODO: UNTIL THEN, THE FUNCTION IS INCOMPLETE
-
             if (BackupDirectoryFiles.Count == 0)
                 return false;
             if (SelectedBackupDirectoryFileIndex < 0)
@@ -982,17 +979,20 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             if (!IsBackupDownloadInProgress)
             {
                 Console.Error.WriteLine(nameof(ConnectionPresenter) + ": the variable " + nameof(IsBackupDownloadInProgress) + " should be true at this point! The download will continue, but this may cause disaster at some point, and is a programming error.");
+                _IsBackupDownloadInProgress = false;
             }
 
             if (response.ErrorResult != Error.Ok)
             {
                 MessageBox.Show("Failed to download the save download. \n\nError: " + response.ErrorResult, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                _IsBackupDownloadInProgress = false;
                 return;
             }
 
             if (response.Response == null)
             {
                 MessageBox.Show("Failed to download save due to programming error. Please submit a bug report on the GitHub issue page.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                _IsBackupDownloadInProgress = false;
                 return;
             }
 

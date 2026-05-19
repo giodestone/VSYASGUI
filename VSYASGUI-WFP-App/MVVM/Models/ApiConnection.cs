@@ -80,10 +80,11 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// </summary>
         /// <param name="request">The request.</param>
         /// <param name="cancellationToken"></param>
+        /// <param name="progress">May report progress of operation. See similarly named paramter in the following function for details: <see cref="SendHttpRequest"/></param>
         /// <returns>A task which can be cancelled.</returns>
-        public async Task<ApiResponse<FileResponse>> RequestFileFromApi(ApiRequest request, CancellationToken cancellationToken)
+        public async Task<ApiResponse<FileResponse>> RequestFileFromApi(ApiRequest request, CancellationToken cancellationToken, IProgress<double>? progress=null)
         {
-            var response = await SendHttpRequest(request, cancellationToken, true);
+            var response = await SendHttpRequest(request, cancellationToken, tolerateNonJsonResponses: true, progress: progress);
 
             if (response.ResultMediaType != RequestResult.MediaType.File)
                 return new ApiResponse<FileResponse>(Error.UnexpectedResponse, null);
@@ -96,8 +97,10 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// </summary>
         /// <param name="request">The request to send.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
+        /// <param name="tolerateNonJsonResponses">Whether a response that ISN'T json is tolerated. At this time this means a file download will get triggered if the response is an octlet.</param>
+        /// <param name="progress">For tracking progress of a file download <b>only</b>, for exact details of usage, see <see cref="HandleFileResponse"/>.</param>
         /// <returns>A cancellable task with the result of the response. The response contains information and the content, if applicable.</returns>
-        private async Task<RequestResult> SendHttpRequest(ApiRequest request, CancellationToken cancellationToken, bool tolerateNonJsonResponses=false)
+        private async Task<RequestResult> SendHttpRequest(ApiRequest request, CancellationToken cancellationToken, bool tolerateNonJsonResponses=false, IProgress<double>? progress =null)
         {
             HttpResponseMessage? response = null;
 
@@ -138,7 +141,7 @@ namespace VSYASGUI_WFP_App.MVVM.Models
             if (response.Content.Headers.ContentType?.MediaType == System.Net.Mime.MediaTypeNames.Application.Octet && tolerateNonJsonResponses)
             {
                 // this is a file to be downloaded - must be handled appropriately
-                return await HandleFileResponse(cancellationToken, response);
+                return await HandleFileResponse(cancellationToken, response, progress);
             }
             else if (response.Content.Headers.ContentType?.MediaType == System.Net.Mime.MediaTypeNames.Application.Json)
             {
@@ -214,10 +217,11 @@ namespace VSYASGUI_WFP_App.MVVM.Models
         /// <summary>
         /// Handles a file response.
         /// </summary>
-        /// <param name="response"></param>
-        /// <exception cref="NotImplementedException"></exception>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <param name="response">The response given by the server which contains details about the incoming file.</param>
+        /// <param name="progress">The optional progress argument. Will report a value 0..1 depending on progress.</param>
         /// <returns>Task with completion success.</returns>
-        private async Task<RequestResult> HandleFileResponse(CancellationToken cancellationToken, HttpResponseMessage response)
+        private async Task<RequestResult> HandleFileResponse(CancellationToken cancellationToken, HttpResponseMessage response, IProgress<double>? progress=null)
         {
             if (response.Content.Headers.ContentType?.MediaType != System.Net.Mime.MediaTypeNames.Application.Octet)
                 return RequestResult.FromFile(Error.BadType, null);
@@ -240,38 +244,69 @@ namespace VSYASGUI_WFP_App.MVVM.Models
 
             try
             {
-                using (Stream input = response.Content.ReadAsStream())
+                long expectedContentLength = -1;
+
+                if (response.Content.Headers.ContentLength != null)
+                {
+                    expectedContentLength = response.Content.Headers.ContentLength.Value;
+                }
+
+                using (Stream input = response.Content.ReadAsStream(cancellationToken))
                 {
                     byte[] buffer = new byte[8192];
                     int bytesRead;
+                    long totalBytesRead = 0;
                     while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
                     {
+                        // Cancellation requested.
                         if (cancellationToken.IsCancellationRequested)
                         {
-                            outStream.Close();
-                            outFileInfo.Delete();
+                            CloseStreamAndDeleteFile(outStream, outFileInfo);
+
                             return RequestResult.FromFile(Error.Cancelled, null);
                         }
 
+                        // Write to file.
                         outStream.Write(buffer, 0, bytesRead);
+                        totalBytesRead += bytesRead;
+                        progress?.Report((double)totalBytesRead / (double)expectedContentLength);
+
+                        // Check if recieved file is too big.
+                        if (totalBytesRead > expectedContentLength)
+                        {
+                            CloseStreamAndDeleteFile(outStream, outFileInfo);
+
+                            return RequestResult.FromFile(Error.UnexpectedResponse, null);
+                        }
                     }
                 }
             }
             catch
             {
-                outStream.Close();
-
-                try
-                {
-                    outFileInfo.Delete();
-                }
-                catch { }
+                // TODO: find out if closing the stream is actually neccessary; as the above goes out of scope and closing the stream may be redundant.
+                CloseStreamAndDeleteFile(outStream, outFileInfo);
 
                 return RequestResult.FromFile(Error.StreamError, null);
             }
 
             outStream.Close();
             return RequestResult.FromFile(Error.Ok, outFileInfo);
+        }
+
+        /// <summary>
+        /// Closes <paramref name="outStream"/> and tries to delete <paramref name="outFileInfo"/>. Deletion is not guaranteed.
+        /// </summary>
+        /// <param name="outStream">Stream to close.</param>
+        /// <param name="outFileInfo">File to try to delete.</param>
+        private static void CloseStreamAndDeleteFile(FileStream outStream, FileInfo outFileInfo)
+        {
+            outStream.Close();
+            try
+            {
+                outFileInfo.Delete();
+
+            }
+            catch { }
         }
 
         /// <summary>
