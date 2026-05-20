@@ -208,15 +208,15 @@ The HTTP API runs asynchronously, with the `RunOnApiThread(...)` function being 
 
 The API key must be provided in the header under the `ApiKey` or `Authorization` key.
 
-| Endpoint             | Method | Response Class                                  | Purpose                                                                 |
-|----------------------|--------|-------------------------------------------------|-------------------------------------------------------------------------|
-| /                    | GET    | `ConnectionCheckResponse`                       | For connection checking.                                                |
-| /command/[command]   | POST   | `ConsoleCommandResponse`                        | Send command to be executed. Trailing `/` will be deleted from command, |
-| /console-from/[num]  | GET    | `ConsoleEntriesResponse`                        | Retrieve console entries from a certain line.                           |
-| /player-overviews    | GET    | `PlayerOverviewResponse`                        | Retrieve overview of all connected players.                             |
-| /statistics          | GET    | `ServerStatisticsResponse`                      | Retrieve server statistics.                                             |
-| /backups             | GET    | `DirectoryResponse`                             | Get the contents of the file directory.                                 |
-| /backups/[file name] | GET    | `FileResponse` (special - returns octet stream) | Get a file from the Backups/ directory                                  |
+| Endpoint                      | Method | Response Class                                  | Purpose                                                                 |
+|-------------------------------|--------|-------------------------------------------------|-------------------------------------------------------------------------|
+| /                             | GET    | `ConnectionCheckResponse`                       | For connection checking.                                                |
+| /command/[command]            | POST   | `ConsoleCommandResponse`                        | Send command to be executed. Trailing `/` will be deleted from command. |
+| /console-from/[line index]    | GET    | `ConsoleEntriesResponse`                        | Retrieve all console entries from a certain line.                       |
+| /player-overviews             | GET    | `PlayerOverviewResponse`                        | Retrieve overview of all connected players and their details.           |
+| /statistics                   | GET    | `ServerStatisticsResponse`                      | Retrieve server statistics.                                             |
+| /backups                      | GET    | `DirectoryResponse`                             | Get the contents of the file directory.                                 |
+| /backups/[file name]          | GET    | `FileResponse` (special - returns octet stream) | Get a file from the Backups/ directory                                  |
 
 The Response Class of each response as simply wrappers around JSON. See the relevant classes in `VSYASGUI-CommonLib/ResponseObjects/` for an example of the JSON responses (with exception for `FileResponse`).
 
