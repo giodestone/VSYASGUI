@@ -14,9 +14,7 @@ Key features:
 Please report any bugs or enhancements to [issues tab](https://github.com/giodestone/VSYASGUI/issues).
 
 # Installation
-This mod is provided in two parts: the GUI and mod that must be added to the server. This is a server-side mod.
-
-The mod may be download through [the Vintage Story Mod DB](https://mods.vintagestory.at/show/mod/46221#tab-description).
+This mod is provided in two parts: the GUI and mod for the server.
 
 0. Install .NET 10 Desktop runtime - already required for Vintage Story >=1.22.0 (Windows: https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 1. Download the mod `vsyasguimod-x.x.x.zip` from [the releases page](https://github.com/giodestone/VSYASGUI/releases)
@@ -24,11 +22,11 @@ The mod may be download through [the Vintage Story Mod DB](https://mods.vintages
 3. Download the GUI `vsyasgui-x.x.x.zip` from [the releases page](https://github.com/giodestone/VSYASGUI/releases)
 4. Extract the GUI `vsyasgui-x.x.x.zip`
 5. Open the exe
-6. Optionally, change the `BindURL` in the `data/ModConfig/` folder to point to the IP address of the machine (e.g. `http://192.168.0.2:8181/`), to allow access on LAN.
+6. Optionally, change the `BindURL` in the `data/ModConfig/` to allow access outside of the machine (`http://*:8181/`), to allow access on LAN.
 
 **Note: the API does not use HTTPS.** Therefore, please **do not expose the endpoint port (by default 8181) to the internet**. The API key can be extracted from your usage of the GUI using a man in the middle attack and used to execute commands on the server. By default, you should not be at risk, as the endpoint is bound to localhost (the local machine running the server).
 
-Note: The mod may be used by the host in the Vintage Story game. However, the server will not process any commands when paused.
+Note: The mod may be used in a non-dedicated server. However, the API does not work when paused.
 
 # Configuration
 
@@ -91,7 +89,7 @@ The goal of this project was to create an easy to use GUI which allows for manag
 
 The GUI is written in C# and WPF (Windows Platform Foundation) and uses MVVM (Model, View, View Model/Model View Controller).
 
-The mod is written in C# and utilizes the Vintage Story modding API.
+The mod is written in C# and utilizes the Vintage Story modding API, then provides certain functions over a HTTP API. This approach is more favourable than e.g. attaching to the server stream as it allows for greater flexibility for e.g. verifying input and providing additional utilities that are easier to access via the API. As of writing, this is the only Server GUI mod that takes this approach (with others being wrappers around console commands).
 
 This project is split across three .sln: The Mod for the server (`VSYUASGUI-Mod`), the GUI (`VSYASGUI-WPF-App`), and the shared/common classes (`VSYASGUI-CommonLib`).
 
@@ -238,3 +236,5 @@ The provided mod and application fulfil the goal of providing an easy to use int
 The GUI allows access to the server console/log, ability to view player information visually, and perform basic player management. An explicit disconnection screen would be beneficial. Moving to [Avolina](https://avaloniaui.net/) to allow cross-platform support would also help, as Vintage Story is multi-platform.
 
 The API provides stateless access to core features of the server. The API could be made using more than just POST method. HTTPS implementation would provide further security.
+
+Additional functionality would be useful, such as a way to upload/download saves & configs securely, provide a 'restart' applet/script (allowing the server to auto-restart), and more GUI wrappers for console functions.
