@@ -2,7 +2,7 @@
 
 ![server overview page of GUI](https://github.com/giodestone/VSYASGUI/blob/main/Images/Image2.png)
 
-Provides a basic GUI for viewing the server console and managing players visually. Requires a mod to be installed on the server, which provides a simplified HTTP API for the GUI to interface with.
+Provides a basic GUI for viewing the server console and managing players visually.
 
 Key features:
 * View server resource usage
@@ -10,23 +10,33 @@ Key features:
 * Issue commands
 * View connected players
 * Kick, ban, unban recently connected players
+* Download world backups
+* Can be used to manage server across LAN (see Installation)
 
 Please report any bugs or enhancements to [issues tab](https://github.com/giodestone/VSYASGUI/issues).
 
 # Installation
 This mod is provided in two parts: the GUI and mod for the server.
 
-0. Install .NET 10 Desktop runtime - already required for Vintage Story >=1.22.0 (Windows: https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
+0. Ensure .NET 10 Desktop runtime is installed. Already required for Vintage Story 1.22.0 and later. [Download link for .NET runtime](https://dotnet.microsoft.com/en-us/download/dotnet/10.0).
 1. Download the mod `vsyasguimod-x.x.x.zip` from [the releases page](https://github.com/giodestone/VSYASGUI/releases)
 2. Place into your dedicated server's mod folder.
 3. Download the GUI `vsyasgui-x.x.x.zip` from [the releases page](https://github.com/giodestone/VSYASGUI/releases)
 4. Extract the GUI `vsyasgui-x.x.x.zip`
 5. Open the exe
-6. Optionally, change the `BindURL` in the `data/ModConfig/` to allow access outside of the machine (`http://*:8181/`), to allow access on LAN.
+6. Optionally, change the `BindURL` value in the `ModConfig/vsyasgui-mod-config.json` file to allow access outside of your local machine.
+    1. On Linux:
+        1. Change `BindURL` to `http://*:8181/`
+        2. Add a firewall rule if you have a firewall enabled.
+    2. On Windows, you must first add a firewall exception.
+        1. Open Administrator Command Prompt or Administrator Powershell
+        2. Replace `username` with your username in the following string `netsh http add urlacl url=http://+:8181/ user=username`
+        3. Run the command from above
+        3. Change `BindURL` to `http://+:8181/`
 
 **Note: the API does not use HTTPS.** Therefore, please **do not expose the endpoint port (by default 8181) to the internet**. The API key can be extracted from your usage of the GUI using a man in the middle attack and used to execute commands on the server. By default, you should not be at risk, as the endpoint is bound to localhost (the local machine running the server).
 
-Note: The mod may be used in a non-dedicated server. However, the API does not work when paused.
+Note: The mod may be used in a non-dedicated server. However, the API does not respond when the game is paused.
 
 # Configuration
 
@@ -35,22 +45,23 @@ Configuration files provided may be used to change certain behaviours.
 ## Mod
 The config is stored in `vsyasgui-mod-config.json` in the Vintage Story Mod Config Directory. On Windows, that is: `%AppData%\Roaming\VintagestoryData\ModConfig`
 
-* bindurl: the URL the HTTP Client will bind to. Security warning: exposing the endpoint API to the internet is not recommended.
-* apikey: the key that should be used to perform authenticated principles.
-* maxconsoleentriescache: the maximum number of log entries (does not correspond to lines) that will be cached for retrieval by the GUI.
-* cpuusagepolltimems: every how many milliseconds to poll the CPU usage
+* BindURL: the URL the HTTP Client will bind to. Security warning: exposing the endpoint API to the internet is not recommended.
+* ApiKey: the key that should be used to perform authenticated principles.
+* MaxConsoleEntriesCache: the maximum number of log entries (does not correspond to lines) that will be cached for retrieval by the GUI.
+* CPUUsagePollTimerMs: every how many milliseconds to poll the CPU usage
 
 ## GUI
-The recently connected endpoints/api keys can be cleared by selecting Application > Clear Configuration.
+The recently connected endpoints/api keys can be cleared by selecting the following option in the menu bar: Application > Clear Configuration.
 
-The config is stored in `settings.json`.
+The config is stored in `settings.json` in the same directory as the executable.
 
-* currentapikey: most recently selected api key.
-* apikeyhistory: previously selected api keys (including the most recently selected).
-* currentendpoint: most recently selected endpoint.
-* endpointaddresses: previously selected endpoints.
-* serverpollintervalms: every how many milliseconds to poll the server for things like statistics
-* maxfailedconnectionrequests: how many times a the connection request fail before considering the server offline.
+* CurrentApiKey: most recently selected api key.
+* ApiKeyHistory: previously selected api keys (including the most recently selected).
+* CurrentEndpoint: most recently selected endpoint.
+* EndpointAddresses: previously selected endpoints.
+* ServerPollIntervalMs: every how many milliseconds to poll the server for things like statistics
+* MaxFailedConnectionRequests: how many times the connection request fail before considering the server offline.
+* AutomaticallyScrollConsoleToBottom: whether to automatically scroll to the bottom of the console when a new message is recieved.
 
 
 
@@ -77,7 +88,7 @@ Follow [this guide to setup your development environment](https://wiki.vintagest
 
 The solution is built with Visual Studio 2026 (not code) with WPF extensions added.
 
-Vintage Story should be installed.
+Vintage Story should be installed, along with the required .NET version (10).
 
 New versions of both the GUI may be created by right clicking on `VSYUASGUI-Mod` or `VSYASGUI-WPF-App` projects, and selecting 'Publish'.
 
@@ -93,9 +104,9 @@ The mod is written in C# and utilizes the Vintage Story modding API, then provid
 
 This project is split across three .sln: The Mod for the server (`VSYUASGUI-Mod`), the GUI (`VSYASGUI-WPF-App`), and the shared/common classes (`VSYASGUI-CommonLib`).
 
-The Task async pattern is used throughout, with some classes being threadsafe (e.g. `CpuLoadCalc`).
+The Task async pattern is used throughout, with some classes being threadsafe (e.g. `CpuLoadCalc`), and with progress reporting for the file download.
 
-Overall, I think the implementation is okay for this scope. I wish I had moved more of the request/responses to the common library as they are very heavily intertwined. There are also a number of performance enhancements to be made: namely reducing the number of player update data if it is up to date, and changing the log cache to use a ring buffer.
+Overall, I think the implementation is okay for this scope and purpose. I wish I had moved more of the request/responses to the common library as they are very heavily intertwined. There are also a number of performance enhancements to be made: namely reducing the number of player update data if it is up to date, and changing the log cache to use a ring buffer.
 
 The following sections provide an implementation overview, rationale, and any specific improvements. A reflection section is provided. 
 
@@ -157,11 +168,13 @@ Error tolerance was implemented using the `Error` enum, where various errors can
 
 The views are implemented using `Page` system, as to make state management easier. This removes the need for custom view management code (which would be required if `UserControl` was used). I am aware this is better for web-based applications.
 
-Each view tries to maximize the use of the XML, and to have as little logic in each corresponding view class.
+Each view tries to maximize the use of the XAML, and to have as little logic in each corresponding view class.
 
 The `ApiConnection` model provides ways to interact with the API. The View Model `ConnectionPresenter` provides the majority of properties and functions (connection checking etc.) for the connection (`ConnectPage`, `ConnectingPage`, `ConnectionFailedPage`), console, and player (`Server`) views. All blocking connection-related blocking tasks are implemented using the async task model.
 
-The API uses templating to provide reusable functions to interpret the incoming requests, namely `ApiConnection.RequestApiInfo<T>(...)` and its derivatives. It allows for a mostly generic way of processing incoming requests.
+Generics/tempting is used throughout to provide reusable functions to interpret the incoming requests, for example in `ApiConnection.RequestApiInfo<T>(...)` and its derivatives. It allows for a mostly generic way of processing incoming requests.
+
+File downloading/directory browsing is handled by the `FilePresenter` view model and `FileDownloader` user control. The download is sent as an octet stream (standard format for downloaded content) along with the appropriate headers. As the file response is special (in that it is a stream), a special `FileResponse` class is needed, along with special handling. The file is first downloaded to a temp directory, then the user is prompted with a save dialog when downloaded. Progress is provided to via a progress bar, which implemented `IProgress`. Moreover, to make `FilePresenter` versatile, the exact endpoint is specified via the `IFileRequestProvider`, which is provided to the `FileDownloader` in ServerPage.xaml.cs.
 
 The `Config` model provides an interface to the saved user config, which is provided using the `ConfigPresenter`. It is primarily used in the `ConnectPage` to allow for API/endpoint connection history and saving this to disk.
 
@@ -177,6 +190,8 @@ Icons would make the GUI prettier. However, the SVG library refused to correctly
 
 Ban/kick reason and duration should be customisable.
 
+The file download could be extended to include more directories, and support browsing sub-folders in directories, checksums, and resuming.
+
 
 
 ## Mod/HTTP API
@@ -191,15 +206,18 @@ The HTTP API runs asynchronously, with the `RunOnApiThread(...)` function being 
 
 ### API Endpoints
 
-The API key must be provided in the header under the `ApiKey` key.
+The API key must be provided in the header under the `ApiKey` or `Authorization` key.
 
-| Endpoint    | Method | Request Class              | Response Class             | Purpose                                     |
-|-------------|--------|----------------------------|----------------------------|---------------------------------------------|
-| /           | POST   | `ConnectionRequest`        | `ConnectionCheckResponse`  | For connection checking.                    |
-| /command    | POST   | `CommandRequest`           | `ConsoleCommandResponse`   | Send command to be executed.                |
-| /console    | POST   | `ConsoleRequest`           | `ConsoleEntriesResponse`   | Retrieve console entries.                   |
-| /players    | POST   | `PlayerOverviewRequest`    | `PlayerOverviewResponse`   | Retrieve overview of all connected players. |
-| /statistics | POST   | `ServerStatisticsRequest`  | `ServerStatisticsResponse` | Retrieve server statistics.                 |
+| Endpoint             | Method | Response Class             | Purpose                                          |
+|----------------------|--------|----------------------------|--------------------------------------------------|
+| /                    | GET    | `ConnectionCheckResponse`  | For connection checking.                         |
+| /command/<command>   | POST   | `ConsoleCommandResponse`   | Send command to be executed. Trailing `/` will be deleted from command |
+| /console-from/<num>  | GET    | `ConsoleEntriesResponse`   | Retrieve console entries from a certain line.    |
+| /player-overviews    | GET    | `PlayerOverviewResponse`   | Retrieve overview of all connected players.      |
+| /statistics          | GET    | `ServerStatisticsResponse` | Retrieve server statistics.                      |
+| /backups             | GET    | `DirectoryResponse`        | Get the contents of the file directory.          |
+| /backups/<file name> | GET    | `FileResponse` (special)   | Get a file from the Backups/ directory           |
+
 
 ### Improvements
 
@@ -209,6 +227,7 @@ Adding encryption, or better yet HTTPS support. Currently, the API does not use 
 
 The `LogCache` class could be upgraded with a ring buffer, as currently it uses a `Queue` to store a maximum number of messages.
 
+The logic behind directory browsing and file downloading could be made into its own class to provide easy extendability to e.g. the Mods/ folder or configs. Subdirectory navigation would need to be implemneted for e.g. the Logs/ directory. Adding an upload feature would also be beneficial.
 
 
 ## Common Lib
@@ -231,10 +250,10 @@ The `PlayerOverview` class could be expanded to take into account offline player
 
 ## Reflection on Suitability
 
-The provided mod and application fulfil the goal of providing an easy to use interface for a locally running server.
+The provided mod and application fulfil the goal of providing an easy to use interface for both a locally running server, both on the local machine, and another one on LAN.
 
 The GUI allows access to the server console/log, ability to view player information visually, and perform basic player management. An explicit disconnection screen would be beneficial. Moving to [Avolina](https://avaloniaui.net/) to allow cross-platform support would also help, as Vintage Story is multi-platform.
 
-The API provides stateless access to core features of the server. The API could be made using more than just POST method. HTTPS implementation would provide further security.
+The API provides stateless access to core features of the server. HTTPS implementation would provide further security.
 
-Additional functionality would be useful, such as a way to upload/download saves & configs securely, provide a 'restart' applet/script (allowing the server to auto-restart), and more GUI wrappers for console functions.
+Additional functionality would be useful, such as a way to upload saves, upload/download/modify configs securely, provide a 'restart' applet/script (allowing the server to auto-restart), and more GUI wrappers for console functions.
