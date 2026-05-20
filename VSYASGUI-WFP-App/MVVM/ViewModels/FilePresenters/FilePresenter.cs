@@ -45,29 +45,16 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters
         public abstract string DirectoryDescription { get; }
 
         /// <summary>
-        /// Tells you if a file is selected.
-        /// </summary>
-        public bool IsFileSelected
-        {
-            get
-            {
-                if (SelectedFileIndex == -1)
-                    return false;
-
-                if (SelectedFileIndex >= DirectoryFiles.Count)
-                    return false;
-
-                return true;
-            }
-        }
-
-        /// <summary>
         /// Contents of the directory and its files.
         /// </summary>
         public ObservableCollection<ApiFileInfo> DirectoryFiles
         {
             get { return _DirectoryFiles; }
-            set { UpdateFieldWithValue(ref _DirectoryFiles, value, nameof(DirectoryFiles)); }
+            set 
+            { 
+                UpdateFieldWithValue(ref _DirectoryFiles, value, nameof(DirectoryFiles));
+                NotifyFieldUpdated(nameof(CanDownloadFile));
+            }
         }
 
         /// <summary>
@@ -79,7 +66,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters
             set
             {
                 UpdateFieldWithValue(ref _FileSelectedIndex, value, nameof(DirectoryFiles));
-                NotifyFieldUpdated(nameof(IsFileSelected));
+                NotifyFieldUpdated(nameof(CanDownloadFile));
             }
         }
 
@@ -116,7 +103,28 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters
         public bool IsFileDownloadInProgress
         {
             get => _IsDownloadInProgress;
-            set => UpdateFieldWithValue(ref _IsDownloadInProgress, value, nameof(IsFileDownloadInProgress));
+            set
+            {
+                UpdateFieldWithValue(ref _IsDownloadInProgress, value, nameof(IsFileDownloadInProgress));
+                NotifyFieldUpdated(nameof(CanDownloadFile));
+            }
+        }
+
+        /// <summary>
+        /// Whether it is possible to download a file. Combo of <see cref="IsFileDownloadInProgress"/>, and bound checking of <see cref="SelectedFileIndex"/> with <see cref="DirectoryFiles"/>.
+        /// </summary>
+        public bool CanDownloadFile
+        {
+            get
+            {
+                if (IsFileDownloadInProgress)
+                    return false;
+
+                if (SelectedFileIndex < 0 && SelectedFileIndex >= DirectoryFiles.Count && DirectoryFiles.Count > 0)
+                    return false;
+
+                return true;
+            }
         }
 
         /// <summary>
@@ -161,17 +169,14 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters
         /// <returns><c>true</c> if possible; <c>false</c> if not.</returns>
         public bool TryRequestFileDownload()
         {
-            if (DirectoryFiles.Count == 0)
-                return false;
-            if (SelectedFileIndex < 0)
-                return false;
-            if (SelectedFileIndex > DirectoryFiles.Count - 1)
+            // TODO: this is a bit of a mess, refactoring this would require expanding below to just check. However, then the task running would need to become an updatable property which would involve figuring out state tracking, which IsFileDownloading kind of wraps around.
+            if (!CanDownloadFile)
                 return false;
 
             if (TaskHelpers.IsTaskRunning(_DownloadFileRequestTask))
                 return false;
 
-            if (_IsDownloadInProgress)
+            if (IsFileDownloadInProgress)
                 return false;
 
             if (_FileDownloadProgress == null)
@@ -184,7 +189,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters
             {
                 IsFileDownloadInProgress = true;
                 _DownloadFileCancellationTokenSource = new CancellationTokenSource();
-                _DownloadFileRequestTask = ApiConnection.Instance.RequestFileFromApi(FileRequestFactoryMethod(DirectoryFiles[SelectedFileIndex].FileName), _DownloadFileCancellationTokenSource.Token, downloadProgress);
+                _DownloadFileRequestTask = ApiConnection.Instance.RequestFileFromApi(FileRequestFactoryMethod(DirectoryFiles[SelectedFileIndex].FileName), _DownloadFileCancellationTokenSource.Token, _FileDownloadProgress);
                 _DownloadFileRequestTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnFileDownloadComplete, task.Result));
             }
             catch (Exception e)
@@ -232,14 +237,14 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters
             if (response.ErrorResult != Error.Ok)
             {
                 MessageBox.Show("Failed to download the save download. \n\nError: " + response.ErrorResult, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                _IsDownloadInProgress = false;
+                IsFileDownloadInProgress = false;
                 return;
             }
 
             if (response.Response == null)
             {
                 MessageBox.Show("Failed to download save due to programming error. Please submit a bug report on the GitHub issue page.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                _IsDownloadInProgress = false;
+                IsFileDownloadInProgress = false;
                 return;
             }
 
