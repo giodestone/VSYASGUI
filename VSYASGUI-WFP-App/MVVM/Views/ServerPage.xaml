@@ -95,7 +95,12 @@
                 </Grid>
             </TabItem>
             <TabItem Header="World Backups">
-                <UserControls:FileDownloader/>
+                <StackPanel>
+                    <TextBlock Margin="6 6 0 12" TextWrapping="WrapWithOverflow">
+                       View and download the avaliable backups. Make to wait until /genbackup [world name] finishes, as it is possible to download a partial file backup!
+                    </TextBlock>
+                    <UserControls:FileDownloader/>
+                </StackPanel>
             </TabItem>
         </TabControl>
 

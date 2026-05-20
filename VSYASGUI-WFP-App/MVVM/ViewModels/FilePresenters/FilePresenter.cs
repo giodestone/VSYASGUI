@@ -33,17 +33,6 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters
         private double _FileDownloadProgressValue = 0.0;
         private Progress<double>? _FileDownloadProgress;
 
-
-        /// <summary>
-        /// Provides the human readable title of the directory.
-        /// </summary>
-        public abstract string DirectoryTitle { get; }
-
-        /// <summary>
-        /// Provides the human readable directory description.
-        /// </summary>
-        public abstract string DirectoryDescription { get; }
-
         /// <summary>
         /// Contents of the directory and its files.
         /// </summary>

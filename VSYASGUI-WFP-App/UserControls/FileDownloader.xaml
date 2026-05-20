@@ -13,12 +13,9 @@
         <viewModels:WorldBackupsFilePresenter/>
     </UserControl.DataContext>
 
-    <ScrollViewer>
+    <!--<ScrollViewer>-->
         <StackPanel>
-            <Label Content="{Binding DirectoryTitle}"/>
-            <TextBlock Margin="6 0 0 0" Text="{Binding DirectoryDescription}" TextWrapping="WrapWithOverflow"/>
-            <Separator Margin="0 6 0 0"/>
-            <DockPanel Margin="0 4 0 0">
+            <DockPanel>
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
                     <Label>Last updated:</Label>
                     <Label Content="{Binding LastSuccessfulDirectoryRefreshHumanReadable}"/>
@@ -41,5 +38,5 @@
             </DockPanel>
         </StackPanel>
 
-    </ScrollViewer>
+    <!--</ScrollViewer>-->
 </UserControl>
