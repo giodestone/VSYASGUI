@@ -12,7 +12,7 @@ namespace VSYASGUI_Mod
         public string BindURL { get; set; } = "http://127.0.0.1:8181/";
         public string ApiKey { get; set; } = "changeme";
         public int MaxConsoleEntriesCache { get; set; } = 10000;
-        public int CPUUsagePollTimerMs { get; set; } = 2000;
+        public int CpuUsagePollTimerMs { get; set; } = 2000;
 
         /// <summary>
         /// Load the config from the stored file, as defined by <see cref="ConfigFileName"/>, or create a new one at the location if it fails.

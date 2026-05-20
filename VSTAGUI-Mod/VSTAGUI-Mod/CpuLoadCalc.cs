@@ -44,7 +44,7 @@ namespace VSYASGUI_Mod
         }
 
         /// <summary>
-        /// Task that runs forever measuring the CPU every certain time, as defined by <see cref="Config.CPUUsagePollTimerMs"/>.
+        /// Task that runs forever measuring the CPU every certain time, as defined by <see cref="Config.CpuUsagePollTimerMs"/>.
         /// </summary>
         private async Task MeasureCPUUsage(CancellationToken cancellationToken)
         {
@@ -53,7 +53,7 @@ namespace VSYASGUI_Mod
                 TimeSpan measuermentStartTime = _TrackedProcess.TotalProcessorTime;
                 Stopwatch timer = Stopwatch.StartNew();
 
-                await Task.Delay(_Config.CPUUsagePollTimerMs, cancellationToken);
+                await Task.Delay(_Config.CpuUsagePollTimerMs, cancellationToken);
 
                 TimeSpan measuerementEndTime = _TrackedProcess.TotalProcessorTime;
                 timer.Stop();
