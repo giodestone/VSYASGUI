@@ -16,7 +16,7 @@ namespace VSYASGUI_WFP_App.UserControls
     /// <summary>
     /// Interaction logic for FileDownloader.xaml
     /// </summary>
-    public partial class FileDownloader : UserControl
+    internal partial class FileDownloader : UserControl
     {
         public FileDownloader()
         {

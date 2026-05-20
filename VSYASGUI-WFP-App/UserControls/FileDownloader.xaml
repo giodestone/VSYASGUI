@@ -4,9 +4,47 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:VSYASGUI_WFP_App.UserControls"
+             x:ClassModifier="internal"
+             xmlns:viewModels="clr-namespace:VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
+    
+    <UserControl.DataContext>
+        <viewModels:WorldBackupsFilePresenter/>
+    </UserControl.DataContext>
+
+    <ScrollViewer>
+        <StackPanel>
+            <Label Content="{Binding DirectoryTitle}"/>
+            <TextBlock Margin="6 0 0 0" Text="{Binding DirectoryDescription}" TextWrapping="WrapWithOverflow"/>
+            <Separator Margin="0 6 0 0"/>
+            <DockPanel Margin="0 4 0 0">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <Label>Last updated:</Label>
+                    <Label Content="{Binding LastSuccessfulDirectoryRefreshHumanReadable}"/>
+                </StackPanel>
+                <Button DockPanel.Dock="Right" Content="Refresh directory" Width="100" HorizontalAlignment="Right"/>
+            </DockPanel>
             
-    </Grid>
+            <DataGrid x:Name="DirectoryFilesDataView" ItemsSource="{Binding DirectoryFiles}" SelectedIndex="{Binding SelectedFileIndex}" Height="200" ColumnWidth="Auto" AutoGenerateColumns="False" IsReadOnly="True" Margin="0 6 0 0">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="File Name" Binding="{Binding FileName}"/>
+                    <DataGridTextColumn Header="Creation Time" Binding="{Binding CreationTime}"/>
+                    <DataGridTextColumn Header="Last Modified Time" Binding="{Binding LastWriteTime}"/>
+                    <DataGridTextColumn Header="Size (MB)" Binding="{Binding FileLengthMb}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <DockPanel Margin="0 6 0 0">
+                <Button DockPanel.Dock="Left" Width="120" Command="{Binding TryRequestFileSaveCommand}" IsEnabled="{Binding IsFileSelected}">Download selected</Button>
+                <ProgressBar DockPanel.Dock="Right" Margin="6 0 0 0" Minimum="{Binding MinDownloadProgressValue}" Maximum="{Binding MaxDownloadProgressValue}" Value="{Binding DownloadProgress}"/>
+            </DockPanel>
+            
+            <!--<StackPanel Orientation="Horizontal">
+                <Button Command="{Binding TryRequestFileSaveCommand}">Download selected</Button>
+                <ProgressBar Minimum="{Binding MinDownloadProgressValue}" Maximum="{Binding MaxDownloadProgressValue}" Value="{Binding DownloadProgress}">
+            </StackPanel>-->
+        </StackPanel>
+
+    </ScrollViewer>
 </UserControl>

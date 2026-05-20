@@ -69,16 +69,6 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         private int _SelectedPlayerOverviewIndex = -1;
 
 
-        public event EventHandler<ApiResponse<DirectoryResponse>> BackupsDirectoryChanged;
-        private Task<ApiResponse<DirectoryResponse>> _BackupDirectoryLookupTask;
-        private CancellationTokenSource _BackupDirectoryCancelllationTokenSource;
-        private ObservableCollection<ApiFileInfo> _BackupDirectoryFiles = new();
-        private int _BackupDirectorySelectedIndex = -1;
-        private DateTime _LastSuccessfulBackupDirectoryRefresh = DateTime.UnixEpoch;
-        private bool _IsBackupDownloadInProgress = false;
-
-        private Task<ApiResponse<FileResponse>> _DownloadFileRequestTask;
-        private CancellationTokenSource _DownloadFileCancellationTokenSource;
 
         /// <summary>
         /// Command form of <see cref="TryBeginConnectionCheck"/>.
@@ -109,16 +99,6 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// Command form of <see cref="TryUnbanCurrentlySelectedPlayer"/>.
         /// </summary>
         public ICommand TryUnbanCurrentlySelectedPlayerCommand => new Command(_ => TryUnbanCurrentlySelectedPlayer());
-
-        /// <summary>
-        /// Try to request the saved world.
-        /// </summary>
-        public ICommand TryRequestWorldSaveCommand => new Command(_ => TryRequestWorldSave());
-
-        /// <summary>
-        /// Try to request the contents of the backup directory.
-        /// </summary>
-        public ICommand TryRequestBackupDirectoryCommand => new Command(_ => TryRequestBackupDirectory());
 
         /// <summary>
         /// Send a command to make a world backup.
@@ -364,23 +344,6 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             }
         }
 
-        /// <summary>
-        /// Tells you if a world backup is selected, and whether related operations can be performed.
-        /// </summary>
-        public bool IsBackupSelected
-        {
-            get
-            {
-                if (SelectedBackupDirectoryFileIndex == -1)
-                    return false;
-
-                if (SelectedBackupDirectoryFileIndex >= BackupDirectoryFiles.Count)
-                    return false;
-
-                return CanSendConsoleCommand();
-            }
-        }
-
         public string ServerStatus
         {
             get
@@ -426,7 +389,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <returns><c>true</c> if check was begun, <c>false</c> if the check is already running, or in rare cases cannot start.</returns>
         public bool TryBeginConnectionCheck()
         {
-            if (IsTaskRunning(_CurrentConnectionCheckTask))
+            if (TaskHelpers.IsTaskRunning(_CurrentConnectionCheckTask))
                 return false;
 
             ConnectionCheckBegun?.Invoke(this, EventArgs.Empty);
@@ -485,7 +448,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             {
                 // TODO: fix these repetitions.
                 NotifyFieldUpdated(nameof(IsPlayerSelected));
-                NotifyFieldUpdated(nameof(IsBackupSelected));
+                //NotifyFieldUpdated(nameof(IsFileSelected));
                 return false;
             }
 
@@ -504,14 +467,14 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
                 // TODO: fix these repetitions.
                 NotifyFieldUpdated(nameof(IsPlayerSelected));
-                NotifyFieldUpdated(nameof(IsBackupSelected));
+                //NotifyFieldUpdated(nameof(IsFileSelected));
 
                 return false;
             }
 
             // TODO: fix these repetitions.
             NotifyFieldUpdated(nameof(IsPlayerSelected));
-            NotifyFieldUpdated(nameof(IsBackupSelected));
+            //NotifyFieldUpdated(nameof(IsFileSelected));
 
             return true;
         }
@@ -522,7 +485,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <returns>true if requested, false if not</returns>
         private bool TryRequestConsoleUpdate()
         {
-            if (IsTaskRunning(_ConsoleEntryRequestTask))
+            if (TaskHelpers.IsTaskRunning(_ConsoleEntryRequestTask))
                 return false;
 
             try
@@ -541,75 +504,11 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         }
 
         /// <summary>
-        /// Contents of the backup directory and its files.
-        /// </summary>
-        public ObservableCollection<ApiFileInfo> BackupDirectoryFiles
-        {
-            get { return _BackupDirectoryFiles; }
-            set { UpdateFieldWithValue(ref _BackupDirectoryFiles, value, nameof(BackupDirectoryFiles)); }
-        }
-
-        /// <summary>
-        /// Which backup directory is currently selected.
-        /// </summary>
-        public int SelectedBackupDirectoryFileIndex
-        {
-            get => _BackupDirectorySelectedIndex;
-            set
-            {
-                UpdateFieldWithValue(ref _BackupDirectorySelectedIndex, value, nameof(BackupDirectoryFiles));
-                NotifyFieldUpdated(nameof(IsBackupSelected));
-            }
-        }
-
-        /// <summary>
-        /// When <see cref="OnBackupDirectoryRequestComplete(ApiResponse{DirectoryResponse})"/> last completed successfully.
-        /// </summary>
-        public DateTime LastSuccessfulBackupDirectoryRefresh 
-        { 
-            get => _LastSuccessfulBackupDirectoryRefresh; 
-            set
-            {
-                UpdateFieldWithValue(ref _LastSuccessfulBackupDirectoryRefresh, value, nameof(LastSuccessfulBackupDirectoryRefresh));
-                NotifyFieldUpdated(nameof(LastSuccessfulBackupDirectoryRefreshHumanReadable));
-            }
-        }
-
-        /// <summary>
-        /// Returns a more human readable version of <see cref="LastSuccessfulBackupDirectoryRefresh"/>, where if never updated, it tells user it has never been updated.
-        /// </summary>
-        public string LastSuccessfulBackupDirectoryRefreshHumanReadable
-        {
-            get
-            {
-                if (LastSuccessfulBackupDirectoryRefresh == DateTime.UnixEpoch)
-                    return "Never";
-                else
-                    return LastSuccessfulBackupDirectoryRefresh.ToString();
-            }
-        }
-
-        /// <summary>
-        /// Whether there is currently a world backup in progress.
-        /// </summary>
-        public bool IsBackupDownloadInProgress 
-        { 
-            get => _IsBackupDownloadInProgress; 
-            set => UpdateFieldWithValue(ref _IsBackupDownloadInProgress, value, nameof(IsBackupDownloadInProgress)); 
-        }
-
-
-        /// <summary>
         /// Callback to clear the current server lgo.
         /// </summary>
         private void OnServerGuidChanged_UpdateConsoleLog(object? sender, EventArgs e)
         {
             ConsoleContents = string.Empty;
-        }
-
-        private bool IsTaskRunning(Task task)
-        {
-            return ApiConnection.Instance != null && (task != null && !task.IsCompleted);
         }
 
         /// <summary>
@@ -694,7 +593,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
 
             // TODO: fix these repetitions.
             NotifyFieldUpdated(nameof(IsPlayerSelected));
-            NotifyFieldUpdated(nameof(IsBackupSelected));
+            //NotifyFieldUpdated(nameof(IsFileSelected));
         }
 
 
@@ -742,7 +641,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <returns>true if it was requested, false otherwise.</returns>
         private Error TryRequestServerStatisticsUpdate()
         {
-            return TryMakeRequest(ref _ServerStatisticsUpdateTask, _PollServerCancellationTokenSource, RequestFactory.MakeStatisticsRequest(), OnServerStatisticsUpdateSucceeded);
+            return TaskHelpers.TryMakeRequest(ref _ServerStatisticsUpdateTask, _PollServerCancellationTokenSource, RequestFactory.MakeStatisticsRequest(), OnServerStatisticsUpdateSucceeded);
         }
 
         /// <summary>
@@ -816,7 +715,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
         /// <returns><c>true</c> if request was made, <c>false</c> if it was not.</returns>
         private Error TryRequestPlayersUpdate()
         {
-            return TryMakeRequest(ref _PlayerOverviewRequestTask, _PollServerCancellationTokenSource, RequestFactory.MakePlayerOverviewRequest(), OnPlayerOverviewRequestComplete);
+            return TaskHelpers.TryMakeRequest(ref _PlayerOverviewRequestTask, _PollServerCancellationTokenSource, RequestFactory.MakePlayerOverviewRequest(), OnPlayerOverviewRequestComplete);
         }
 
         /// <summary>
@@ -847,38 +746,6 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             PlayerOverviews = new ObservableCollection<PlayerOverview>(response.Response.PlayerOverviews);
 
             NotifyFieldUpdated(nameof(PlayerOverviews));
-        }
-
-        /// <summary>
-        /// Try to make a request in a wrapped way with <see cref="ApiConnection.RequestApiInfoJson{TExpectedResponse}(RequestBase, CancellationToken)"/>.
-        /// </summary>
-        /// <typeparam name="TResponse">Type of the expected response.</typeparam>
-        /// <param name="baseTask">Where the launched task gets stored.</param>
-        /// <param name="cancellationTokenSource">Cancellation token.</param>
-        /// <param name="request">The request to send. Will auto-populate <see cref="RequestBase.ApiKey"/> with <see cref="ApiConnection.RequestApiInfoJson{TExpectedResponse}(RequestBase, CancellationToken)"/>.</param>
-        /// <param name="continuationFunction">Function to call when the request completes. Invoked by the main thread's dispatcher, as defined by <see cref="Application.Current"/>.</param>
-        /// <returns><c>true</c> if the request was made, <c>false</c> if it cannot be made either due to an exception or outcome of <see cref="IsTaskRunning(Task)"/>.</returns>
-        private Error TryMakeRequest<TResponse>(ref Task<ApiResponse<TResponse>> baseTask, CancellationTokenSource cancellationTokenSource, ApiRequest request, Action<ApiResponse<TResponse>> continuationFunction) where TResponse : ResponseBase, new()
-        {
-            if (IsTaskRunning(baseTask))
-                return Error.RequestAlreadyInProgress;
-
-            try
-            {
-                if (cancellationTokenSource == null)
-                    cancellationTokenSource = new CancellationTokenSource();
-
-                baseTask = ApiConnection.Instance.RequestApiInfoJson<TResponse>(request, cancellationTokenSource.Token);
-                baseTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(continuationFunction, task.Result));
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("ERROR: Unable to invoke task due to an exception.");
-                Console.WriteLine(e.Message);
-                return Error.General;
-            }
-
-            return Error.Ok;
         }
 
         /// <summary>
@@ -939,104 +806,6 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels
             _SendCommandContents = previousConsoleContents;
 
             return returnVal;
-        }
-
-        private bool TryRequestWorldSave()
-        {
-            if (BackupDirectoryFiles.Count == 0)
-                return false;
-            if (SelectedBackupDirectoryFileIndex < 0)
-                return false;
-            if (SelectedBackupDirectoryFileIndex > BackupDirectoryFiles.Count - 1)
-                return false;
-
-            if (IsTaskRunning(_DownloadFileRequestTask))
-                return false;
-
-            if (_IsBackupDownloadInProgress)
-                return false;
-
-            try
-            {
-                IsBackupDownloadInProgress = true;
-                _DownloadFileCancellationTokenSource = new CancellationTokenSource();
-                _DownloadFileRequestTask = ApiConnection.Instance.RequestFileFromApi(RequestFactory.MakeBackupDownloadRequest(BackupDirectoryFiles[SelectedBackupDirectoryFileIndex].FileName), _DownloadFileCancellationTokenSource.Token);
-                _DownloadFileRequestTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnWorldDownloadComplete, task.Result));
-            }
-            catch (Exception e)
-            {
-                IsBackupDownloadInProgress = false;
-                Console.WriteLine("ERROR: Unable to invoke task due to an exception.");
-                Console.WriteLine(e.Message);
-                return false;
-            }
-
-            return true;
-        }
-
-        private void OnWorldDownloadComplete(ApiResponse<FileResponse> response)
-        {
-            if (!IsBackupDownloadInProgress)
-            {
-                Console.Error.WriteLine(nameof(ConnectionPresenter) + ": the variable " + nameof(IsBackupDownloadInProgress) + " should be true at this point! The download will continue, but this may cause disaster at some point, and is a programming error.");
-                _IsBackupDownloadInProgress = false;
-            }
-
-            if (response.ErrorResult != Error.Ok)
-            {
-                MessageBox.Show("Failed to download the save download. \n\nError: " + response.ErrorResult, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                _IsBackupDownloadInProgress = false;
-                return;
-            }
-
-            if (response.Response == null)
-            {
-                MessageBox.Show("Failed to download save due to programming error. Please submit a bug report on the GitHub issue page.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                _IsBackupDownloadInProgress = false;
-                return;
-            }
-
-            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
-            dlg.FileName = "WorldBackup_" + DateTime.Now.ToString("HH_mm_ss_dd_MM_yyyy"); // Default file name
-            dlg.DefaultExt = ".vcdbs"; // Default file extension
-            dlg.Filter = "Vintage Story World Files (*.vcdbs) |*.vcdbs|All Files(*.*)|*.*";
-
-            // Show save file dialog box
-            Nullable<bool> result = dlg.ShowDialog();
-
-            // Process save file dialog box results
-            if (result == true)
-            {
-                // Save document
-                string filename = dlg.FileName;
-
-                response.Response.SavedFile.MoveTo(filename, true);
-            }
-
-            IsBackupDownloadInProgress = false;
-        }
-
-        private bool TryRequestBackupDirectory()
-        {
-            return TryMakeRequest<DirectoryResponse>(ref _BackupDirectoryLookupTask, _BackupDirectoryCancelllationTokenSource, RequestFactory.MakeBackupDirectoryRequest(), OnBackupDirectoryRequestComplete) == Error.Ok;
-        }
-
-        private void OnBackupDirectoryRequestComplete(ApiResponse<DirectoryResponse> response)
-        {
-            // TODO: Make this nicer maybe? It clears the whole field, which isn't good.
-
-            if (response.ErrorResult != Error.Ok)
-                return;
-
-            if (response.Response == null)
-            {
-                Console.Error.WriteLine(nameof(ConnectionPresenter) + ": Request has no response, when one was expected.");
-                return;
-            }
-
-            LastSuccessfulBackupDirectoryRefresh = DateTime.Now;
-
-            BackupDirectoryFiles = new ObservableCollection<ApiFileInfo>(response.Response.FileInfos);
         }
 
         /// <summary>
