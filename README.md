@@ -10,6 +10,7 @@ Key features:
 * Issue commands
 * View connected players
 * Kick, ban, unban recently connected players
+* Download world backups
 
 Please report any bugs or enhancements to [issues tab](https://github.com/giodestone/VSYASGUI/issues).
 
@@ -35,22 +36,23 @@ Configuration files provided may be used to change certain behaviours.
 ## Mod
 The config is stored in `vsyasgui-mod-config.json` in the Vintage Story Mod Config Directory. On Windows, that is: `%AppData%\Roaming\VintagestoryData\ModConfig`
 
-* bindurl: the URL the HTTP Client will bind to. Security warning: exposing the endpoint API to the internet is not recommended.
-* apikey: the key that should be used to perform authenticated principles.
-* maxconsoleentriescache: the maximum number of log entries (does not correspond to lines) that will be cached for retrieval by the GUI.
-* cpuusagepolltimems: every how many milliseconds to poll the CPU usage
+* BindURL: the URL the HTTP Client will bind to. Security warning: exposing the endpoint API to the internet is not recommended.
+* ApiKey: the key that should be used to perform authenticated principles.
+* MaxConsoleEntriesCache: the maximum number of log entries (does not correspond to lines) that will be cached for retrieval by the GUI.
+* CPUUsagePollTimerMs: every how many milliseconds to poll the CPU usage
 
 ## GUI
 The recently connected endpoints/api keys can be cleared by selecting Application > Clear Configuration.
 
-The config is stored in `settings.json`.
+The config is stored in `settings.json` in the same directory as the executable.
 
-* currentapikey: most recently selected api key.
-* apikeyhistory: previously selected api keys (including the most recently selected).
-* currentendpoint: most recently selected endpoint.
-* endpointaddresses: previously selected endpoints.
-* serverpollintervalms: every how many milliseconds to poll the server for things like statistics
-* maxfailedconnectionrequests: how many times a the connection request fail before considering the server offline.
+* CurrentApiKey: most recently selected api key.
+* ApiKeyHistory: previously selected api keys (including the most recently selected).
+* CurrentEndpoint: most recently selected endpoint.
+* EndpointAddresses: previously selected endpoints.
+* ServerPollIntervalMs: every how many milliseconds to poll the server for things like statistics
+* MaxFailedConnectionRequests: how many times the connection request fail before considering the server offline.
+* AutomaticallyScrollConsoleToBottom: whether to automatically scroll to the bottom of the console when a new message is recieved.
 
 
 
