@@ -162,7 +162,6 @@ namespace VSYASGUI_Mod
                     }
                     break;
                 case ApiEndpointConstants.ConnectionCheckAddress:
-                    // TODO
                     await SendConnectionCheckResponse(context);
                     break;
                 default:
@@ -615,6 +614,11 @@ namespace VSYASGUI_Mod
         /// <param name="context">The response to reply to.</param>
         private async Task SendConnectionCheckResponse(HttpListenerContext context)
         {
+            if (context.Request.HttpMethod != "GET")
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return;
+            }
             context.Response.StatusCode = (int)HttpStatusCode.OK;
             WriteJsonToResponse(context, ResponseFactory.MakeConnectionCheckResponse(this._InstanceGuid));
         }
