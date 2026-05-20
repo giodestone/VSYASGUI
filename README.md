@@ -196,7 +196,7 @@ The file download could be extended to include more directories, and support bro
 
 ## Mod/HTTP API
 
-The API is stateless, as to respect RESTful principles. Only an API key is required to correctly communicate. POST is used exclusively at the moment, as some of the requests need to send over a body, and no robust method of checking GET requests has been implemented.
+The API is stateless, as to respect RESTful principles. Only an API key is required to correctly communicate. Parameters are set in the URL.
 
 Error tolerance was built in, as I don't think a HTTP API should crash the server.
 
@@ -208,15 +208,17 @@ The HTTP API runs asynchronously, with the `RunOnApiThread(...)` function being 
 
 The API key must be provided in the header under the `ApiKey` or `Authorization` key.
 
-| Endpoint             | Method | Response Class             | Purpose                                          |
-|----------------------|--------|----------------------------|--------------------------------------------------|
-| /                    | GET    | `ConnectionCheckResponse`  | For connection checking.                         |
-| /command/<command>   | POST   | `ConsoleCommandResponse`   | Send command to be executed. Trailing `/` will be deleted from command |
-| /console-from/<num>  | GET    | `ConsoleEntriesResponse`   | Retrieve console entries from a certain line.    |
-| /player-overviews    | GET    | `PlayerOverviewResponse`   | Retrieve overview of all connected players.      |
-| /statistics          | GET    | `ServerStatisticsResponse` | Retrieve server statistics.                      |
-| /backups             | GET    | `DirectoryResponse`        | Get the contents of the file directory.          |
-| /backups/<file name> | GET    | `FileResponse` (special)   | Get a file from the Backups/ directory           |
+| Endpoint             | Method | Response Class                                  | Purpose                                                                 |
+|----------------------|--------|-------------------------------------------------|-------------------------------------------------------------------------|
+| /                    | GET    | `ConnectionCheckResponse`                       | For connection checking.                                                |
+| /command/[command]   | POST   | `ConsoleCommandResponse`                        | Send command to be executed. Trailing `/` will be deleted from command, |
+| /console-from/[num]  | GET    | `ConsoleEntriesResponse`                        | Retrieve console entries from a certain line.                           |
+| /player-overviews    | GET    | `PlayerOverviewResponse`                        | Retrieve overview of all connected players.                             |
+| /statistics          | GET    | `ServerStatisticsResponse`                      | Retrieve server statistics.                                             |
+| /backups             | GET    | `DirectoryResponse`                             | Get the contents of the file directory.                                 |
+| /backups/[file name] | GET    | `FileResponse` (special - returns octet stream) | Get a file from the Backups/ directory                                  |
+
+The Response Class of each response as simply wrappers around JSON. See the relevant classes in `VSYASGUI-CommonLib/ResponseObjects/` for an example of the JSON responses (with exception for `FileResponse`).
 
 
 ### Improvements
