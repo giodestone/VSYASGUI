@@ -97,8 +97,14 @@
             <TabItem Header="World Backups">
                 <StackPanel Background="AliceBlue">
                     <TextBlock Margin="6 6 0 12" TextWrapping="WrapWithOverflow">
-                       View and download the avaliable backups. Make to wait until /genbackup [world name] finishes, as it is possible to download a partial file backup!
+                       View and download the avaliable backups. Make to wait until 
+                        <Run FontStyle="Italic">
+                        /genbackup [world name] 
+                            </Run>
+                        finishes, as it is possible to download a partial file backup!
                     </TextBlock>
+                    <Button Width="120" HorizontalAlignment="Left" Margin="6 0 6 0" Height="24" Command="{Binding TryMakeWorldBackupCommand}">Make backup</Button>
+                    <Separator Margin="6"/>
                     <UserControls:FileDownloader x:Name="WorldBackupFileDownloader"/>
                 </StackPanel>
             </TabItem>

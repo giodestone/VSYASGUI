@@ -32,7 +32,7 @@
                 </DataGrid.Columns>
             </DataGrid>
 
-            <DockPanel Margin="0 6 0 0">
+            <DockPanel Margin="0 6 0 0" Height="24">
                 <Button DockPanel.Dock="Left" Width="120" Command="{Binding TryRequestFileSaveCommand}" IsEnabled="{Binding CanDownloadFile}">Download selected</Button>
                 <ProgressBar DockPanel.Dock="Right" Margin="6 0 0 0" Minimum="{Binding MinDownloadProgressValue}" Maximum="{Binding MaxDownloadProgressValue}" Value="{Binding DownloadProgress}"/>
             </DockPanel>
