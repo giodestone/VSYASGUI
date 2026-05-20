@@ -129,6 +129,7 @@ namespace VSYASGUI_WFP_App.MVVM.Models
             }
             catch (Exception e)
             {
+                Console.Error.WriteLine(nameof(ApiConnection) + ": Something went wrong when sending HTTP request. Exception: " + e.ToString());
                 return RequestResult.FromJson(Error.General, null);
             }
 
@@ -228,7 +229,7 @@ namespace VSYASGUI_WFP_App.MVVM.Models
 
             // Make temp file to recieve to
             var fileOutPath = Path.GetTempPath() + "vsyasgui-download_" + Guid.NewGuid().ToString() + ".txt";
-            FileStream? outStream = null;
+            FileStream? outStream = null; // TODO: wrap in RAAI
 
             try
             {
@@ -236,11 +237,23 @@ namespace VSYASGUI_WFP_App.MVVM.Models
             }
             catch (Exception e)
             {
+                // Something went wrong when creating a file.
                 outStream?.Close();
+                Console.Error.WriteLine(nameof(ApiConnection) + ": Something went wrong when trying to create the temp file. Exception: " + e.ToString());
                 return RequestResult.FromFile(Error.FileError, null);
             }
 
-            FileInfo outFileInfo = new FileInfo(fileOutPath);
+            FileInfo? outFileInfo = null;
+            try
+            {
+                outFileInfo = new FileInfo(fileOutPath);
+            }
+            catch (Exception e)
+            {
+                // Something went weird between creating file and getting info.
+                Console.Error.WriteLine(nameof(ApiConnection) + ": Something went wrong when trying to access the file descriptor for the temp file. Exception: " + e.ToString());
+                return RequestResult.FromFile(Error.FileError, null);
+            }
 
             try
             {
@@ -283,10 +296,12 @@ namespace VSYASGUI_WFP_App.MVVM.Models
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
                 // TODO: find out if closing the stream is actually neccessary; as the above goes out of scope and closing the stream may be redundant.
                 CloseStreamAndDeleteFile(outStream, outFileInfo);
+
+                Console.Error.WriteLine(nameof(ApiConnection) + ": Something went wrong when trying to download to the temp file. Exception: " + e.ToString());
 
                 return RequestResult.FromFile(Error.StreamError, null);
             }
