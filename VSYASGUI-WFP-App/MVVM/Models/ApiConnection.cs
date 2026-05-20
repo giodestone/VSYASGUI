@@ -258,6 +258,8 @@ namespace VSYASGUI_WFP_App.MVVM.Models
                     long totalBytesRead = 0;
                     while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
                     {
+                        //await Task.Delay(10);
+
                         // Cancellation requested.
                         if (cancellationToken.IsCancellationRequested)
                         {
