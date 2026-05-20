@@ -5,12 +5,12 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:VSYASGUI_WFP_App.UserControls"
              x:ClassModifier="internal"
-             xmlns:viewModels="clr-namespace:VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters"
+             xmlns:viewModels="clr-namespace:VSYASGUI_WFP_App.MVVM.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     
     <UserControl.DataContext>
-        <viewModels:WorldBackupsFilePresenter/>
+        <viewModels:FilePresenter/>
     </UserControl.DataContext>
 
     <!--<ScrollViewer>-->
@@ -20,7 +20,7 @@
                     <Label>Last updated:</Label>
                     <Label Content="{Binding LastSuccessfulDirectoryRefreshHumanReadable}"/>
                 </StackPanel>
-                <Button DockPanel.Dock="Right" Content="Refresh directory" Width="100" HorizontalAlignment="Right"/>
+            <Button DockPanel.Dock="Right" HorizontalAlignment="Right" Content="Refresh directory" Width="100" Command="{Binding TryRequestDirectoryContentsCommand}"/>
             </DockPanel>
             
             <DataGrid x:Name="DirectoryFilesDataView" ItemsSource="{Binding DirectoryFiles}" SelectedIndex="{Binding SelectedFileIndex}" Height="200" ColumnWidth="Auto" AutoGenerateColumns="False" IsReadOnly="True" Margin="0 6 0 0">

@@ -10,16 +10,19 @@ using VSYASGUI_CommonLib.ResponseObjects;
 using VSYASGUI_CommonLib.ResponseObjects.ClientSide;
 using VSYASGUI_WFP_App.MVVM.Models;
 using VSYASGUI_WFP_App.MVVM.ViewModels.Base;
+using VSYASGUI_WFP_App.MVVM.ViewModels.FileRequestProviders;
 
-namespace VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters
+namespace VSYASGUI_WFP_App.MVVM.ViewModels
 {
     /// <summary>
     /// Provides file operations such as viewing contents and downloading a file, along with progress reporting.
     /// 
     /// Customisable in order to provide more than one possible implementation
     /// </summary>
-    internal abstract class FilePresenter : Presenter
+    internal class FilePresenter : Presenter
     {
+        private readonly IFileRequestProvider _FileRequestProvider;
+
         private Task<ApiResponse<DirectoryResponse>>? _DirectoryLookupTask;
         private CancellationTokenSource? _DirectoryCancellationTokenSource;
         private ObservableCollection<ApiFileInfo> _DirectoryFiles = new();
@@ -123,9 +126,6 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters
         {
             get
             {
-                if (!_IsDownloadInProgress)
-                    return 0.0;
-
                 return _FileDownloadProgressValue;
             }
 
@@ -151,6 +151,24 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters
         /// Try to request the contents of the backup directory.
         /// </summary>
         public ICommand TryRequestDirectoryContentsCommand => new Command(_ => TryRequestDirectoryContents());
+
+
+        /// <summary>
+        /// Create with a dummy file request provider. Will not provide full functionality if called.
+        /// </summary>
+        public FilePresenter()
+        {
+            _FileRequestProvider = new DummyFileRequestProvider();
+        }
+
+        /// <summary>
+        /// Create with a file request provider.
+        /// </summary>
+        /// <param name="fileRequestProvider"></param>
+        public FilePresenter(IFileRequestProvider fileRequestProvider)
+        {
+            _FileRequestProvider = fileRequestProvider;
+        }
 
         /// <summary>
         /// Try to request a file download and set up download progress, if not already setup.
@@ -178,7 +196,7 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters
             {
                 IsFileDownloadInProgress = true;
                 _DownloadFileCancellationTokenSource = new CancellationTokenSource();
-                _DownloadFileRequestTask = ApiConnection.Instance.RequestFileFromApi(FileRequestFactoryMethod(DirectoryFiles[SelectedFileIndex].FileName), _DownloadFileCancellationTokenSource.Token, _FileDownloadProgress);
+                _DownloadFileRequestTask = ApiConnection.Instance.RequestFileFromApi(_FileRequestProvider.GetFileDownloadRequest(DirectoryFiles[SelectedFileIndex].FileName), _DownloadFileCancellationTokenSource.Token, _FileDownloadProgress);
                 _DownloadFileRequestTask.ContinueWith(task => Application.Current.Dispatcher.BeginInvoke(OnFileDownloadComplete, task.Result));
             }
             catch (Exception e)
@@ -198,19 +216,8 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters
         /// <returns><c>true</c> if requested and possible, <c>false</c> if not.</returns>
         public bool TryRequestDirectoryContents()
         {
-            return TaskHelpers.TryMakeRequest<DirectoryResponse>(ref _DirectoryLookupTask, _DirectoryCancellationTokenSource, DirectoryContentsRequest(), OnDirectoryContentsRequestComplete) == Error.Ok;
+            return TaskHelpers.TryMakeRequest<DirectoryResponse>(ref _DirectoryLookupTask, _DirectoryCancellationTokenSource, _FileRequestProvider.GetDirectoryContentsRequest(), OnDirectoryContentsRequestComplete) == Error.Ok;
         }
-
-        /// <summary>
-        /// Returns the <see cref="ApiRequest"/> to begin downloading a file. Expected return type should be provided by <see cref="RequestFactory"/>.
-        /// </summary>
-        /// <param name="selectedFileName">The file name of the currently selected file.</param>
-        protected abstract ApiRequest FileRequestFactoryMethod(string selectedFileName);
-
-        /// <summary>
-        /// Returns the <see cref="ApiRequest"/> to request the contents of the specified directory. Expected return type should be provided by <see cref="RequestFactory"/>.
-        /// </summary>
-        protected abstract ApiRequest DirectoryContentsRequest();
         
         /// <summary>
         /// Callback for when the file has been successfully downloaded to disk.
@@ -254,6 +261,9 @@ namespace VSYASGUI_WFP_App.MVVM.ViewModels.FilePresenters
                 response.Response.SavedFile.MoveTo(filename, true);
             }
 
+
+            _FileDownloadProgress = null;
+            DownloadProgress = 0.0;
             IsFileDownloadInProgress = false;
         }
 

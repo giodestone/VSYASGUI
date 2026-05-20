@@ -13,6 +13,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using VSYASGUI_WFP_App.MVVM.Models;
+using VSYASGUI_WFP_App.MVVM.ViewModels;
+using VSYASGUI_WFP_App.MVVM.ViewModels.FileRequestProviders;
 
 namespace VSYASGUI_WFP_App.MVVM.Views
 {
@@ -28,8 +30,8 @@ namespace VSYASGUI_WFP_App.MVVM.Views
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-
-        }
+            WorldBackupFileDownloader.DataContext = new FilePresenter(new WorldBackupFileRequestProvider());
+        } 
 
         private void ServerConsole_Loaded(object sender, RoutedEventArgs e)
         {
